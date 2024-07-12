@@ -1,6 +1,10 @@
+use crate::algebra::arithmetic::RingMod;
 use crate::algebra::big_int::Zero;
+use crate::algebra::complex::{Complex, C64};
 use crate::algebra::polynomial::Polynomial;
 use std::ops::{Add, Mul, Sub};
+
+use bnum::types::I256;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct CyclotomicRing<T> {
@@ -129,6 +133,18 @@ where
         );
         let new_poly = self.polynomial * &other.polynomial;
         CyclotomicRing::new(new_poly.coefficients(), self.dimension)
+    }
+}
+
+impl CyclotomicRing<RingMod<I256>> {
+    pub fn to_c64(&self) -> Polynomial<C64> {
+        let coefficients = self
+            .polynomial
+            .ref_coefficients()
+            .iter()
+            .map(|coeff| coeff.to_c64())
+            .collect();
+        Polynomial::new(coefficients)
     }
 }
 

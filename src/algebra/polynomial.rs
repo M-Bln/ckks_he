@@ -1,8 +1,8 @@
 use crate::algebra::arithmetic::RingMod;
-use crate::algebra::big_int::{Zero, f64_to_i256, i256_to_f64};
-use crate::algebra::complex::{C64};
-use std::ops::{Add, Mul, Sub};
+use crate::algebra::big_int::{f64_to_i256, i256_to_f64, Zero};
+use crate::algebra::complex::C64;
 use bnum::types::I256;
+use std::ops::{Add, Mul, Sub};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Polynomial<T> {
@@ -132,21 +132,33 @@ where
 
 impl Polynomial<I256> {
     pub fn to_f64(&self) -> Polynomial<f64> {
-        let coefficients = self.coefficients.iter().map(|&coeff| i256_to_f64(coeff)).collect();
+        let coefficients = self
+            .coefficients
+            .iter()
+            .map(|&coeff| i256_to_f64(coeff))
+            .collect();
         Polynomial { coefficients }
     }
 }
 
 impl Polynomial<f64> {
     pub fn to_i256(&self) -> Polynomial<I256> {
-        let coefficients = self.coefficients.iter().map(|&coeff| f64_to_i256(coeff)).collect();
+        let coefficients = self
+            .coefficients
+            .iter()
+            .map(|&coeff| f64_to_i256(coeff))
+            .collect();
         Polynomial { coefficients }
     }
 }
 
 impl Polynomial<RingMod<I256>> {
     pub fn to_c64(&self) -> Polynomial<C64> {
-        let coefficients = self.coefficients.iter().map(|coeff| coeff.to_c64()).collect();
+        let coefficients = self
+            .coefficients
+            .iter()
+            .map(|coeff| coeff.to_c64())
+            .collect();
         Polynomial { coefficients }
     }
 }

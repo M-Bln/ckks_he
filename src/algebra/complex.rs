@@ -102,7 +102,7 @@ impl Complex for C64 {
 
 impl Zero for C64 {
     fn zero(&self) -> Self {
-	Self::new(0.0, 0.0)
+        Self::new(0.0, 0.0)
     }
 }
 

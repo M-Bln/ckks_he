@@ -1,11 +1,9 @@
-use crate::algebra::big_int::{BigInt, Zero, f64_to_i256, i256_to_f64};
-use crate::algebra::complex::{Complex,C64};
+use crate::algebra::big_int::{f64_to_i256, i256_to_f64, BigInt, Zero};
+use crate::algebra::complex::{Complex, C64};
 use std::cmp::{Eq, PartialEq};
 use std::ops::{Add, Mul, Sub};
 
 use bnum::types::I256;
-
-
 
 #[derive(Copy, Clone, Debug)]
 pub struct RingMod<T: BigInt> {
