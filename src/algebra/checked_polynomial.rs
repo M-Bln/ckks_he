@@ -1,6 +1,6 @@
 use crate::algebra::arithmetic::RingMod;
 use crate::algebra::big_int::BigInt;
-use std::ops::{Add, Mul};
+use std::ops::{Add};
 
 // Polynomial which are always checked to remove leading zeros so that degree = coefficients.len() -1
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -67,7 +67,7 @@ impl<T: BigInt> Add<&CheckedPolynomial<RingMod<T>>> for CheckedPolynomial<RingMo
 mod tests {
     use super::*;
     use crate::algebra::arithmetic::RingMod;
-    use crate::algebra::big_int::BigInt;
+
 
     #[test]
     fn test_polynomial_creation() {

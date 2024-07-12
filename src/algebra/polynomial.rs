@@ -1,5 +1,5 @@
-use crate::algebra::arithmetic::RingMod;
-use crate::algebra::big_int::{BigInt, Zero};
+//use crate::algebra::arithmetic::RingMod;
+use crate::algebra::big_int::{Zero};
 use std::ops::{Add, Mul};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -72,7 +72,6 @@ where
 mod tests {
     use super::*;
     use crate::algebra::arithmetic::RingMod;
-    use crate::algebra::big_int::BigInt;
 
     #[test]
     fn test_polynomial_creation() {
