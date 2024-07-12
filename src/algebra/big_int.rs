@@ -1,5 +1,6 @@
 use std::fmt;
 use std::ops::{Add, Div, Mul, Rem, Sub};
+use bnum::types::I256;
 
 pub trait Zero: Sized {
     fn zero(&self) -> Self;
@@ -25,7 +26,9 @@ pub trait BigInt:
     + Eq
     + Zero
 {
-    fn new(value: i64) -> Self;
+    fn new(value: i64) -> Self {
+	Self::from(value)
+    }
 }
 
 impl<T: BigInt> Zero for T {
@@ -34,24 +37,24 @@ impl<T: BigInt> Zero for T {
     }
 }
 
-impl BigInt for i64 {
-    fn new(value: i64) -> Self {
-        value
-    }
-}
+impl BigInt for i64 {}
+
+impl BigInt for I256 {}
+
 
 #[cfg(test)]
 mod tests {
-    use crate::algebra::big_int::BigInt;
+    use super::*;
+    use bnum::types::I256;
 
     #[test]
-    fn test_new() {
+    fn test_new_i64() {
         let big_int = i64::new(42);
         assert_eq!(big_int, 42);
     }
 
     #[test]
-    fn test_add() {
+    fn test_add_i64() {
         let a = i64::new(10);
         let b = i64::new(20);
         let result = a + b;
@@ -59,7 +62,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sub() {
+    fn test_sub_i64() {
         let a = i64::new(30);
         let b = i64::new(10);
         let result = a - b;
@@ -67,7 +70,7 @@ mod tests {
     }
 
     #[test]
-    fn test_mul() {
+    fn test_mul_i64() {
         let a = i64::new(5);
         let b = i64::new(6);
         let result = a * b;
@@ -75,7 +78,7 @@ mod tests {
     }
 
     #[test]
-    fn test_div() {
+    fn test_div_i64() {
         let a = i64::new(50);
         let b = i64::new(5);
         let result = a / b;
@@ -83,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn test_rem() {
+    fn test_rem_i64() {
         let a = i64::new(17);
         let b = i64::new(5);
         let result = a % b;
@@ -91,7 +94,7 @@ mod tests {
     }
 
     #[test]
-    fn test_add_ref() {
+    fn test_add_ref_i64() {
         let a = i64::new(15);
         let b = i64::new(25);
         let result = a + &b;
@@ -99,7 +102,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sub_ref() {
+    fn test_sub_ref_i64() {
         let a = i64::new(100);
         let b = i64::new(30);
         let result = a - &b;
@@ -107,7 +110,7 @@ mod tests {
     }
 
     #[test]
-    fn test_mul_ref() {
+    fn test_mul_ref_i64() {
         let a = i64::new(7);
         let b = i64::new(8);
         let result = a * &b;
@@ -115,7 +118,7 @@ mod tests {
     }
 
     #[test]
-    fn test_div_ref() {
+    fn test_div_ref_i64() {
         let a = i64::new(80);
         let b = i64::new(4);
         let result = a / &b;
@@ -123,10 +126,98 @@ mod tests {
     }
 
     #[test]
-    fn test_mod_ref() {
+    fn test_rem_ref_i64() {
         let a = i64::new(20);
         let b = i64::new(4);
         let result = a % &b;
         assert_eq!(result, 0);
     }
+
+    #[test]
+    fn test_new_i256() {
+        let big_int = I256::new(42);
+        assert_eq!(big_int, I256::from(42));
+    }
+
+    #[test]
+    fn test_add_i256() {
+        let a = I256::new(10);
+        let b = I256::new(20);
+        let result = a + b;
+        assert_eq!(result, I256::from(30));
+    }
+
+    #[test]
+    fn test_sub_i256() {
+        let a = I256::new(30);
+        let b = I256::new(10);
+        let result = a - b;
+        assert_eq!(result, I256::from(20));
+    }
+
+    #[test]
+    fn test_mul_i256() {
+        let a = I256::new(5);
+        let b = I256::new(6);
+        let result = a * b;
+        assert_eq!(result, I256::from(30));
+    }
+
+    #[test]
+    fn test_div_i256() {
+        let a = I256::new(50);
+        let b = I256::new(5);
+        let result = a / b;
+        assert_eq!(result, I256::from(10));
+    }
+
+    #[test]
+    fn test_rem_i256() {
+        let a = I256::new(17);
+        let b = I256::new(5);
+        let result = a % b;
+        assert_eq!(result, I256::from(2));
+    }
+
+    #[test]
+    fn test_add_ref_i256() {
+        let a = I256::new(15);
+        let b = I256::new(25);
+        let result = a + &b;
+        assert_eq!(result, I256::from(40));
+    }
+
+    #[test]
+    fn test_sub_ref_i256() {
+        let a = I256::new(100);
+        let b = I256::new(30);
+        let result = a - &b;
+        assert_eq!(result, I256::from(70));
+    }
+
+    #[test]
+    fn test_mul_ref_i256() {
+        let a = I256::new(7);
+        let b = I256::new(8);
+        let result = a * &b;
+        assert_eq!(result, I256::from(56));
+    }
+
+    #[test]
+    fn test_div_ref_i256() {
+        let a = I256::new(80);
+        let b = I256::new(4);
+        let result = a / &b;
+        assert_eq!(result, I256::from(20));
+    }
+
+    #[test]
+    fn test_rem_ref_i256() {
+        let a = I256::new(20);
+        let b = I256::new(4);
+        let result = a % &b;
+        assert_eq!(result, I256::from(0));
+    }
 }
+
+
