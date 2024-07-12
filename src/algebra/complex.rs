@@ -1,5 +1,5 @@
-use std::fmt;
 use std::f64::consts::PI;
+use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
 
 pub trait Complex:
@@ -17,7 +17,7 @@ pub trait Complex:
     + fmt::Display
     + fmt::Debug
 {
-    type Real : From<f64>;
+    type Real: From<f64>;
     fn new(real: Self::Real, imaginary: Self::Real) -> Self;
     fn real(&self) -> Self::Real;
     fn imaginary(&self) -> Self::Real;
@@ -26,30 +26,44 @@ pub trait Complex:
 
     fn primitive_root_of_unity(n: u32) -> Self {
         let angle = 2.0 * PI / (n as f64);
-        Self::new(
-            Self::Real::from(angle.cos()),
-            Self::Real::from(angle.sin())
-        )
+        Self::new(Self::Real::from(angle.cos()), Self::Real::from(angle.sin()))
     }
 
     fn primitive_2_to_the_h_th_roots_of_unity(h: u32) -> Vec<Self> {
-	if h == 0 {
-	    return vec![Self::new(Self::Real::from(1.0), Self::Real::from(0.0))];
-	}
-	let mut result = Vec::with_capacity(2_usize.pow(h-1));
-	let angle_0 = 2.0 * PI / (2_u64.pow(h) as f64);
+        if h == 0 {
+            return vec![Self::new(Self::Real::from(1.0), Self::Real::from(0.0))];
+        }
+        let mut result = Vec::with_capacity(2_usize.pow(h - 1));
+        let angle_0 = 2.0 * PI / (2_u64.pow(h) as f64);
         result.push(Self::new(
             Self::Real::from(angle_0.cos()),
-            Self::Real::from(angle_0.sin())
+            Self::Real::from(angle_0.sin()),
         ));
-	for k in 1..2_u64.pow(h-1) {
-	    let angle = angle_0*((2*k) as f64  + 1.0);
-	    result.push(Self::new(
-		Self::Real::from(angle.cos()),
-		Self::Real::from(angle.sin())
+        for k in 1..2_u64.pow(h - 1) {
+            let angle = angle_0 * ((2 * k) as f64 + 1.0);
+            result.push(Self::new(
+                Self::Real::from(angle.cos()),
+                Self::Real::from(angle.sin()),
             ));
-	}
-	result
+        }
+        result
+    }
+
+    fn all_2_to_the_h_th_roots_of_unity(h: u32) -> Vec<Self> {
+        if h == 0 {
+            return vec![Self::new(Self::Real::from(1.0), Self::Real::from(0.0))];
+        }
+        let mut result = Vec::with_capacity(2_usize.pow(h));
+        let angle_0 = 2.0 * PI / (2_u64.pow(h) as f64);
+        result.push(Self::new(Self::Real::from(1.0), Self::Real::from(0.0)));
+        for k in 1..2_u64.pow(h) {
+            let angle = angle_0 * (k as f64);
+            result.push(Self::new(
+                Self::Real::from(angle.cos()),
+                Self::Real::from(angle.sin()),
+            ));
+        }
+        result
     }
 }
 
@@ -263,7 +277,7 @@ mod tests {
         assert!((root.imaginary() - expected_imaginary).abs() < 1e-10);
     }
 
-      #[test]
+    #[test]
     fn test_primitive_2_to_the_h_th_roots_of_unity() {
         // Test for h = 0
         let roots_h0 = C64::primitive_2_to_the_h_th_roots_of_unity(0);
@@ -281,7 +295,7 @@ mod tests {
         let roots_h2 = C64::primitive_2_to_the_h_th_roots_of_unity(2);
         assert_eq!(roots_h2.len(), 2);
         let expected_h2 = vec![
-            (0.0, 1.0), // cos(pi/2), sin(pi/2)
+            (0.0, 1.0),  // cos(pi/2), sin(pi/2)
             (0.0, -1.0), // cos(3pi/2), sin(3pi/2)
         ];
         for (i, root) in roots_h2.iter().enumerate() {
@@ -293,13 +307,15 @@ mod tests {
         let roots_h3 = C64::primitive_2_to_the_h_th_roots_of_unity(3);
         assert_eq!(roots_h3.len(), 4);
         let expected_h3 = vec![
-	    (0.70710678118, 0.70710678118), // cos(pi/4), sin(pi/4)
-	    (-0.70710678118, 0.70710678118), // cos(3pi/4), sin(3pi/4)
-	    (-0.70710678118, -0.70710678118), // cos(5pi/4), sin(5pi/4)
-	    (0.70710678118, -0.70710678118), // cos(7pi/4), sin(7pi/4)
+            (0.70710678118, 0.70710678118),   // cos(pi/4), sin(pi/4)
+            (-0.70710678118, 0.70710678118),  // cos(3pi/4), sin(3pi/4)
+            (-0.70710678118, -0.70710678118), // cos(5pi/4), sin(5pi/4)
+            (0.70710678118, -0.70710678118),  // cos(7pi/4), sin(7pi/4)
         ];
-	for (i, root) in roots_h3.iter().enumerate() {
-            if (root.real() - expected_h3[i].0).abs() >= 1e-10 || (root.imaginary() - expected_h3[i].1).abs() >= 1e-10 {
+        for (i, root) in roots_h3.iter().enumerate() {
+            if (root.real() - expected_h3[i].0).abs() >= 1e-10
+                || (root.imaginary() - expected_h3[i].1).abs() >= 1e-10
+            {
                 println!(
                     "Mismatch at index {}: expected ({}, {}), got ({}, {})",
                     i,
@@ -316,5 +332,70 @@ mod tests {
         //     assert!((root.real() - expected_h3[i].0).abs() < 1e-10);
         //     assert!((root.imaginary() - expected_h3[i].1).abs() < 1e-10);
         // }
+    }
+
+    #[test]
+    fn test_all_2_to_the_h_th_roots_of_unity() {
+        // Test for h = 0
+        let roots_h0 = C64::all_2_to_the_h_th_roots_of_unity(0);
+        assert_eq!(roots_h0.len(), 1);
+        assert!((roots_h0[0].real() - 1.0).abs() < 1e-10);
+        assert!((roots_h0[0].imaginary() - 0.0).abs() < 1e-10);
+
+        // Test for h = 1
+        let roots_h1 = C64::all_2_to_the_h_th_roots_of_unity(1);
+        assert_eq!(roots_h1.len(), 2);
+        let expected_h1 = vec![
+            (1.0, 0.0),  // cos(0), sin(0)
+            (-1.0, 0.0), // cos(pi), sin(pi)
+        ];
+        for (i, root) in roots_h1.iter().enumerate() {
+            assert!((root.real() - expected_h1[i].0).abs() < 1e-10);
+            assert!((root.imaginary() - expected_h1[i].1).abs() < 1e-10);
+        }
+
+        // Test for h = 2
+        let roots_h2 = C64::all_2_to_the_h_th_roots_of_unity(2);
+        assert_eq!(roots_h2.len(), 4);
+        let expected_h2 = vec![
+            (1.0, 0.0),  // cos(0), sin(0)
+            (0.0, 1.0),  // cos(pi/2), sin(pi/2)
+            (-1.0, 0.0), // cos(pi), sin(pi)
+            (0.0, -1.0), // cos(3pi/2), sin(3pi/2)
+        ];
+        for (i, root) in roots_h2.iter().enumerate() {
+            assert!((root.real() - expected_h2[i].0).abs() < 1e-10);
+            assert!((root.imaginary() - expected_h2[i].1).abs() < 1e-10);
+        }
+
+        // Test for h = 3
+        let roots_h3 = C64::all_2_to_the_h_th_roots_of_unity(3);
+        assert_eq!(roots_h3.len(), 8);
+        let expected_h3 = vec![
+            (1.0, 0.0),                       // cos(0), sin(0)
+            (0.70710678118, 0.70710678118),   // cos(pi/4), sin(pi/4)
+            (0.0, 1.0),                       // cos(pi/2), sin(pi/2)
+            (-0.70710678118, 0.70710678118),  // cos(3pi/4), sin(3pi/4)
+            (-1.0, 0.0),                      // cos(pi), sin(pi)
+            (-0.70710678118, -0.70710678118), // cos(5pi/4), sin(5pi/4)
+            (0.0, -1.0),                      // cos(3pi/2), sin(3pi/2)
+            (0.70710678118, -0.70710678118),  // cos(7pi/4), sin(7pi/4)
+        ];
+        for (i, root) in roots_h3.iter().enumerate() {
+            if (root.real() - expected_h3[i].0).abs() >= 1e-10
+                || (root.imaginary() - expected_h3[i].1).abs() >= 1e-10
+            {
+                println!(
+                    "Mismatch at index {}: expected ({}, {}), got ({}, {})",
+                    i,
+                    expected_h3[i].0,
+                    expected_h3[i].1,
+                    root.real(),
+                    root.imaginary()
+                );
+            }
+            assert!((root.real() - expected_h3[i].0).abs() < 1e-10);
+            assert!((root.imaginary() - expected_h3[i].1).abs() < 1e-10);
+        }
     }
 }
