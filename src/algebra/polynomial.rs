@@ -1,15 +1,27 @@
 //use crate::algebra::arithmetic::RingMod;
 use crate::algebra::big_int::{Zero};
-use std::ops::{Add, Mul};
+use std::ops::{Add, Sub, Mul};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-struct Polynomial<T> {
+pub struct Polynomial<T> {
     coefficients: Vec<T>,
 }
 
 impl<T> Polynomial<T> {
     pub fn new(coefficients: Vec<T>) -> Self {
         Polynomial { coefficients }
+    }
+
+    pub fn coefficients(self) -> Vec<T> {
+	self.coefficients
+    }
+
+    pub fn ref_coefficients(&self) -> &[T] {
+	&self.coefficients[..]
+    }
+
+    pub fn mut_coefficients(&mut self) -> &mut Vec<T> {
+	&mut self.coefficients
     }
 }
 
@@ -31,6 +43,34 @@ where
                 (Some(c1), Some(c2)) => c1 + c2,
                 (Some(c1), None) => c1,
                 (None, Some(c2)) => c2,
+                (None, None) => unreachable!(),
+            };
+
+            result_coeffs.push(sum);
+        }
+
+        Polynomial::new(result_coeffs)
+    }
+}
+
+impl<T> Sub<&Polynomial<T>> for Polynomial<T>
+where
+    T: Sub<Output = T> + Clone + Zero,
+{
+    type Output = Self;
+
+    fn sub(self, other: &Polynomial<T>) -> Self::Output {
+        let max_len = std::cmp::max(self.coefficients.len(), other.coefficients.len());
+        let mut result_coeffs = Vec::with_capacity(max_len);
+
+        for i in 0..max_len {
+            let coeff1 = self.coefficients.get(i).cloned();
+            let coeff2 = other.coefficients.get(i).cloned();
+
+            let sum = match (coeff1, coeff2) {
+                (Some(c1), Some(c2)) => c1 - c2,
+                (Some(c1), None) => c1,
+                (None, Some(c2)) => c2.zero() -c2,
                 (None, None) => unreachable!(),
             };
 
