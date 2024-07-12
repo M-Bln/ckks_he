@@ -1,6 +1,6 @@
-use std::ops::{Add, Mul, Sub};
+use crate::algebra::big_int::Zero;
 use crate::algebra::polynomial::Polynomial;
-use crate::algebra::big_int::{Zero};
+use std::ops::{Add, Mul, Sub};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct CyclotomicRing<T> {
@@ -10,37 +10,50 @@ pub struct CyclotomicRing<T> {
 
 impl<T> CyclotomicRing<T>
 where
-    T: Add<Output = T> + for<'a> Add<&'a T, Output = T> + Sub<Output = T> + for<'a> Sub<&'a T, Output = T> + Clone + Zero,
+    T: Add<Output = T>
+        + for<'a> Add<&'a T, Output = T>
+        + Sub<Output = T>
+        + for<'a> Sub<&'a T, Output = T>
+        + Clone
+        + Zero,
 {
     pub fn new(mut coefficients: Vec<T>, dimension: usize) -> Self {
-	assert!(!coefficients.is_empty(), "Don't create new cyclotomic ring with empty vector"); // This is because we need to know the modulus
-	extend_by_zero(&mut coefficients, dimension);
+        assert!(
+            !coefficients.is_empty(),
+            "Don't create new cyclotomic ring with empty vector"
+        ); // This is because we need to know the modulus
+        extend_by_zero(&mut coefficients, dimension);
         let polynomial = Polynomial::new(coefficients);
-        let mut cyclo = CyclotomicRing { polynomial, dimension };
+        let mut cyclo = CyclotomicRing {
+            polynomial,
+            dimension,
+        };
         cyclo.reduce();
         cyclo
     }
-
 
     fn reduce(&mut self) {
         let n = self.dimension;
         let coefficients = self.polynomial.ref_coefficients().to_vec();
 
         let mut new_coefficients = coefficients[..n].to_vec();
-        for (index, coeff) in coefficients[n..].iter().enumerate() { // beware! index == 0 corresponds to coefficient of degree n
+        for (index, coeff) in coefficients[n..].iter().enumerate() {
+            // beware! index == 0 corresponds to coefficient of degree n
             let shifted_index = index % n;
             let shifted_coeff = new_coefficients[shifted_index].clone();
-            if ((index + n) / n) % 2 == 0 { 
+            if ((index + n) / n) % 2 == 0 {
                 new_coefficients[shifted_index] = shifted_coeff + coeff.clone();
             } else {
                 new_coefficients[shifted_index] = shifted_coeff - coeff.clone();
             }
         }
 
-        self.polynomial.mut_coefficients().splice(.., new_coefficients);
+        self.polynomial
+            .mut_coefficients()
+            .splice(.., new_coefficients);
         self.polynomial.mut_coefficients().truncate(n);
     }
-    
+
     // TODO: maybe reduce the number of call to clone?
     // fn reduce(&mut self) {
     //     let n = self.dimension;
@@ -60,7 +73,7 @@ where
     //     self.polynomial.mut_coefficients().splice(.., new_coefficients);
     //     self.polynomial.mut_coefficients().truncate(n);
     // }
-    
+
     // fn reduce(&mut self){
     // 	let n = self.dimension;
     // 	for (index, coeff) in self.polynomial.mut_coefficients()[n..].iter().enumerate() {
@@ -76,23 +89,34 @@ where
 }
 
 fn extend_by_zero<T: Zero + Clone>(coefficients: &mut Vec<T>, minimal_length: usize) {
-    assert!(!coefficients.is_empty(), "cannot extend empty vector by zero, we might need to know the modulus");
+    assert!(
+        !coefficients.is_empty(),
+        "cannot extend empty vector by zero, we might need to know the modulus"
+    );
     if coefficients.len() >= minimal_length {
-	return;
+        return;
     }
     let extension_length = minimal_length - coefficients.len();
     let mut extension = vec![coefficients[0].zero(); extension_length];
     coefficients.append(&mut extension)
-} 
+}
 
 impl<'a, T> Add<&'a CyclotomicRing<T>> for CyclotomicRing<T>
 where
-    T: Add<Output = T> + for<'b> Add<&'b T, Output = T> + Sub<Output = T> + for<'b> Sub<&'b T, Output = T> + Clone + Zero,
+    T: Add<Output = T>
+        + for<'b> Add<&'b T, Output = T>
+        + Sub<Output = T>
+        + for<'b> Sub<&'b T, Output = T>
+        + Clone
+        + Zero,
 {
     type Output = Self;
 
     fn add(self, other: &'a CyclotomicRing<T>) -> Self::Output {
-        assert_eq!(self.dimension, other.dimension, "Dimensions must be equal for addition");
+        assert_eq!(
+            self.dimension, other.dimension,
+            "Dimensions must be equal for addition"
+        );
         let new_poly = self.polynomial + &other.polynomial;
         CyclotomicRing::new(new_poly.coefficients(), self.dimension)
     }
@@ -100,12 +124,20 @@ where
 
 impl<'a, T> Sub<&'a CyclotomicRing<T>> for CyclotomicRing<T>
 where
-    T: Add<Output = T> + for<'b> Add<&'b T, Output = T> + Sub<Output = T> + for<'b> Sub<&'b T, Output = T> + Clone + Zero,
+    T: Add<Output = T>
+        + for<'b> Add<&'b T, Output = T>
+        + Sub<Output = T>
+        + for<'b> Sub<&'b T, Output = T>
+        + Clone
+        + Zero,
 {
     type Output = Self;
 
     fn sub(self, other: &'a CyclotomicRing<T>) -> Self::Output {
-        assert_eq!(self.dimension, other.dimension, "Dimensions must be equal for subtraction");
+        assert_eq!(
+            self.dimension, other.dimension,
+            "Dimensions must be equal for subtraction"
+        );
         let new_poly = self.polynomial - &other.polynomial;
         CyclotomicRing::new(new_poly.coefficients(), self.dimension)
     }
@@ -113,25 +145,31 @@ where
 
 impl<'a, T> Mul<&'a CyclotomicRing<T>> for CyclotomicRing<T>
 where
-    T: Add<Output = T> + for<'b> Add<&'b T, Output = T> + Sub<Output = T> + for<'b> Sub<&'b T, Output = T> + Clone + Zero + Mul<Output = T>,
+    T: Add<Output = T>
+        + for<'b> Add<&'b T, Output = T>
+        + Sub<Output = T>
+        + for<'b> Sub<&'b T, Output = T>
+        + Clone
+        + Zero
+        + Mul<Output = T>,
 {
     type Output = Self;
 
     fn mul(self, other: &'a CyclotomicRing<T>) -> Self::Output {
-        assert_eq!(self.dimension, other.dimension, "Dimensions must be equal for multiplication");
+        assert_eq!(
+            self.dimension, other.dimension,
+            "Dimensions must be equal for multiplication"
+        );
         let new_poly = self.polynomial * &other.polynomial;
         CyclotomicRing::new(new_poly.coefficients(), self.dimension)
     }
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::algebra::big_int::BigInt;
     use crate::algebra::arithmetic::RingMod;
-
+    use crate::algebra::big_int::BigInt;
 
     #[test]
     fn test_extend_with_zeros() {
@@ -165,7 +203,7 @@ mod tests {
         let expected_coefficients = vec![-1, 6];
         assert_eq!(cyclo_ring.polynomial.coefficients(), expected_coefficients);
     }
-    
+
     #[test]
     fn test_cyclotomic_ring_addition() {
         let dimension = 5;
@@ -175,7 +213,10 @@ mod tests {
         let expected_sum = CyclotomicRing::new(vec![5, 7, 9], dimension);
 
         let result_sum = poly1 + &poly2;
-        assert_eq!(result_sum.polynomial.coefficients(), expected_sum.polynomial.coefficients());
+        assert_eq!(
+            result_sum.polynomial.coefficients(),
+            expected_sum.polynomial.coefficients()
+        );
     }
 
     #[test]
@@ -196,15 +237,12 @@ mod tests {
         let poly1 = CyclotomicRing::new(vec![1, 2, 3], dimension);
         let poly2 = CyclotomicRing::new(vec![4, 5, 6], dimension);
 
-        let expected_product = CyclotomicRing::new(vec![
-            -6, -14
-        ], dimension);
+        let expected_product = CyclotomicRing::new(vec![-6, -14], dimension);
 
         let result_product = poly1 * &poly2;
         assert_eq!(result_product.polynomial, expected_product.polynomial);
     }
 }
-
 
 // impl<T> Add for CyclotomicRing<T>
 // where

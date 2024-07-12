@@ -1,6 +1,6 @@
 //use crate::algebra::arithmetic::RingMod;
-use crate::algebra::big_int::{Zero};
-use std::ops::{Add, Sub, Mul};
+use crate::algebra::big_int::Zero;
+use std::ops::{Add, Mul, Sub};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Polynomial<T> {
@@ -13,15 +13,35 @@ impl<T> Polynomial<T> {
     }
 
     pub fn coefficients(self) -> Vec<T> {
-	self.coefficients
+        self.coefficients
     }
 
     pub fn ref_coefficients(&self) -> &[T] {
-	&self.coefficients[..]
+        &self.coefficients[..]
     }
 
     pub fn mut_coefficients(&mut self) -> &mut Vec<T> {
-	&mut self.coefficients
+        &mut self.coefficients
+    }
+}
+
+impl<T> Polynomial<T>
+where
+    T: Add<Output = T> + Mul<T, Output = T> + Clone + Zero,
+{
+    pub fn eval(&self, x: T) -> T
+    where
+        T: Add<Output = T> + Mul<Output = T> + Clone,
+    {
+        let mut result = self
+            .coefficients
+            .last()
+            .cloned()
+            .unwrap_or_else(|| x.zero());
+        for coeff in self.coefficients.iter().rev().skip(1) {
+            result = coeff.clone() + result * x.clone();
+        }
+        result
     }
 }
 
@@ -70,7 +90,7 @@ where
             let sum = match (coeff1, coeff2) {
                 (Some(c1), Some(c2)) => c1 - c2,
                 (Some(c1), None) => c1,
-                (None, Some(c2)) => c2.zero() -c2,
+                (None, Some(c2)) => c2.zero() - c2,
                 (None, None) => unreachable!(),
             };
 
@@ -172,5 +192,16 @@ mod tests {
 
         let result_product = poly1.clone() * &poly2;
         assert_eq!(result_product, expected_product);
+    }
+
+    #[test]
+    fn test_polynomial_evaluation() {
+        let poly = Polynomial::new(vec![1, 2, 3]); // Represents 1 + 2x + 3x^2
+        let value = poly.eval(2); // Evaluate at x = 2
+        assert_eq!(value, 17); // 1 + 2*2 + 3*2^2 = 17
+
+        let poly = Polynomial::new(vec![0, 1, 0, 1]); // Represents x + x^3
+        let value = poly.eval(2); // Evaluate at x = 2
+        assert_eq!(value, 10); // 2 + 2^3 = 10
     }
 }
