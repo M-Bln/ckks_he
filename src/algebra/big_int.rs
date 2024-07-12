@@ -41,11 +41,11 @@ impl BigInt for i64 {}
 
 impl BigInt for I256 {}
 
-fn i256_to_f64(n: I256) -> f64 {
+pub fn i256_to_f64(n: I256) -> f64 {
     n.to_string().parse::<f64>().unwrap()
 }
 
-fn f64_to_i256(n: f64) -> I256 {
+pub fn f64_to_i256(n: f64) -> I256 {
     I256::from_str_radix(&format!("{:.0}", n), 10).unwrap()
 }
 

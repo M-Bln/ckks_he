@@ -1,6 +1,8 @@
-//use crate::algebra::arithmetic::RingMod;
-use crate::algebra::big_int::Zero;
+use crate::algebra::arithmetic::RingMod;
+use crate::algebra::big_int::{Zero, f64_to_i256, i256_to_f64};
+use crate::algebra::complex::{C64};
 use std::ops::{Add, Mul, Sub};
+use bnum::types::I256;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Polynomial<T> {
@@ -128,6 +130,27 @@ where
     }
 }
 
+impl Polynomial<I256> {
+    pub fn to_f64(&self) -> Polynomial<f64> {
+        let coefficients = self.coefficients.iter().map(|&coeff| i256_to_f64(coeff)).collect();
+        Polynomial { coefficients }
+    }
+}
+
+impl Polynomial<f64> {
+    pub fn to_i256(&self) -> Polynomial<I256> {
+        let coefficients = self.coefficients.iter().map(|&coeff| f64_to_i256(coeff)).collect();
+        Polynomial { coefficients }
+    }
+}
+
+impl Polynomial<RingMod<I256>> {
+    pub fn to_c64(&self) -> Polynomial<C64> {
+        let coefficients = self.coefficients.iter().map(|coeff| coeff.to_c64()).collect();
+        Polynomial { coefficients }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -243,5 +266,21 @@ mod tests {
         let x = RingMod::new(I256::from(2), modulus);
         let value = poly.eval(x); // Evaluate at x = 2
         assert_eq!(value.value(), I256::from(17 % 13)); // 1 + 2*2 + 3*2^2 = 17 % 13 = 4
+    }
+
+    #[test]
+    fn test_polynomial_conversion() {
+        // Create a Polynomial<I256>
+        let poly_i256 = Polynomial {
+            coefficients: vec![I256::from(1), I256::from(2), I256::from(3)],
+        };
+
+        // Convert to Polynomial<f64>
+        let poly_f64 = poly_i256.to_f64();
+        assert_eq!(poly_f64.coefficients, vec![1.0, 2.0, 3.0]);
+
+        // Convert back to Polynomial<I256>
+        let poly_i256_converted_back = poly_f64.to_i256();
+        assert_eq!(poly_i256, poly_i256_converted_back);
     }
 }

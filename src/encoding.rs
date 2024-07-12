@@ -1,5 +1,6 @@
 use crate::algebra::big_int::BigInt;
 use crate::algebra::complex::{Complex, C64};
+use crate::algebra::polynomial::Polynomial;
 use crate::algebra::cyclotomic_ring::CyclotomicRing;
 
 use std::f64::consts::PI;
@@ -67,13 +68,23 @@ impl<T: BigInt> Encoder<T> {
         let mut matrix = vandermonde_matrix.to_vec();
 
         for i in 0..n {
-            let factor = roots[n - i];
+            let factor = roots[n - i -1];
             for j in 0..n {
                 matrix[i][j] = matrix[i][j] * factor;
             }
         }
 
         matrix
+    }
+
+    pub fn apply_sigma_inverse(&self, poly: &Polynomial<C64>) -> Vec<C64> {
+        let mut result = vec![C64::new(0.0, 0.0); poly.ref_coefficients().len()];
+        for (i, row) in self.sigma_inverse_matrix.iter().enumerate() {
+            result[i] = row.iter()
+                .zip(poly.ref_coefficients())
+                .fold(C64::new(0.0, 0.0), |sum, (a, b)| sum + a.clone() * b);
+        }
+        result
     }
 }
 
@@ -114,7 +125,62 @@ impl<T: BigInt> Encoder<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::algebra::big_int::BigInt;
+    use crate::algebra::complex::C64;
+    use crate::algebra::arithmetic::RingMod;
+    use bnum::types::I256;
 
+    
+    #[test]
+    fn test_sigma_inverse_matrix_evaluation() {
+        let dimension_exponent = 3;
+        let modulus = I256::new(13);
+        let encoder = Encoder::new(dimension_exponent, modulus.clone());
+
+        // Example polynomial in the cyclotomic ring
+        let poly_ringmod = Polynomial::new( 
+            vec![
+                RingMod::new(I256::new(1), modulus.clone()),
+                RingMod::new(I256::new(2), modulus.clone()),
+                RingMod::new(I256::new(3), modulus.clone()),
+		RingMod::new(I256::new(1), modulus.clone()),
+                RingMod::new(I256::new(2), modulus.clone()),
+                RingMod::new(I256::new(3), modulus.clone()),
+		RingMod::new(I256::new(1), modulus.clone()),
+                RingMod::new(I256::new(2), modulus.clone()),
+            ],
+      );
+
+        // Convert polynomial to Polynomial<C64>
+        let poly_c64 = poly_ringmod.to_c64();
+
+        // Generate primitive 2^{h+1} roots of unity
+        let roots = C64::primitive_2_to_the_h_th_roots_of_unity(dimension_exponent+1);// C64::primitive_2_to_the_h_plus_1_th_roots_of_unity(dimension_exponent as usize);
+
+        // Evaluate polynomial at these roots
+        let evaluations: Vec<C64> = roots.iter().map(|root| poly_c64.eval(root.clone())).collect();
+
+        // Apply sigma_inverse_matrix to the polynomial coefficients
+        let sigma_inverse_result = encoder.apply_sigma_inverse(&poly_c64);
+
+        // Compare results
+        for (i, eval) in evaluations.iter().enumerate() {
+            assert!(
+                (eval.real() - sigma_inverse_result[i].real()).abs() < 1e-10,
+                "Real part mismatch at index {}: expected {}, got {}",
+                i,
+                eval.real(),
+                sigma_inverse_result[i].real()
+            );
+            assert!(
+                (eval.imaginary() - sigma_inverse_result[i].imaginary()).abs() < 1e-10,
+                "Imaginary part mismatch at index {}: expected {}, got {}",
+                i,
+                eval.imaginary(),
+                sigma_inverse_result[i].imaginary()
+            );
+        }
+    }
     // #[test]
     // fn test_print_vandermonde_matrix() {
     //     let dimension_exponent = 3;

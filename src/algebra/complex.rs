@@ -2,6 +2,8 @@ use std::f64::consts::PI;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
 
+use crate::algebra::big_int::Zero;
+
 pub trait Complex:
     Sized
     + Add<Output = Self>
@@ -16,6 +18,7 @@ pub trait Complex:
     + Default
     + fmt::Display
     + fmt::Debug
+    + Zero
 {
     type Real: From<f64>;
     fn new(real: Self::Real, imaginary: Self::Real) -> Self;
@@ -94,6 +97,12 @@ impl Complex for C64 {
 
     fn phase(&self) -> f64 {
         self.imaginary.atan2(self.real)
+    }
+}
+
+impl Zero for C64 {
+    fn zero(&self) -> Self {
+	Self::new(0.0, 0.0)
     }
 }
 
