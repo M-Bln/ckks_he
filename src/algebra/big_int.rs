@@ -1,6 +1,6 @@
+use bnum::types::I256;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Rem, Sub};
-use bnum::types::I256;
 
 pub trait Zero: Sized {
     fn zero(&self) -> Self;
@@ -27,7 +27,7 @@ pub trait BigInt:
     + Zero
 {
     fn new(value: i64) -> Self {
-	Self::from(value)
+        Self::from(value)
     }
 }
 
@@ -40,7 +40,6 @@ impl<T: BigInt> Zero for T {
 impl BigInt for i64 {}
 
 impl BigInt for I256 {}
-
 
 #[cfg(test)]
 mod tests {
@@ -219,5 +218,3 @@ mod tests {
         assert_eq!(result, I256::from(0));
     }
 }
-
-

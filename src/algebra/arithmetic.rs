@@ -1,6 +1,6 @@
 use crate::algebra::big_int::{BigInt, Zero};
 use std::cmp::{Eq, PartialEq};
-use std::ops::{Add, Sub, Mul};
+use std::ops::{Add, Mul, Sub};
 
 #[derive(Copy, Clone, Debug)]
 pub struct RingMod<T: BigInt> {
@@ -209,7 +209,6 @@ mod tests {
         assert_eq!(result_sub.value(), I256::from(2)); // (7 - 5) % 10 = 2
     }
 
-    
     #[test]
     fn test_ring_mod_addition() {
         let modulus = 10;

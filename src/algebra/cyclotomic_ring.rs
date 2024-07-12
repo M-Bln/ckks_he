@@ -53,39 +53,6 @@ where
             .splice(.., new_coefficients);
         self.polynomial.mut_coefficients().truncate(n);
     }
-
-    // TODO: maybe reduce the number of call to clone?
-    // fn reduce(&mut self) {
-    //     let n = self.dimension;
-    //     let coefficients = self.polynomial.ref_coefficients().to_vec();
-
-    //     let mut new_coefficients = coefficients[..n].to_vec();
-    //     for (index, coeff) in coefficients[n..].iter().enumerate() {
-    //         let shifted_index = index % n;
-    //         let shifted_coeff = new_coefficients[shifted_index].clone();
-    //         if (index - shifted_index) % (2 * n) != 0 {
-    //             new_coefficients[shifted_index] = shifted_coeff + coeff.clone();
-    //         } else {
-    //             new_coefficients[shifted_index] = shifted_coeff - coeff.clone();
-    //         }
-    //     }
-
-    //     self.polynomial.mut_coefficients().splice(.., new_coefficients);
-    //     self.polynomial.mut_coefficients().truncate(n);
-    // }
-
-    // fn reduce(&mut self){
-    // 	let n = self.dimension;
-    // 	for (index, coeff) in self.polynomial.mut_coefficients()[n..].iter().enumerate() {
-    // 	    let shifted_index = index % n;
-    // 	    let shifted_coef = self.polynomial.ref_coefficients()[shifted_index].clone();
-    // 	    if (index - shifted_index) % 2*n == 0 {
-    // 		self.polynomial.mut_coefficients()[shifted_index] = self.polynomial.ref_coefficients()[shifted_index].clone() + coeff;
-    // 	    } else {
-    // 		self.polynomial.mut_coefficients()[shifted_index] = self.polynomial.ref_coefficients()[shifted_index].clone() - coeff;
-    // 	    }
-    // 	}
-    // }
 }
 
 fn extend_by_zero<T: Zero + Clone>(coefficients: &mut Vec<T>, minimal_length: usize) {
@@ -169,7 +136,7 @@ where
 mod tests {
     use super::*;
     use crate::algebra::arithmetic::RingMod;
-    use crate::algebra::big_int::BigInt;
+    use bnum::types::I256;
 
     #[test]
     fn test_extend_with_zeros() {
@@ -185,15 +152,6 @@ mod tests {
         let cyclo_ring = CyclotomicRing::new(coefficients, dimension);
         assert_eq!(cyclo_ring.polynomial.coefficients(), vec![1, 2, 3, 0, 0]);
     }
-
-    // #[test]
-    // fn test_reduce() {
-    //     let dimension = 2;
-    //     let mut cyclo_ring = CyclotomicRing::new(vec![0, 0, 0, 0, 1], dimension);
-    //     cyclo_ring.reduce();
-    //     let expected_coefficients = vec![1, 0];
-    //     assert_eq!(cyclo_ring.polynomial.coefficients(), expected_coefficients);
-    // }
 
     #[test]
     fn test_reduce() {
@@ -242,34 +200,77 @@ mod tests {
         let result_product = poly1 * &poly2;
         assert_eq!(result_product.polynomial, expected_product.polynomial);
     }
+
+    #[test]
+    fn test_cyclotomic_ring_subtraction_256() {
+        let dimension = 5;
+        let modulus = I256::from(13);
+        let poly1 = CyclotomicRing::new(
+            vec![
+                RingMod::new(I256::from(1), modulus),
+                RingMod::new(I256::from(2), modulus),
+                RingMod::new(I256::from(3), modulus),
+            ],
+            dimension,
+        );
+        let poly2 = CyclotomicRing::new(
+            vec![
+                RingMod::new(I256::from(4), modulus),
+                RingMod::new(I256::from(5), modulus),
+                RingMod::new(I256::from(6), modulus),
+            ],
+            dimension,
+        );
+
+        let expected_difference = CyclotomicRing::new(
+            vec![
+                RingMod::new(I256::from(-3), modulus),
+                RingMod::new(I256::from(-3), modulus),
+                RingMod::new(I256::from(-3), modulus),
+            ],
+            dimension,
+        );
+
+        let result_difference = poly1 - &poly2;
+        assert_eq!(
+            result_difference.polynomial.coefficients(),
+            expected_difference.polynomial.coefficients()
+        );
+    }
+
+    #[test]
+    fn test_cyclotomic_ring_multiplication_256() {
+        let dimension = 2;
+        let modulus = I256::from(13);
+        let poly1 = CyclotomicRing::new(
+            vec![
+                RingMod::new(I256::from(1), modulus),
+                RingMod::new(I256::from(2), modulus),
+                RingMod::new(I256::from(3), modulus),
+            ],
+            dimension,
+        );
+        let poly2 = CyclotomicRing::new(
+            vec![
+                RingMod::new(I256::from(4), modulus),
+                RingMod::new(I256::from(5), modulus),
+                RingMod::new(I256::from(6), modulus),
+            ],
+            dimension,
+        );
+
+        let expected_product = CyclotomicRing::new(
+            vec![
+                RingMod::new(I256::from(-6), modulus),
+                RingMod::new(I256::from(12), modulus),
+            ],
+            dimension,
+        );
+
+        let result_product = poly1 * &poly2;
+        assert_eq!(
+            result_product.polynomial.coefficients(),
+            expected_product.polynomial.coefficients()
+        );
+    }
 }
-
-// impl<T> Add for CyclotomicRing<T>
-// where
-//     T: Add<Output = T> + Sub<Output = T> + Clone + Zero,
-// {
-//     type Output = Self;
-
-//     fn add(self, other: Self) -> Self::Output {
-//         assert_eq!(self.modulus, other.modulus, "Moduli must be equal for addition");
-//         let new_poly = self.polynomial + other.polynomial;
-//         let mut result = CyclotomicRing::new(new_poly.coefficients, self.modulus);
-//         result.reduce();
-//         result
-//     }
-// }
-
-// impl<T> Mul for CyclotomicRing<T>
-// where
-//     T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Clone + Zero,
-// {
-//     type Output = Self;
-
-//     fn mul(self, other: Self) -> Self::Output {
-//         assert_eq!(self.modulus, other.modulus, "Moduli must be equal for multiplication");
-//         let new_poly = self.polynomial * other.polynomial;
-//         let mut result = CyclotomicRing::new(new_poly.coefficients, self.modulus);
-//         result.reduce();
-//         result
-//     }
-// }

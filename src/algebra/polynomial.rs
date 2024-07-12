@@ -132,6 +132,7 @@ where
 mod tests {
     use super::*;
     use crate::algebra::arithmetic::RingMod;
+    use bnum::types::I256;
 
     #[test]
     fn test_polynomial_creation() {
@@ -203,5 +204,44 @@ mod tests {
         let poly = Polynomial::new(vec![0, 1, 0, 1]); // Represents x + x^3
         let value = poly.eval(2); // Evaluate at x = 2
         assert_eq!(value, 10); // 2 + 2^3 = 10
+    }
+
+    #[test]
+    fn test_polynomial_multiplication_256() {
+        let modulus = I256::from(13);
+        let poly1 = Polynomial::new(vec![
+            RingMod::new(I256::from(1), modulus),
+            RingMod::new(I256::from(2), modulus),
+            RingMod::new(I256::from(3), modulus),
+        ]);
+        let poly2 = Polynomial::new(vec![
+            RingMod::new(I256::from(4), modulus),
+            RingMod::new(I256::from(5), modulus),
+            RingMod::new(I256::from(6), modulus),
+        ]);
+
+        let expected_product = Polynomial::new(vec![
+            RingMod::new(I256::from(4), modulus),
+            RingMod::new(I256::from(13 % 13), modulus),
+            RingMod::new(I256::from(28 % 13), modulus),
+            RingMod::new(I256::from(27 % 13), modulus),
+            RingMod::new(I256::from(18 % 13), modulus),
+        ]);
+
+        let result_product = poly1.clone() * &poly2;
+        assert_eq!(result_product, expected_product);
+    }
+
+    #[test]
+    fn test_polynomial_evaluation_256() {
+        let modulus = I256::from(13);
+        let poly = Polynomial::new(vec![
+            RingMod::new(I256::from(1), modulus),
+            RingMod::new(I256::from(2), modulus),
+            RingMod::new(I256::from(3), modulus),
+        ]);
+        let x = RingMod::new(I256::from(2), modulus);
+        let value = poly.eval(x); // Evaluate at x = 2
+        assert_eq!(value.value(), I256::from(17 % 13)); // 1 + 2*2 + 3*2^2 = 17 % 13 = 4
     }
 }
