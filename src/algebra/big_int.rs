@@ -1,5 +1,5 @@
 use std::fmt;
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Rem, Sub};
 
 pub trait BigInt:
     Sized
@@ -7,10 +7,12 @@ pub trait BigInt:
     + Sub<Output = Self>
     + Mul<Output = Self>
     + Div<Output = Self>
+    + Rem<Output = Self>
     + for<'a> Add<&'a Self, Output = Self>
     + for<'a> Sub<&'a Self, Output = Self>
     + for<'a> Mul<&'a Self, Output = Self>
     + for<'a> Div<&'a Self, Output = Self>
+    + for<'a> Rem<&'a Self, Output = Self>
     + Copy
     + fmt::Display
     + fmt::Debug
@@ -69,6 +71,14 @@ mod tests {
     }
 
     #[test]
+    fn test_rem() {
+        let a = i64::new(17);
+        let b = i64::new(5);
+        let result = a % b;
+        assert_eq!(result, 2);
+    }
+
+    #[test]
     fn test_add_ref() {
         let a = i64::new(15);
         let b = i64::new(25);
@@ -98,5 +108,13 @@ mod tests {
         let b = i64::new(4);
         let result = a / &b;
         assert_eq!(result, 20);
+    }
+
+    #[test]
+    fn test_mod_ref() {
+        let a = i64::new(20);
+        let b = i64::new(4);
+        let result = a % &b;
+        assert_eq!(result, 0);
     }
 }
