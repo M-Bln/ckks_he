@@ -21,8 +21,16 @@ impl<T: BigInt> Encoder<T> {
         let vandermonde_matrix =
             Self::generate_vandermonde_matrix(&roots_vandermonde, dimension_exponent);
         let sigma_inverse_matrix = Self::generate_sigma_inverse_matrix(&vandermonde_matrix, &roots);
+
+
+	let mut inverse_roots = C64::inverse_all_2_to_the_h_th_roots_of_unity(dimension_exponent + 1);
+        inverse_roots.truncate(2_usize.pow(dimension_exponent));
+        let inverse_roots_vandermonde = C64::inverse_all_2_to_the_h_th_roots_of_unity(dimension_exponent);
+        let inverse_vandermonde_matrix =
+            Self::generate_vandermonde_matrix(&inverse_roots_vandermonde, dimension_exponent);
+	
         let sigma_matrix =
-            Self::generate_sigma_matrix(&vandermonde_matrix, &roots, dimension_exponent);
+            Self::generate_sigma_matrix(&inverse_vandermonde_matrix, &inverse_roots, dimension_exponent);
 
         Encoder {
             dimension_exponent,
@@ -68,12 +76,13 @@ impl<T: BigInt> Encoder<T> {
         dimension_exponent: u32,
     ) -> Vec<Vec<C64>> {
         let n = 2_usize.pow(dimension_exponent);
+	let n_complex = C64::new(n as f64, 0.0);
         let mut matrix = vandermonde_matrix.to_vec();
 
         for i in 0..n {
-            let factor = roots[n - i - 1];
+            let factor = roots[i];
             for j in 0..n {
-                matrix[i][j] = matrix[i][j] * factor;
+                matrix[i][j] = matrix[i][j] * factor / n_complex ;
             }
         }
 
@@ -91,6 +100,30 @@ impl<T: BigInt> Encoder<T> {
         result
     }
 }
+
+fn multiply_matrices(a: &[Vec<C64>], b: &[Vec<C64>]) -> Vec<Vec<C64>> {
+    let n = a.len();
+    let mut result = vec![vec![C64::new(0.0, 0.0); n]; n];
+    
+    for i in 0..n {
+        for j in 0..n {
+            for k in 0..n {
+                result[i][j] = result[i][j] + a[i][k] * b[k][j];
+            }
+        }
+    }
+
+    result
+}
+
+fn identity_matrix(n: usize) -> Vec<Vec<C64>> {
+    let mut matrix = vec![vec![C64::new(0.0, 0.0); n]; n];
+    for i in 0..n {
+        matrix[i][i] = C64::new(1.0, 0.0);
+    }
+    matrix
+}
+
 
 // #[derive(Debug)]
 // pub struct Encoder<T: BigInt> {
@@ -203,6 +236,35 @@ mod tests {
                 print!("({:.4}, {:.4}) ", element.real(), element.imaginary());
             }
             println!();
+        }
+    }
+
+    #[test]
+    fn test_sigma_matrices_are_inverses() {
+        let dimension_exponent = 3;
+        let modulus = I256::new(13);
+        let encoder = Encoder::new(dimension_exponent, modulus.clone());
+
+        // Multiply sigma_matrix by sigma_inverse_matrix
+        let product = multiply_matrices(&encoder.sigma_matrix, &encoder.sigma_inverse_matrix);
+
+        // Generate the identity matrix
+        let identity = identity_matrix(product.len());
+
+        // Check if the product is equal to the identity matrix
+        for i in 0..product.len() {
+            for j in 0..product.len() {
+                assert!(
+                    (product[i][j].real() - identity[i][j].real()).abs() < 1e-10,
+                    "Real part mismatch at ({}, {}): expected {}, got {}",
+                    i, j, identity[i][j].real(), product[i][j].real()
+                );
+                assert!(
+                    (product[i][j].imaginary() - identity[i][j].imaginary()).abs() < 1e-10,
+                    "Imaginary part mismatch at ({}, {}): expected {}, got {}",
+                    i, j, identity[i][j].imaginary(), product[i][j].imaginary()
+                );
+            }
         }
     }
 }

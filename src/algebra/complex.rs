@@ -68,6 +68,23 @@ pub trait Complex:
         }
         result
     }
+
+    fn inverse_all_2_to_the_h_th_roots_of_unity(h: u32) -> Vec<Self> {
+        if h == 0 {
+            return vec![Self::new(Self::Real::from(1.0), Self::Real::from(0.0))];
+        }
+        let mut result = Vec::with_capacity(2_usize.pow(h));
+        let angle_0 = -2.0 * PI / (2_u64.pow(h) as f64);
+        result.push(Self::new(Self::Real::from(1.0), Self::Real::from(0.0)));
+        for k in 1..2_u64.pow(h) {
+            let angle = angle_0 * (k as f64);
+            result.push(Self::new(
+                Self::Real::from(angle.cos()),
+                Self::Real::from(angle.sin()),
+            ));
+        }
+        result
+    }
 }
 
 #[derive(Clone, Copy)]
