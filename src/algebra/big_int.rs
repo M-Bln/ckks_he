@@ -14,6 +14,7 @@ pub trait BigInt:
     + for<'a> Div<&'a Self, Output = Self>
     + for<'a> Rem<&'a Self, Output = Self>
     + Copy
+    + Default
     + fmt::Display
     + fmt::Debug
     + From<i64>

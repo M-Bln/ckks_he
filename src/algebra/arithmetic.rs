@@ -3,13 +3,13 @@ use std::cmp::{Eq, PartialEq};
 use std::ops::{Add, Mul};
 
 #[derive(Copy, Clone, Debug)]
-struct RingMod<T: BigInt> {
-    modulus: T,
+pub struct RingMod<T: BigInt> {
     value: T,
+    modulus: T,
 }
 
 impl<T: BigInt> RingMod<T> {
-    pub fn new(modulus: T, value: T) -> Self {
+    pub fn new(value: T, modulus: T) -> Self {
         RingMod {
             modulus,
             value: value % &modulus,
@@ -101,6 +101,7 @@ impl<T: BigInt> PartialEq for RingMod<T> {
     }
 }
 
+
 impl<T: BigInt> Eq for RingMod<T> {}
 
 #[cfg(test)]
@@ -113,8 +114,8 @@ mod tests {
         let value1 = 7;
         let value2 = 5;
 
-        let ring_mod1 = RingMod::new(modulus, value1);
-        let ring_mod2 = RingMod::new(modulus, value2);
+        let ring_mod1 = RingMod::new(value1, modulus);
+        let ring_mod2 = RingMod::new(value2, modulus);
 
         let result_add = ring_mod1 + ring_mod2;
         assert_eq!(result_add.value(), 2); // (7 + 5) % 10 = 2
@@ -126,8 +127,8 @@ mod tests {
         let value1 = 7;
         let value2 = 5;
 
-        let ring_mod1 = RingMod::new(modulus, value1);
-        let ring_mod2 = RingMod::new(modulus, value2);
+        let ring_mod1 = RingMod::new( value1, modulus);
+        let ring_mod2 = RingMod::new( value2, modulus);
 
         let result_mul = ring_mod1 * ring_mod2;
         assert_eq!(result_mul.value(), 5); // (7 * 5) % 10 = 5
@@ -139,8 +140,8 @@ mod tests {
         let value1 = 7;
         let value2 = 7;
 
-        let ring_mod1 = RingMod::new(modulus, value1);
-        let ring_mod2 = RingMod::new(modulus, value2);
+        let ring_mod1 = RingMod::new( value1, modulus);
+        let ring_mod2 = RingMod::new( value2, modulus);
 
         assert_eq!(ring_mod1, ring_mod2);
     }
@@ -151,8 +152,8 @@ mod tests {
         let value1 = 7;
         let value2 = 5;
 
-        let ring_mod1 = RingMod::new(modulus, value1);
-        let ring_mod2 = RingMod::new(modulus, value2);
+        let ring_mod1 = RingMod::new( value1, modulus);
+        let ring_mod2 = RingMod::new( value2, modulus);
 
         assert_ne!(ring_mod1, ring_mod2);
     }

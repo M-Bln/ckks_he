@@ -12,6 +12,7 @@ pub trait Complex:
     + for<'a> Mul<&'a Self, Output = Self>
     + for<'a> Div<&'a Self, Output = Self>
     + Copy
+    + Default
     + fmt::Display
     + fmt::Debug
 {
@@ -156,6 +157,12 @@ impl fmt::Display for C64 {
 impl fmt::Debug for C64 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "({} + {}i)", self.real, self.imaginary)
+    }
+}
+
+impl Default for C64 {
+    fn default() -> Self {
+	Self::new(0.0, 0.0)
     }
 }
 
