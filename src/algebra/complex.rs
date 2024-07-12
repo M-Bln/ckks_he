@@ -162,7 +162,7 @@ impl fmt::Debug for C64 {
 
 impl Default for C64 {
     fn default() -> Self {
-	Self::new(0.0, 0.0)
+        Self::new(0.0, 0.0)
     }
 }
 
