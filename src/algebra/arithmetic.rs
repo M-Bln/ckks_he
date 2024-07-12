@@ -1,4 +1,4 @@
-use crate::algebra::big_int::BigInt;
+use crate::algebra::big_int::{BigInt, Zero};
 use std::cmp::{Eq, PartialEq};
 use std::ops::{Add, Mul};
 
@@ -8,6 +8,11 @@ pub struct RingMod<T: BigInt> {
     modulus: T,
 }
 
+impl<T: BigInt> Zero for RingMod<T> {
+    fn zero(&self) -> Self {
+        Self::new(T::from(0), self.modulus)
+    }
+}
 impl<T: BigInt> RingMod<T> {
     pub fn new(value: T, modulus: T) -> Self {
         RingMod {

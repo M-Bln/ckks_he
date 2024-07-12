@@ -1,6 +1,10 @@
 use std::fmt;
 use std::ops::{Add, Div, Mul, Rem, Sub};
 
+pub trait Zero: Sized {
+    fn zero(&self) -> Self;
+}
+
 pub trait BigInt:
     Sized
     + Add<Output = Self>
@@ -19,8 +23,15 @@ pub trait BigInt:
     + fmt::Debug
     + From<i64>
     + Eq
+    + Zero
 {
     fn new(value: i64) -> Self;
+}
+
+impl<T: BigInt> Zero for T {
+    fn zero(&self) -> Self {
+        T::from(0)
+    }
 }
 
 impl BigInt for i64 {

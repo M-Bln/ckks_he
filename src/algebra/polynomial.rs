@@ -1,65 +1,70 @@
 use crate::algebra::arithmetic::RingMod;
-use crate::algebra::big_int::BigInt;
+use crate::algebra::big_int::{BigInt, Zero};
 use std::ops::{Add, Mul};
 
-// Polynomial which are always checked to remove leading zeros so that degree = coefficients.len() -1
 #[derive(Clone, PartialEq, Eq, Debug)]
-struct CheckedPolynomial<T> {
+struct Polynomial<T> {
     coefficients: Vec<T>,
 }
 
-impl<T> CheckedPolynomial<T> {
+impl<T> Polynomial<T> {
     pub fn new(coefficients: Vec<T>) -> Self {
-        CheckedPolynomial { coefficients }
-    }
-
-    // Get the degree of the polynomial, we agree that degree(0) = 0
-    pub fn degree(&self) -> usize {
-        if self.coefficients.len() >= 1 {
-            self.coefficients.len() - 1
-        } else {
-            0
-        }
-    }
-
-    pub fn is_zero(&self) -> bool {
-        self.coefficients.is_empty()
+        Polynomial { coefficients }
     }
 }
 
-impl<T: BigInt> Add<&CheckedPolynomial<RingMod<T>>> for CheckedPolynomial<RingMod<T>> {
+impl<T> Add<&Polynomial<T>> for Polynomial<T>
+where
+    T: Add<Output = T> + Clone,
+{
     type Output = Self;
-    fn add(self, other: &CheckedPolynomial<RingMod<T>>) -> CheckedPolynomial<RingMod<T>> {
-        if self.is_zero() & other.is_zero() {
-            return CheckedPolynomial::<RingMod<T>>::new(vec![]);
-        }
-        if other.is_zero() {
-            return self;
-        }
-        if self.is_zero() {
-            return other.clone();
-        }
-        let modulus: T = self.coefficients[0].modulus();
-        let zero = RingMod::<T>::new(T::from(0), modulus);
 
-        let max_length = std::cmp::max(self.coefficients.len(), other.coefficients.len());
-        let mut current_length = 0;
-        let mut coefficients: Vec<RingMod<T>> = Vec::new();
-        for i in 0..max_length {
-            let mut coeff = RingMod::<T>::new(T::from(0), modulus);
-            if i < self.coefficients.len() {
-                coeff = coeff + self.coefficients[i];
-            }
-            if i < other.coefficients.len() {
-                coeff = coeff + other.coefficients[i];
-            }
-            if coeff != zero {
-                current_length = i + 1;
-            }
-            coefficients.push(coeff);
+    fn add(self, other: &Polynomial<T>) -> Self::Output {
+        let max_len = std::cmp::max(self.coefficients.len(), other.coefficients.len());
+        let mut result_coeffs = Vec::with_capacity(max_len);
+
+        for i in 0..max_len {
+            let coeff1 = self.coefficients.get(i).cloned();
+            let coeff2 = other.coefficients.get(i).cloned();
+
+            let sum = match (coeff1, coeff2) {
+                (Some(c1), Some(c2)) => c1 + c2,
+                (Some(c1), None) => c1,
+                (None, Some(c2)) => c2,
+                (None, None) => unreachable!(),
+            };
+
+            result_coeffs.push(sum);
         }
-        coefficients.truncate(current_length);
-        CheckedPolynomial::<RingMod<T>>::new(coefficients)
+
+        Polynomial::new(result_coeffs)
+    }
+}
+
+impl<T> Mul<&Polynomial<T>> for Polynomial<T>
+where
+    T: Mul<Output = T> + Add<Output = T> + Clone + Zero,
+{
+    type Output = Self;
+
+    fn mul(self, other: &Polynomial<T>) -> Self::Output {
+        if self.coefficients.is_empty() | other.coefficients.is_empty() {
+            return Polynomial::new(vec![]);
+        }
+
+        let result_len = self.coefficients.len() + other.coefficients.len() - 1;
+        let mut result_coeffs = vec![self.coefficients[0].zero(); result_len];
+
+        for i in 0..self.coefficients.len() {
+            for j in 0..other.coefficients.len() {
+                if i + j < result_len {
+                    result_coeffs[i + j] = result_coeffs[i + j].clone()
+                        + (self.coefficients[i].clone() * other.coefficients[j].clone());
+                }
+            }
+        }
+
+        Polynomial::new(result_coeffs)
     }
 }
 
@@ -76,137 +81,57 @@ mod tests {
             RingMod::new(5, 13),
             RingMod::new(3, 13),
         ];
-        let poly = CheckedPolynomial::new(coefficients.clone());
+        let poly = Polynomial::new(coefficients.clone());
         assert_eq!(poly.coefficients, coefficients);
-    }
-
-    #[test]
-    fn test_polynomial_degree() {
-        let coefficients = vec![
-            RingMod::new(10, 13),
-            RingMod::new(5, 13),
-            RingMod::new(3, 13),
-        ];
-        let poly = CheckedPolynomial::new(coefficients);
-        assert_eq!(poly.degree(), 2);
-
-        let zero_poly: CheckedPolynomial<RingMod<i64>> = CheckedPolynomial::new(vec![]);
-        assert_eq!(zero_poly.degree(), 0);
-    }
-
-    #[test]
-    fn test_polynomial_is_zero() {
-        let zero_poly: CheckedPolynomial<RingMod<i64>> = CheckedPolynomial::new(vec![]);
-        assert!(zero_poly.is_zero());
-
-        let non_zero_poly = CheckedPolynomial::new(vec![RingMod::new(10, 13)]);
-        assert!(!non_zero_poly.is_zero());
     }
 
     #[test]
     fn test_polynomial_addition() {
         let modulus = 13;
-        let poly1 = CheckedPolynomial::new(vec![
+        let poly1 = Polynomial::new(vec![
             RingMod::new(1, modulus),
             RingMod::new(2, modulus),
             RingMod::new(3, modulus),
         ]);
-        let poly2 = CheckedPolynomial::new(vec![
+        let poly2 = Polynomial::new(vec![
             RingMod::new(4, modulus),
             RingMod::new(5, modulus),
             RingMod::new(6, modulus),
         ]);
 
-        let expected_sum = CheckedPolynomial::new(vec![
+        let expected_sum = Polynomial::new(vec![
             RingMod::new(5, modulus),
             RingMod::new(7, modulus),
             RingMod::new(9, modulus),
         ]);
 
-        let result_sum = poly1 + &poly2;
-
+        let result_sum = poly1.clone() + &poly2;
         assert_eq!(result_sum, expected_sum);
     }
 
     #[test]
-    fn test_polynomial_addition_distinct_degrees() {
+    fn test_polynomial_multiplication() {
         let modulus = 13;
-        let poly1 =
-            CheckedPolynomial::new(vec![RingMod::new(1, modulus), RingMod::new(2, modulus)]);
-        let poly2 = CheckedPolynomial::new(vec![
-            RingMod::new(4, modulus),
-            RingMod::new(5, modulus),
-            RingMod::new(6, modulus),
-        ]);
-
-        let expected_sum = CheckedPolynomial::new(vec![
-            RingMod::new(5, modulus),
-            RingMod::new(7, modulus),
-            RingMod::new(6, modulus),
-        ]);
-
-        let result_sum = poly1 + &poly2;
-
-        assert_eq!(result_sum, expected_sum);
-    }
-
-    #[test]
-    fn test_polynomial_addition_smaller_degree() {
-        let modulus = 13;
-        let poly1 = CheckedPolynomial::new(vec![
-            RingMod::new(1, modulus),
-            RingMod::new(2, modulus),
-            RingMod::new(7, modulus),
-        ]);
-        let poly2 = CheckedPolynomial::new(vec![
-            RingMod::new(4, modulus),
-            RingMod::new(5, modulus),
-            RingMod::new(6, modulus),
-        ]);
-
-        let expected_sum =
-            CheckedPolynomial::new(vec![RingMod::new(5, modulus), RingMod::new(7, modulus)]);
-
-        let result_sum = poly1 + &poly2;
-
-        assert_eq!(result_sum, expected_sum);
-    }
-
-    #[test]
-    fn test_polynomial_addition_result_zero() {
-        let modulus = 13;
-        let poly1 = CheckedPolynomial::new(vec![
-            RingMod::new(1, modulus),
-            RingMod::new(2, modulus),
-            RingMod::new(7, modulus),
-        ]);
-        let poly2 = CheckedPolynomial::new(vec![
-            RingMod::new(12, modulus),
-            RingMod::new(11, modulus),
-            RingMod::new(-7, modulus),
-        ]);
-
-        let expected_sum = CheckedPolynomial::new(vec![]);
-
-        let result_sum = poly1 + &poly2;
-
-        assert_eq!(result_sum, expected_sum);
-    }
-
-    #[test]
-    fn test_polynomial_addition_with_zero() {
-        let modulus = 13;
-        let poly1 = CheckedPolynomial::new(vec![
+        let poly1 = Polynomial::new(vec![
             RingMod::new(1, modulus),
             RingMod::new(2, modulus),
             RingMod::new(3, modulus),
         ]);
-        let zero_poly: CheckedPolynomial<RingMod<i64>> = CheckedPolynomial::new(vec![]);
+        let poly2 = Polynomial::new(vec![
+            RingMod::new(4, modulus),
+            RingMod::new(5, modulus),
+            RingMod::new(6, modulus),
+        ]);
 
-        let result_sum = poly1.clone() + &zero_poly;
-        assert_eq!(result_sum, poly1);
+        let expected_product = Polynomial::new(vec![
+            RingMod::new(4, modulus),
+            RingMod::new(13, modulus),
+            RingMod::new(28, modulus),
+            RingMod::new(27, modulus),
+            RingMod::new(18, modulus),
+        ]);
 
-        let result_sum = zero_poly + &poly1;
-        assert_eq!(result_sum, poly1);
+        let result_product = poly1.clone() * &poly2;
+        assert_eq!(result_product, expected_product);
     }
 }
