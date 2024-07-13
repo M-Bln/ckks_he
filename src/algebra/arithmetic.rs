@@ -1,5 +1,6 @@
-use crate::algebra::big_int::{f64_to_i256, i256_to_f64, BigInt, Zero};
+use crate::algebra::big_int::{BigInt, Zero};
 use crate::algebra::complex::{Complex, C64};
+use crate::algebra::conversion_rounding::{f64_to_i256, i256_to_f64};
 use std::cmp::{Eq, PartialEq};
 use std::ops::{Add, Mul, Sub};
 
@@ -7,7 +8,7 @@ use bnum::types::I256;
 
 #[derive(Copy, Clone, Debug)]
 pub struct RingMod<T: BigInt> {
-    value: T,
+    pub value: T,
     modulus: T,
 }
 
@@ -144,16 +145,16 @@ impl<T: BigInt> PartialEq for RingMod<T> {
 
 impl<T: BigInt> Eq for RingMod<T> {}
 
-impl RingMod<I256> {
-    pub fn to_c64(&self) -> C64 {
-        let real = i256_to_f64(self.value.clone());
-        C64::new(real, 0.0)
-    }
-}
+// impl RingMod<I256> {
+//     pub fn to_c64(&self) -> C64 {
+//         let real = i256_to_f64(self.value.clone());
+//         C64::new(real, 0.0)
+//     }
+// }
 
-pub fn c64_to_ring_mod_256(complex: &C64, modulus: I256) -> RingMod<I256> {
-    RingMod::new(f64_to_i256(complex.real()), modulus)
-}
+// pub fn c64_to_ring_mod_256(complex: &C64, modulus: I256) -> RingMod<I256> {
+//     RingMod::new(f64_to_i256(complex.real()), modulus)
+// }
 
 #[cfg(test)]
 mod tests {

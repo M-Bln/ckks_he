@@ -1,5 +1,5 @@
 use crate::algebra::arithmetic::RingMod;
-use crate::algebra::big_int::{f64_to_i256, i256_to_f64, Zero};
+use crate::algebra::big_int::Zero;
 use crate::algebra::complex::{Complex, C64};
 use crate::algebra::cyclotomic_ring::CyclotomicRing;
 use bnum::types::I256;
@@ -132,14 +132,14 @@ where
 }
 
 impl Polynomial<I256> {
-    pub fn to_f64(&self) -> Polynomial<f64> {
-        let coefficients = self
-            .coefficients
-            .iter()
-            .map(|&coeff| i256_to_f64(coeff))
-            .collect();
-        Polynomial { coefficients }
-    }
+    // pub fn to_f64(&self) -> Polynomial<f64> {
+    //     let coefficients = self
+    //         .coefficients
+    //         .iter()
+    //         .map(|&coeff| i256_to_f64(coeff))
+    //         .collect();
+    //     Polynomial { coefficients }
+    // }
 
     pub fn modulo(&self, modulus: I256) -> Polynomial<RingMod<I256>> {
         let coefficients = self
@@ -151,44 +151,44 @@ impl Polynomial<I256> {
     }
 }
 
-impl Polynomial<RingMod<I256>> {
-    pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<RingMod<I256>> {
-        CyclotomicRing::new(self.coefficients(), 2_usize.pow(dimension_exponent))
-    }
-}
+// impl Polynomial<RingMod<I256>> {
+//     pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<RingMod<I256>> {
+//         CyclotomicRing::new(self.coefficients(), 2_usize.pow(dimension_exponent))
+//     }
+// }
 
-impl Polynomial<f64> {
-    pub fn to_i256(&self) -> Polynomial<I256> {
-        let coefficients = self
-            .coefficients
-            .iter()
-            .map(|&coeff| f64_to_i256(coeff))
-            .collect();
-        Polynomial { coefficients }
-    }
-}
+// impl Polynomial<f64> {
+//     pub fn to_i256(&self) -> Polynomial<I256> {
+//         let coefficients = self
+//             .coefficients
+//             .iter()
+//             .map(|&coeff| f64_to_i256(coeff))
+//             .collect();
+//         Polynomial { coefficients }
+//     }
+// }
 
-impl Polynomial<C64> {
-    pub fn to_i256(&self) -> Polynomial<I256> {
-        let coefficients = self
-            .coefficients
-            .iter()
-            .map(|&coeff| f64_to_i256(coeff.real()))
-            .collect();
-        Polynomial { coefficients }
-    }
-}
+// impl Polynomial<C64> {
+//     pub fn to_i256(&self) -> Polynomial<I256> {
+//         let coefficients = self
+//             .coefficients
+//             .iter()
+//             .map(|&coeff| f64_to_i256(coeff.real()))
+//             .collect();
+//         Polynomial { coefficients }
+//     }
+// }
 
-impl Polynomial<RingMod<I256>> {
-    pub fn to_c64(&self) -> Polynomial<C64> {
-        let coefficients = self
-            .coefficients
-            .iter()
-            .map(|coeff| coeff.to_c64())
-            .collect();
-        Polynomial { coefficients }
-    }
-}
+// impl Polynomial<RingMod<I256>> {
+//     pub fn to_c64(&self) -> Polynomial<C64> {
+//         let coefficients = self
+//             .coefficients
+//             .iter()
+//             .map(|coeff| coeff.to_c64())
+//             .collect();
+//         Polynomial { coefficients }
+//     }
+// }
 
 #[cfg(test)]
 mod tests {

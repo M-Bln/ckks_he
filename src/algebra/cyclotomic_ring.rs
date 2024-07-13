@@ -8,7 +8,7 @@ use bnum::types::I256;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct CyclotomicRing<T> {
-    polynomial: Polynomial<T>,
+    pub polynomial: Polynomial<T>,
     pub dimension: usize,
 }
 
@@ -136,17 +136,17 @@ where
     }
 }
 
-impl CyclotomicRing<RingMod<I256>> {
-    pub fn to_c64(&self) -> Polynomial<C64> {
-        let coefficients = self
-            .polynomial
-            .ref_coefficients()
-            .iter()
-            .map(|coeff| coeff.to_c64())
-            .collect();
-        Polynomial::new(coefficients)
-    }
-}
+// impl CyclotomicRing<RingMod<I256>> {
+//     pub fn to_c64(&self) -> Polynomial<C64> {
+//         let coefficients = self
+//             .polynomial
+//             .ref_coefficients()
+//             .iter()
+//             .map(|coeff| coeff.to_c64())
+//             .collect();
+//         Polynomial::new(coefficients)
+//     }
+// }
 
 #[cfg(test)]
 mod tests {

@@ -1,6 +1,7 @@
-use crate::algebra::arithmetic::{c64_to_ring_mod_256, RingMod};
+use crate::algebra::arithmetic::RingMod;
 use crate::algebra::big_int::BigInt;
 use crate::algebra::complex::{Complex, C64};
+use crate::algebra::conversion_rounding::c64_to_ring_mod_256;
 use crate::algebra::cyclotomic_ring::CyclotomicRing;
 use crate::algebra::linear_algebra::{apply_matrix, identity_matrix, multiply_matrices};
 use crate::algebra::polynomial::Polynomial;
