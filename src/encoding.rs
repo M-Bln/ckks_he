@@ -20,25 +20,25 @@ impl<T: BigInt> Encoder<T> {
     /// $\sigma$ and $\sigma\inv$ are stored as matrices of roots of unity.
     // TODO use FFT rather than matrices (no emergency, probably not the bottleneck)
     pub fn new(dimension_exponent: u32, modulus: T) -> Self {
-	// generate (1, \zeta, \zeta^2, \zeta^3, ..., \zeta^{2^{h+1}-1})
+	// We take a primitive 2^{h+1}-th root of unity \zeta = \exp(2 i \pi/ 2^{h+1})
+	// Generate (1, \zeta, \zeta^2, \zeta^3, ..., \zeta^{2^{h+1}-1})
         let mut roots = C64::all_2_to_the_h_th_roots_of_unity(dimension_exponent + 1);
-	// generate (1, \zeta^2, \zeta^4, \zeta^6, ..., \zeta^{2^{h+2}-2})
+	
+	// Generate (1, \zeta^2, \zeta^4, \zeta^6, ..., \zeta^{2^{h+2}-2})
 	let roots_vandermonde = even_index_elements(&roots);
-        roots.truncate(2_usize.pow(dimension_exponent));
 
+	// Keep (1, \zeta, \zeta^2, ..., \zeta^{2^h-1})
+	roots.truncate(2_usize.pow(dimension_exponent));
+
+	// Compute the Vandermonde matrix with coefficient at line i and column j: (\zeta^{2(i-1)(j-1)})
 	let vandermonde_matrix =
             Self::generate_vandermonde_matrix(&roots_vandermonde, dimension_exponent);
         let sigma_inverse_matrix = Self::generate_sigma_inverse_matrix(&vandermonde_matrix, &roots);
 
 	
-        //let roots_vandermonde = C64::all_2_to_the_h_th_roots_of_unity(dimension_exponent);
-
 	let inverse_roots: Vec<C64> = roots.iter().map(|z| z.conjugate()).collect();
 	let inverse_roots_vandermonde: Vec<C64> = roots_vandermonde.iter().map(|z| z.conjugate()).collect();
 
-//	let mut inverse_roots = C64::inverse_all_2_to_the_h_th_roots_of_unity(dimension_exponent + 1);
-//        inverse_roots.truncate(2_usize.pow(dimension_exponent));
-//        let inverse_roots_vandermonde = C64::inverse_all_2_to_the_h_th_roots_of_unity(dimension_exponent);
         let inverse_vandermonde_matrix =
             Self::generate_vandermonde_matrix(&inverse_roots_vandermonde, dimension_exponent);
 	
@@ -147,40 +147,6 @@ fn identity_matrix(n: usize) -> Vec<Vec<C64>> {
 }
 
 
-// #[derive(Debug)]
-// pub struct Encoder<T: BigInt> {
-//     dimension_exponent: u32,
-//     modulus: T,
-//     sigma_inverse_matrix: Vec<Vec<C64>>,
-//     sigma_matrix: Vec<Vec<C64>>,
-// }
-
-// impl<T: BigInt> Encoder<T> {
-//     pub fn new(dimension_exponent: u32, modulus: T) -> Self {
-//         let roots = C64::all_2_to_the_h_th_roots_of_unity(dimension_exponent);
-//         let vandermonde_matrix = Self::generate_vandermonde_matrix(&roots, dimension_exponent);
-
-//         Encoder {
-//             dimension_exponent,
-//             modulus,
-//             vandermonde_matrix,
-//         }
-//     }
-
-//     fn generate_vandermonde_matrix(roots: &[C64], dimension_exponent: u32) -> Vec<Vec<C64>> {
-//         let n = 2_usize.pow(dimension_exponent);
-//         let mut matrix = vec![vec![C64::new(0.0, 0.0); n]; n];
-
-//         for i in 0..n {
-//             for j in 0..n {
-//                 matrix[i][j] = roots[(i * j) % n].clone();
-//             }
-//         }
-
-//         matrix
-//     }
-// }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -191,6 +157,8 @@ mod tests {
 
     #[test]
     fn test_sigma_inverse_matrix_evaluation() {
+	// We check that sigma_inverse indeed compute canonical embedding, i.e.
+	// the evaluation of the polynomial at primitive roots of unity
         let dimension_exponent = 3;
         let modulus = I256::new(13);
         let encoder = Encoder::new(dimension_exponent, modulus.clone());
@@ -215,9 +183,8 @@ mod tests {
         println!("poly_c64: {:?}", poly_c64);
 
         // Generate primitive 2^{h+1} roots of unity
-        let roots = C64::primitive_2_to_the_h_th_roots_of_unity(dimension_exponent + 1); // C64::primitive_2_to_the_h_plus_1_th_roots_of_unity(dimension_exponent as usize);
-                                                                                         //let roots = C64::all_2_to_the_h_th_roots_of_unity(dimension_exponent);
-
+        let roots = C64::primitive_2_to_the_h_th_roots_of_unity(dimension_exponent + 1);
+	
         println!("root: {:?}", roots);
         // Evaluate polynomial at these roots
         let evaluations: Vec<C64> = roots
