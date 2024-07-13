@@ -27,21 +27,18 @@ impl Encoder<I256> {
 
         // Step 1: Apply projection_inverse to plaintext
         let projection_inverse_result = self.projection_inverse(&plaintext);
-        println!("Projection Inverse Result: {:?}", projection_inverse_result);
 
         // Step 2: Apply sigma_inverse to the result of projection_inverse
         let sigma_inverse_result = self.sigma_inverse(&projection_inverse_result);
-        println!("Sigma Inverse Result: {:?}", sigma_inverse_result);
 
         // Step 3: Convert the polynomial to I256
         let integer_polynomial = sigma_inverse_result.to_i256();
-        println!("Integer Polynomial: {:?}", integer_polynomial);
 
-        // Step 4: Apply modulus to the polynomial
+        // Step 4: Reduce the polynomial modulo modulus
         let modular_polynomial = integer_polynomial.modulo(self.modulus.clone());
         println!("Modular Polynomial: {:?}", modular_polynomial);
 
-        // Step 5: Convert to CyclotomicRing
+        // Step 5: Reduce modulo the cyclotomic polynomial
         let cyclotomic_polynomial = modular_polynomial.to_cyclotomic(self.dimension_exponent);
         println!("Cyclotomic Polynomial: {:?}", cyclotomic_polynomial);
 
@@ -55,15 +52,15 @@ impl Encoder<I256> {
             "Message dimension does not match expected dimension"
         );
 
-        // Step 1: Convert cyclotomic ring to Polynomial<C64>
+        // Step 1: Convert to complex coefficients
         let complex_polynomial = message.to_c64();
         println!("Complex Polynomial: {:?}", complex_polynomial);
 
-        // Step 2: Apply sigma to the polynomial
+        // Step 2: Apply sigma
         let canonical_embedding = self.sigma(&complex_polynomial);
         println!("Canonical Embedding: {:?}", canonical_embedding);
 
-        // Step 3: Apply projection to the result of sigma
+        // Step 3: Project to message space
         let projection_result = self.projection(&canonical_embedding);
         println!("Projection Result: {:?}", projection_result);
 
@@ -122,7 +119,7 @@ impl<T: BigInt> Encoder<T> {
         // Compute the Vandermonde matrix with coefficient at line i and column j: (\zeta^{2(i-1)(j-1)})
         let vandermonde_matrix =
             Self::generate_vandermonde_matrix(&roots_vandermonde, dimension_exponent);
-        let sigma_inverse_matrix = Self::generate_sigma_inverse_matrix(&vandermonde_matrix, &roots);
+        let sigma_matrix = Self::generate_sigma_matrix(&vandermonde_matrix, &roots);
 
         let inverse_roots: Vec<C64> = roots.iter().map(|z| z.conjugate()).collect();
         let inverse_roots_vandermonde: Vec<C64> =
@@ -131,7 +128,7 @@ impl<T: BigInt> Encoder<T> {
         let inverse_vandermonde_matrix =
             Self::generate_vandermonde_matrix(&inverse_roots_vandermonde, dimension_exponent);
 
-        let sigma_matrix = Self::generate_sigma_matrix(
+        let sigma_inverse_matrix = Self::generate_sigma_inverse_matrix(
             &inverse_vandermonde_matrix,
             &inverse_roots,
             dimension_exponent,
@@ -173,11 +170,11 @@ impl<T: BigInt> Encoder<T> {
     }
 
     fn sigma(&self, p: &Polynomial<C64>) -> Vec<C64> {
-        apply_matrix(&self.sigma_inverse_matrix, p.ref_coefficients())
+        apply_matrix(&self.sigma_matrix, p.ref_coefficients())
     }
 
     fn sigma_inverse(&self, z: &[C64]) -> Polynomial<C64> {
-        Polynomial::<C64>::new(apply_matrix(&self.sigma_matrix, z))
+        Polynomial::<C64>::new(apply_matrix(&self.sigma_inverse_matrix, z))
     }
 
     fn generate_vandermonde_matrix(roots: &[C64], dimension_exponent: u32) -> Vec<Vec<C64>> {
@@ -193,10 +190,7 @@ impl<T: BigInt> Encoder<T> {
         matrix
     }
 
-    fn generate_sigma_inverse_matrix(
-        vandermonde_matrix: &[Vec<C64>],
-        roots: &[C64],
-    ) -> Vec<Vec<C64>> {
+    fn generate_sigma_matrix(vandermonde_matrix: &[Vec<C64>], roots: &[C64]) -> Vec<Vec<C64>> {
         let n = roots.len();
         let mut matrix = vandermonde_matrix.to_vec();
 
@@ -210,7 +204,7 @@ impl<T: BigInt> Encoder<T> {
         matrix
     }
 
-    fn generate_sigma_matrix(
+    fn generate_sigma_inverse_matrix(
         vandermonde_matrix: &[Vec<C64>],
         roots: &[C64],
         dimension_exponent: u32,
