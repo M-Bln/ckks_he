@@ -4,6 +4,16 @@ use crate::algebra::cyclotomic_ring::CyclotomicRing;
 use crate::algebra::polynomial::Polynomial;
 use bnum::types::I256;
 
+
+
+impl Polynomial<RingMod<I256>> {
+    pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<RingMod<I256>> {
+        CyclotomicRing::new(self.coefficients(), 2_usize.pow(dimension_exponent))
+    }
+}
+
+
+// Conversion involving floats, thus  with loss of precision
 /// Convert a big integer to a float, loses precision
 pub fn i256_to_f64(n: I256) -> f64 {
     n.to_string().parse::<f64>().unwrap()
@@ -48,22 +58,17 @@ impl Polynomial<I256> {
     }
 }
 
-impl Polynomial<RingMod<I256>> {
-    pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<RingMod<I256>> {
-        CyclotomicRing::new(self.coefficients(), 2_usize.pow(dimension_exponent))
-    }
-}
 
-impl Polynomial<f64> {
-    pub fn to_i256(&self) -> Polynomial<I256> {
-        let coefficients = self
-            .ref_coefficients()
-            .iter()
-            .map(|coeff| f64_to_i256(*coeff))
-            .collect();
-        Polynomial::new(coefficients)
-    }
-}
+// impl Polynomial<f64> {
+//     pub fn to_i256(&self) -> Polynomial<I256> {
+//         let coefficients = self
+//             .ref_coefficients()
+//             .iter()
+//             .map(|coeff| f64_to_i256(*coeff))
+//             .collect();
+//         Polynomial::new(coefficients)
+//     }
+// }
 
 impl Polynomial<C64> {
     pub fn to_i256(&self) -> Polynomial<I256> {

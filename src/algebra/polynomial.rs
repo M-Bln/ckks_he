@@ -307,21 +307,21 @@ mod tests {
         assert_eq!(value.value(), I256::from(17 % 13)); // 1 + 2*2 + 3*2^2 = 17 % 13 = 4
     }
 
-    #[test]
-    fn test_polynomial_conversion() {
-        // Create a Polynomial<I256>
-        let poly_i256 = Polynomial {
-            coefficients: vec![I256::from(1), I256::from(2), I256::from(3)],
-        };
+    // #[test]
+    // fn test_polynomial_conversion() {
+    //     // Create a Polynomial<I256>
+    //     let poly_i256 = Polynomial {
+    //         coefficients: vec![I256::from(1), I256::from(2), I256::from(3)],
+    //     };
 
-        // Convert to Polynomial<f64>
-        let poly_f64 = poly_i256.to_f64();
-        assert_eq!(poly_f64.coefficients, vec![1.0, 2.0, 3.0]);
+    //     // Convert to Polynomial<f64>
+    //     let poly_f64 = poly_i256.to_f64();
+    //     assert_eq!(poly_f64.coefficients, vec![1.0, 2.0, 3.0]);
 
-        // Convert back to Polynomial<I256>
-        let poly_i256_converted_back = poly_f64.to_i256();
-        assert_eq!(poly_i256, poly_i256_converted_back);
-    }
+    //     // Convert back to Polynomial<I256>
+    //     let poly_i256_converted_back = poly_f64.to_i256();
+    //     assert_eq!(poly_i256, poly_i256_converted_back);
+    // }
 
     // #[test]
     // fn test_polynomial_conversion() {
