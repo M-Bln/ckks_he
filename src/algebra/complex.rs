@@ -2,9 +2,7 @@ use std::f64::consts::PI;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-
 use crate::algebra::big_int::Zero;
-
 
 pub trait Complex:
     Sized

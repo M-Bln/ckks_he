@@ -9,7 +9,7 @@ use bnum::types::I256;
 #[derive(Clone, Debug, PartialEq)]
 pub struct CyclotomicRing<T> {
     polynomial: Polynomial<T>,
-    dimension: usize,
+    pub dimension: usize,
 }
 
 impl<T> CyclotomicRing<T>

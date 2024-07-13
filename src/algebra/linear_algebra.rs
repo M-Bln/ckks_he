@@ -29,7 +29,7 @@ pub fn apply_matrix(a: &[Vec<C64>], b: &[C64]) -> Vec<C64> {
 
     for i in 0..n {
         for j in 0..n {
-	    result[i] = result[i] + a[i][j] * b[j];
+            result[i] = result[i] + a[i][j] * b[j];
         }
     }
 

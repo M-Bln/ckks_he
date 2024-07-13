@@ -1,6 +1,7 @@
 use crate::algebra::arithmetic::RingMod;
 use crate::algebra::big_int::{f64_to_i256, i256_to_f64, Zero};
-use crate::algebra::complex::C64;
+use crate::algebra::complex::{Complex, C64};
+use crate::algebra::cyclotomic_ring::CyclotomicRing;
 use bnum::types::I256;
 use std::ops::{Add, Mul, Sub};
 
@@ -139,6 +140,21 @@ impl Polynomial<I256> {
             .collect();
         Polynomial { coefficients }
     }
+
+    pub fn modulo(&self, modulus: I256) -> Polynomial<RingMod<I256>> {
+        let coefficients = self
+            .coefficients
+            .iter()
+            .map(|&coeff| RingMod::<I256>::new(coeff, modulus))
+            .collect();
+        Polynomial { coefficients }
+    }
+}
+
+impl Polynomial<RingMod<I256>> {
+    pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<RingMod<I256>> {
+        CyclotomicRing::new(self.coefficients(), 2_usize.pow(dimension_exponent))
+    }
 }
 
 impl Polynomial<f64> {
@@ -147,6 +163,17 @@ impl Polynomial<f64> {
             .coefficients
             .iter()
             .map(|&coeff| f64_to_i256(coeff))
+            .collect();
+        Polynomial { coefficients }
+    }
+}
+
+impl Polynomial<C64> {
+    pub fn to_i256(&self) -> Polynomial<I256> {
+        let coefficients = self
+            .coefficients
+            .iter()
+            .map(|&coeff| f64_to_i256(coeff.real()))
             .collect();
         Polynomial { coefficients }
     }
@@ -295,4 +322,31 @@ mod tests {
         let poly_i256_converted_back = poly_f64.to_i256();
         assert_eq!(poly_i256, poly_i256_converted_back);
     }
+
+    // #[test]
+    // fn test_polynomial_conversion() {
+    //     // Create a Polynomial<I256> with large coefficients
+    //     let poly_i256 = Polynomial {
+    //         coefficients: vec![
+    //             I256::from(12345678901234567890u64),
+    //             I256::from(3765432109876543210u64),
+    //             I256::from(11223344556677889900u64),
+    //         ],
+    //     };
+
+    //     println!("Original Polynomial<I256>: {:?}", poly_i256);
+
+    //     // Convert to Polynomial<f64>
+    //     let poly_f64 = poly_i256.to_f64();
+    //     println!("Converted to Polynomial<f64>: {:?}", poly_f64);
+
+    //     // Convert back to Polynomial<I256>
+    //     let poly_i256_converted_back = poly_f64.to_i256();
+    //     println!("Converted back to Polynomial<I256>: {:?}", poly_i256_converted_back);
+
+    //     // Check if the original polynomial and the converted-back polynomial are equal
+    //     for (a, b) in poly_i256.coefficients.iter().zip(poly_i256_converted_back.coefficients.iter()) {
+    //         assert_eq!(a, b, "Mismatch: original {} != converted back {}", a, b);
+    //     }
+    // }
 }
