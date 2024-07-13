@@ -1,10 +1,12 @@
 use crate::algebra::big_int::BigInt;
 use crate::algebra::complex::{Complex, C64};
+use crate::algebra::arithmetic::{RingMod, c64_to_ring_mod_256};
 use crate::algebra::cyclotomic_ring::CyclotomicRing;
-use crate::algebra::linear_algebra::{identity_matrix, multiply_matrices};
+use crate::algebra::linear_algebra::{identity_matrix, multiply_matrices, apply_matrix};
 use crate::algebra::polynomial::Polynomial;
 
 use std::f64::consts::PI;
+use bnum::types::I256;
 
 #[derive(Debug)]
 pub struct Encoder<T: BigInt> {
@@ -12,6 +14,20 @@ pub struct Encoder<T: BigInt> {
     modulus: T, // The space of ciphertexts is Z/(modulus Z) [X] / (1 + X ^(2^(dimension_exponent)))
     sigma_inverse_matrix: Vec<Vec<C64>>, // Matrix to compute canonical embedding
     sigma_matrix: Vec<Vec<C64>>, // Matrix of sigma, the inverse of the canonical embedding
+}
+
+
+
+impl Encoder<I256> {
+    pub fn encode(&self, plaintext: &[C64]) -> CyclotomicRing<RingMod<I256>> {
+	assert_eq!(plaintext.len(), 2_usize.pow(self.dimension_exponent-1),"Plaintext length does not match half dimension of encoder");
+	CyclotomicRing::new(
+	    apply_matrix(
+		&self.sigma_inverse_matrix,
+		&self.projection_inverse(plaintext)).iter().map(|c| c64_to_ring_mod_256(c, self.modulus)).collect(),
+	    2_usize.pow(self.dimension_exponent),
+	)
+    }
 }
 
 impl<T: BigInt> Encoder<T> {
@@ -61,7 +77,7 @@ impl<T: BigInt> Encoder<T> {
         }
     }
 
-    fn projection(&self, z: Vec<C64>) -> Vec<C64> {
+    fn projection(&self, z: &[C64]) -> Vec<C64> {
         assert_eq!(
             z.len(),
             2_usize.pow(self.dimension_exponent),
@@ -70,7 +86,7 @@ impl<T: BigInt> Encoder<T> {
         even_index_elements(&z)
     }
 
-    fn projection_inverse(&self, z: Vec<C64>) -> Vec<C64> {
+    fn projection_inverse(&self, z: &[C64]) -> Vec<C64> {
         let n = 2_usize.pow(self.dimension_exponent - 1);
         assert_eq!(
             z.len(),
@@ -334,7 +350,7 @@ mod tests {
         ];
 
         // Compute the result
-        let result = encoder.projection_inverse(z);
+        let result = encoder.projection_inverse(&z);
 
         // Check if the result matches the expected output
         let tol = 1e-10;
@@ -390,8 +406,8 @@ mod tests {
             .collect();
 
         // Apply projection followed by projection_inverse
-        let projected = encoder.projection(z.clone());
-        let projected_inverse = encoder.projection_inverse(projected.clone());
+        let projected = encoder.projection(&z);
+        let projected_inverse = encoder.projection_inverse(&projected);
 
         // Verify projection_inverse(projection(z)) == z
         let tol = 1e-10;
@@ -411,8 +427,8 @@ mod tests {
         }
 
         // Apply projection_inverse followed by projection
-        let projected_inverse_again = encoder.projection_inverse(projected.clone());
-        let projected_again = encoder.projection(projected_inverse_again.clone());
+        let projected_inverse_again = encoder.projection_inverse(&projected);
+        let projected_again = encoder.projection(&projected_inverse_again);
 
         // Verify projection(projection_inverse(z)) == z
         for (a, b) in projected.iter().zip(projected_again.iter()) {
