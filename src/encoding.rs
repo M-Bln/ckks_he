@@ -68,33 +68,9 @@ impl Encoder<I256> {
     }
 }
 
-// impl Encoder<I256> {
-//     pub fn encode(&self, plaintext: &[C64]) -> CyclotomicRing<RingMod<I256>> {
-//         let expected_length = 2_usize.pow(self.dimension_exponent - 1);
-//         assert_eq!(
-//             plaintext.len(),
-//             expected_length,
-//             "Plaintext length does not match half dimension of encoder"
-//         );
-
-//         let integer_polynomial = self.sigma_inverse(&self.projection_inverse(&plaintext)).to_i256();
-//         let modular_polynomial = integer_polynomial.modulo(self.modulus);
-//         modular_polynomial.to_cyclotomic(self.dimension_exponent)
-//     }
-
-//     pub fn decode(&self, message: CyclotomicRing<RingMod<I256>>) -> Vec<C64> {
-//         let expected_dimension = 2_usize.pow(self.dimension_exponent);
-//         assert_eq!(
-//             message.dimension,
-//             expected_dimension,
-//             "Plaintext length does not match half dimension of encoder"
-//         );
-// 	let complex_polynomial = message.to_c64();
-// 	let canonical_embedding = self.sigma(&complex_polynomial);
-// 	self.projection(&canonical_embedding)
-//     }
-// }
-
+/// Encoder with functions encode to go from plaintext to ciphertext ring and decode from ciphertext ring to plaintext.
+/// The dimension of the ciphertext ring is 2^h with h = dimension_exponent. The ciphertext ring is a cyclotomic ring
+/// $Z/qZ [X] / (1 + X^{2^h})$. Here q = modulus. The space of plaintext is a complex vector space of dimension 2^{h-1}.
 impl<T: BigInt> Encoder<T> {
     /// Generate an encoder for the space of ciphertexts $\ZZ/(modulus \ZZ) [X] / (1 + X ^{2^{dimension_exponent}})$
     /// Decoding $decode: \ZZ/(modulus \ZZ) [X] / (1 + X ^{2^{dimension_exponent}}) \to \CC^{2^{dimension_exponent-1}}$
@@ -102,12 +78,12 @@ impl<T: BigInt> Encoder<T> {
     /// $\sigma$ and $\sigma\inv$ are stored as matrices of roots of unity.
     // TODO use FFT rather than matrices (no emergency, probably not the bottleneck)
     pub fn new(dimension_exponent: u32, modulus: T) -> Self {
-        // We take a primitive 2^{h+1}-th root of unity \zeta = \exp(2 i \pi/ 2^{h+1})
-        // Generate (1, \zeta, \zeta^2, \zeta^3, ..., \zeta^{2^{h+1}-1})
         assert!(
             dimension_exponent >= 1,
             "Dimension exponent must be greater than 1"
         );
+        // We take a primitive $2^{h+1}$-th root of unity $\zeta = \exp(2 i \pi/ 2^{h+1})$
+        // Generate $(1, \zeta, \zeta^2, \zeta^3, ..., \zeta^{2^{h+1}-1})$
         let mut roots = C64::all_2_to_the_h_th_roots_of_unity(dimension_exponent + 1);
 
         // Generate (1, \zeta^2, \zeta^4, \zeta^6, ..., \zeta^{2^{h+2}-2})
@@ -119,6 +95,8 @@ impl<T: BigInt> Encoder<T> {
         // Compute the Vandermonde matrix with coefficient at line i and column j: (\zeta^{2(i-1)(j-1)})
         let vandermonde_matrix =
             Self::generate_vandermonde_matrix(&roots_vandermonde, dimension_exponent);
+
+        // This matrix computes the canonical embedding $\sigma : Z/qZ [X] / (1 + X^{2^h}) \to \CC^{2^{h-1}}$
         let sigma_matrix = Self::generate_sigma_matrix(&vandermonde_matrix, &roots);
 
         let inverse_roots: Vec<C64> = roots.iter().map(|z| z.conjugate()).collect();
@@ -128,6 +106,7 @@ impl<T: BigInt> Encoder<T> {
         let inverse_vandermonde_matrix =
             Self::generate_vandermonde_matrix(&inverse_roots_vandermonde, dimension_exponent);
 
+        // This matrix compute the inverse of the canonical embedding $\sigma$
         let sigma_inverse_matrix = Self::generate_sigma_inverse_matrix(
             &inverse_vandermonde_matrix,
             &inverse_roots,
@@ -142,6 +121,7 @@ impl<T: BigInt> Encoder<T> {
         }
     }
 
+    /// Take even index coefficients of z. The remaining information is redundant when restricted to the image of $\sigma$
     fn projection(&self, z: &[C64]) -> Vec<C64> {
         assert_eq!(
             z.len(),
@@ -151,6 +131,8 @@ impl<T: BigInt> Encoder<T> {
         even_index_elements(&z)
     }
 
+    /// Inverse of the projection. It is constructed by adding the missing conjugates complex numbers in order to lie in
+    /// the image of $\sigma$.
     fn projection_inverse(&self, z: &[C64]) -> Vec<C64> {
         let n = 2_usize.pow(self.dimension_exponent - 1);
         assert_eq!(
@@ -169,14 +151,18 @@ impl<T: BigInt> Encoder<T> {
         result
     }
 
+    /// Canonical embedding (multiplication by diagonal matrix composed with Fourier transform)
+    /// TODO: use FFT to compute the Fourier transform
     fn sigma(&self, p: &Polynomial<C64>) -> Vec<C64> {
         apply_matrix(&self.sigma_matrix, p.ref_coefficients())
     }
 
+    /// Inverse of the canonical embedding  (inverse Fourier transform composed with multiplication by diagonal matrix)
     fn sigma_inverse(&self, z: &[C64]) -> Polynomial<C64> {
         Polynomial::<C64>::new(apply_matrix(&self.sigma_inverse_matrix, z))
     }
 
+    /// Compute the Vandermonde matrix $(\sigma^{2(i-1)(j-1)})_{i,j}$ with $\sigma$ a primitive $2^{h+1}$-th root of unity
     fn generate_vandermonde_matrix(roots: &[C64], dimension_exponent: u32) -> Vec<Vec<C64>> {
         let n = 2_usize.pow(dimension_exponent);
         let mut matrix = vec![vec![C64::new(0.0, 0.0); n]; n];
@@ -190,6 +176,7 @@ impl<T: BigInt> Encoder<T> {
         matrix
     }
 
+    /// Generate the matrix computing canonical embedding, multiplication of Vandermonde matrix and diagonal matrix
     fn generate_sigma_matrix(vandermonde_matrix: &[Vec<C64>], roots: &[C64]) -> Vec<Vec<C64>> {
         let n = roots.len();
         let mut matrix = vandermonde_matrix.to_vec();
@@ -204,6 +191,8 @@ impl<T: BigInt> Encoder<T> {
         matrix
     }
 
+    /// Generate the matrix computing the inverse of the  canonical embedding, multiplication of diagonal matrix by a
+    /// Vandermonde matrix and rescaling by inverse of dimension.
     fn generate_sigma_inverse_matrix(
         vandermonde_matrix: &[Vec<C64>],
         roots: &[C64],
@@ -223,16 +212,16 @@ impl<T: BigInt> Encoder<T> {
         matrix
     }
 
-    pub fn apply_sigma_inverse(&self, poly: &Polynomial<C64>) -> Vec<C64> {
-        let mut result = vec![C64::new(0.0, 0.0); poly.ref_coefficients().len()];
-        for (i, row) in self.sigma_inverse_matrix.iter().enumerate() {
-            result[i] = row
-                .iter()
-                .zip(poly.ref_coefficients())
-                .fold(C64::new(0.0, 0.0), |sum, (a, b)| sum + a.clone() * b);
-        }
-        result
-    }
+    // pub fn apply_sigma_inverse(&self, poly: &Polynomial<C64>) -> Vec<C64> {
+    //     let mut result = vec![C64::new(0.0, 0.0); poly.ref_coefficients().len()];
+    //     for (i, row) in self.sigma_inverse_matrix.iter().enumerate() {
+    //         result[i] = row
+    //             .iter()
+    //             .zip(poly.ref_coefficients())
+    //             .fold(C64::new(0.0, 0.0), |sum, (a, b)| sum + a.clone() * b);
+    //     }
+    //     result
+    // }
 }
 
 fn even_index_elements<T: Clone>(vec: &[T]) -> Vec<T> {
