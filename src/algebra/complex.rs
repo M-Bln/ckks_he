@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 use std::fmt;
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Neg, Div, Mul, Sub};
 
 use crate::algebra::big_int::Zero;
 
@@ -20,12 +20,16 @@ pub trait Complex:
     + fmt::Debug
     + Zero
 {
-    type Real: From<f64>;
+    type Real: From<f64> + Neg<Output = Self::Real>;
     fn new(real: Self::Real, imaginary: Self::Real) -> Self;
     fn real(&self) -> Self::Real;
     fn imaginary(&self) -> Self::Real;
     fn magnitude(&self) -> Self::Real;
     fn phase(&self) -> Self::Real;
+
+    fn conjugate(&self) -> Self {
+	Self::new(self.real(), -self.imaginary())
+    }
 
     fn primitive_root_of_unity(n: u32) -> Self {
         let angle = 2.0 * PI / (n as f64);

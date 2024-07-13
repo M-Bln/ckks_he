@@ -8,24 +8,32 @@ use std::f64::consts::PI;
 #[derive(Debug)]
 pub struct Encoder<T: BigInt> {
     dimension_exponent: u32, // h such that  M = 2^h is the degree of the cyclotomic polynomial
-    modulus: T,
-    sigma_inverse_matrix: Vec<Vec<C64>>,
-    sigma_matrix: Vec<Vec<C64>>,
+    modulus: T,  // The space of ciphertexts is Z/(modulus Z) [X] / (1 + X ^(2^(dimension_exponent)))
+    sigma_inverse_matrix: Vec<Vec<C64>>, // Matrix to compute canonical embedding
+    sigma_matrix: Vec<Vec<C64>>,  // Matrix of sigma, the inverse of the canonical embedding
 }
 
 impl<T: BigInt> Encoder<T> {
+    /// Generate an encoder for the space of ciphertexts $\ZZ/(modulus \ZZ) [X] / (1 + X ^{2^{dimension_exponent}})$
+    /// Decoding $decode: \ZZ/(modulus \ZZ) [X] / (1 + X ^{2^{dimension_exponent}}) \to \CC^{2^{dimension_exponent-1}}$
+    /// is the composition $decode = \pi\inv \circ \sigma\inv$ with $\sigma$ the canonical embedding. In the encoder
+    /// $\sigma$ and $\sigma\inv$ are stored as matrices of roots of unity.
+    // TODO use FFT rather than matrices (no emergency, probably not the bottleneck)
     pub fn new(dimension_exponent: u32, modulus: T) -> Self {
         let mut roots = C64::all_2_to_the_h_th_roots_of_unity(dimension_exponent + 1);
+//	let roots_vandermonde = even_index_elements(&roots);
         roots.truncate(2_usize.pow(dimension_exponent));
         let roots_vandermonde = C64::all_2_to_the_h_th_roots_of_unity(dimension_exponent);
         let vandermonde_matrix =
             Self::generate_vandermonde_matrix(&roots_vandermonde, dimension_exponent);
         let sigma_inverse_matrix = Self::generate_sigma_inverse_matrix(&vandermonde_matrix, &roots);
 
+	let inverse_roots: Vec<C64> = roots.iter().map(|z| z.conjugate()).collect();
+	let inverse_roots_vandermonde: Vec<C64> = roots_vandermonde.iter().map(|z| z.conjugate()).collect();
 
-	let mut inverse_roots = C64::inverse_all_2_to_the_h_th_roots_of_unity(dimension_exponent + 1);
-        inverse_roots.truncate(2_usize.pow(dimension_exponent));
-        let inverse_roots_vandermonde = C64::inverse_all_2_to_the_h_th_roots_of_unity(dimension_exponent);
+//	let mut inverse_roots = C64::inverse_all_2_to_the_h_th_roots_of_unity(dimension_exponent + 1);
+//        inverse_roots.truncate(2_usize.pow(dimension_exponent));
+//        let inverse_roots_vandermonde = C64::inverse_all_2_to_the_h_th_roots_of_unity(dimension_exponent);
         let inverse_vandermonde_matrix =
             Self::generate_vandermonde_matrix(&inverse_roots_vandermonde, dimension_exponent);
 	
@@ -100,6 +108,15 @@ impl<T: BigInt> Encoder<T> {
         result
     }
 }
+
+fn even_index_elements<T: Clone>(vec: &[T]) -> Vec<T> {
+    vec.iter()
+        .enumerate()
+        .filter(|&(i, _)| i % 2 == 0)
+        .map(|(_, x)| x.clone())
+        .collect()
+}
+
 
 fn multiply_matrices(a: &[Vec<C64>], b: &[Vec<C64>]) -> Vec<Vec<C64>> {
     let n = a.len();
