@@ -20,13 +20,18 @@ impl<T: BigInt> Encoder<T> {
     /// $\sigma$ and $\sigma\inv$ are stored as matrices of roots of unity.
     // TODO use FFT rather than matrices (no emergency, probably not the bottleneck)
     pub fn new(dimension_exponent: u32, modulus: T) -> Self {
+	// generate (1, \zeta, \zeta^2, \zeta^3, ..., \zeta^{2^{h+1}-1})
         let mut roots = C64::all_2_to_the_h_th_roots_of_unity(dimension_exponent + 1);
-//	let roots_vandermonde = even_index_elements(&roots);
+	// generate (1, \zeta^2, \zeta^4, \zeta^6, ..., \zeta^{2^{h+2}-2})
+	let roots_vandermonde = even_index_elements(&roots);
         roots.truncate(2_usize.pow(dimension_exponent));
-        let roots_vandermonde = C64::all_2_to_the_h_th_roots_of_unity(dimension_exponent);
-        let vandermonde_matrix =
+
+	let vandermonde_matrix =
             Self::generate_vandermonde_matrix(&roots_vandermonde, dimension_exponent);
         let sigma_inverse_matrix = Self::generate_sigma_inverse_matrix(&vandermonde_matrix, &roots);
+
+	
+        //let roots_vandermonde = C64::all_2_to_the_h_th_roots_of_unity(dimension_exponent);
 
 	let inverse_roots: Vec<C64> = roots.iter().map(|z| z.conjugate()).collect();
 	let inverse_roots_vandermonde: Vec<C64> = roots_vandermonde.iter().map(|z| z.conjugate()).collect();
@@ -265,6 +270,13 @@ mod tests {
         // Multiply sigma_matrix by sigma_inverse_matrix
         let product = multiply_matrices(&encoder.sigma_matrix, &encoder.sigma_inverse_matrix);
 
+        for row in product.iter() {
+            for element in row.iter() {
+                print!("({:.4}, {:.4}) ", element.real(), element.imaginary());
+            }
+            println!();
+        }
+	
         // Generate the identity matrix
         let identity = identity_matrix(product.len());
 
