@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 use std::fmt;
-use std::ops::{Add, Neg, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use crate::algebra::big_int::Zero;
 
@@ -28,7 +28,7 @@ pub trait Complex:
     fn phase(&self) -> Self::Real;
 
     fn conjugate(&self) -> Self {
-	Self::new(self.real(), -self.imaginary())
+        Self::new(self.real(), -self.imaginary())
     }
 
     fn primitive_root_of_unity(n: u32) -> Self {
