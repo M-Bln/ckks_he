@@ -27,8 +27,6 @@ impl UniformSamplable for i64 {
     }
 }
 
-
-
 // impl UniformSampler for Sampler<I256> {
 //     type Item = I256;
 //     fn sample(&mut self, min: I256, max: I256) -> I256 {
@@ -246,7 +244,6 @@ mod tests {
         assert_eq!(non_zero_count, h);
     }
 
-    
     #[test]
     fn test_uniform_sampler_i64() {
         let min = -1;

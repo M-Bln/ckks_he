@@ -12,7 +12,7 @@ pub struct SecretKey<T: BigInt> {
     q: T, // modulus per level, the total modulus in coefficients ring is initialy mul_scaling * q_0 * q^{level_max}
     level_max: u32,
     standard_deviation: f64, // standard deviation of the Gaussian distribution of error sampling
-    raw_key: CiphertextRing<T>,
+    key_s: CiphertextRing<T>,
 }
 
 impl<T: BigInt> SecretKey<T> {
@@ -31,7 +31,7 @@ impl<T: BigInt> SecretKey<T> {
 
         let key_coefficients = hwt_distribution.sample::<T>();
         let key_polynomial = Polynomial::new(key_coefficients);
-        let raw_key = key_polynomial
+        let key_s = key_polynomial
             .modulo(modulus)
             .to_cyclotomic(dimension_exponent);
 
@@ -43,7 +43,7 @@ impl<T: BigInt> SecretKey<T> {
             q,
             level_max,
             standard_deviation,
-            raw_key,
+            key_s,
         }
     }
 }
