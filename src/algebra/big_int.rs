@@ -2,8 +2,8 @@ use bnum::types::I256;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Rem, Sub};
 
-
 use crate::algebra::arithmetic::RingMod;
+use crate::random_distributions::UniformSamplable;
 
 pub trait Zero: Sized {
     fn zero(&self) -> Self;
@@ -28,6 +28,7 @@ pub trait BigInt:
     + From<i64>
     + Eq
     + PartialOrd
+    + UniformSamplable
     + Zero
 {
     fn new(value: i64) -> Self {
@@ -35,7 +36,7 @@ pub trait BigInt:
     }
 
     fn modulo(&self, modulus: Self) -> RingMod<Self> {
-	RingMod::new(self.clone() % modulus, modulus)
+        RingMod::new(self.clone() % modulus, modulus)
     }
 
     fn fast_exp(&self, exponent: u32) -> Self {

@@ -17,11 +17,14 @@ impl<T: BigInt> Polynomial<T> {
     }
 }
 
-
 impl<T: BigInt> Polynomial<T> {
     pub fn modulo(&self, modulus: T) -> Polynomial<RingMod<T>> {
-	let coefficients = self.ref_coefficients().iter().map(|c| c.modulo(modulus)).collect();
-	Polynomial::new(coefficients)
+        let coefficients = self
+            .ref_coefficients()
+            .iter()
+            .map(|c| c.modulo(modulus))
+            .collect();
+        Polynomial::new(coefficients)
     }
 }
 

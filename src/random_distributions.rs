@@ -1,8 +1,58 @@
 use crate::algebra::big_int::BigInt;
+use bnum::random::UniformInt as UniformBInt;
+use bnum::types::I256;
+use rand::distributions::uniform::{UniformInt, UniformSampler};
 use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use rand_distr::{Distribution, Normal};
+
+pub trait UniformSamplable: Sized + PartialOrd {
+    type Sampler: UniformSampler<X = Self>;
+
+    fn sampler(low: Self, high: Self) -> Self::Sampler;
+}
+
+impl UniformSamplable for I256 {
+    type Sampler = UniformBInt<I256>;
+    fn sampler(low: Self, high: Self) -> Self::Sampler {
+        Self::Sampler::new(low, high)
+    }
+}
+
+impl UniformSamplable for i64 {
+    type Sampler = UniformInt<i64>;
+    fn sampler(low: Self, high: Self) -> Self::Sampler {
+        Self::Sampler::new(low, high)
+    }
+}
+
+// pub trait UniformSampler {
+//     type Item;
+//     fn sample(&mut self, min: Self::Item, max: Self::Item) -> Self::Item;
+// }
+
+pub struct Sampler<T: BigInt> {
+    rng: ThreadRng,
+    _marker: std::marker::PhantomData<T>,
+}
+
+// impl UniformSampler for Sampler<I256> {
+//     type Item = I256;
+//     fn sample(&mut self, min: I256, max: I256) -> I256 {
+
+//     }
+// }
+
+// impl<T> UniformSampler<T>
+// where
+//     T: PartialOrd + Copy,
+// {
+//     pub fn sample(&mut self, min: T, max: T) -> T {
+//         let distribution = Uniform::new_inclusive(min, max);
+//         distribution.sample(&mut self.rng)
+//     }
+// }
 
 pub struct DiscreteGaussian {
     mean: f64,

@@ -1,14 +1,14 @@
-use crate::algebra::big_int::{BigInt};
-use crate::algebra::polynomial::{Polynomial};
+use crate::algebra::big_int::BigInt;
+use crate::algebra::polynomial::Polynomial;
 use crate::ciphertext::CiphertextRing;
 use crate::random_distributions::HWTDistribution;
 
 #[derive(Clone, Debug)]
 pub struct SecretKey<T: BigInt> {
     dimension_exponent: u32, // Ciphertexts in cyclotomic ring $R[X]/(1+X^N)$ with N = 2^dimension_exponent
-    hamming_weight: usize, // Number of non zero coefficients in rawKey.1
-    mul_scaling: T, // Rescaling factor used in homomorphic multiplication
-    q_0: T, // minimal modulus
+    hamming_weight: usize,   // Number of non zero coefficients in rawKey.1
+    mul_scaling: T,          // Rescaling factor used in homomorphic multiplication
+    q_0: T,                  // minimal modulus
     q: T, // modulus per level, the total modulus in coefficients ring is initialy mul_scaling * q_0 * q^{level_max}
     level_max: u32,
     standard_deviation: f64, // standard deviation of the Gaussian distribution of error sampling
@@ -20,26 +20,27 @@ impl<T: BigInt> SecretKey<T> {
         dimension_exponent: u32,
         hamming_weight: usize,
         mul_scaling: T,
-	q_0: T,
+        q_0: T,
         q: T,
         level_max: u32,
         standard_deviation: f64,
     ) -> Self {
         let n = 1 << dimension_exponent; // 2^dimension_exponent
-	let modulus = mul_scaling * q_0 * q.fast_exp(level_max); // the total modulus in coefficients ring is initialy mul_scaling * q_0 * q^{level_max}
-	let mut hwt_distribution = HWTDistribution::new(n, hamming_weight);
-	
-	let key_coefficients = hwt_distribution.sample::<T>();
-	let key_polynomial = Polynomial::new(key_coefficients);
-	let raw_key = key_polynomial.modulo(modulus).to_cyclotomic(dimension_exponent);
+        let modulus = mul_scaling * q_0 * q.fast_exp(level_max); // the total modulus in coefficients ring is initialy mul_scaling * q_0 * q^{level_max}
+        let mut hwt_distribution = HWTDistribution::new(n, hamming_weight);
 
+        let key_coefficients = hwt_distribution.sample::<T>();
+        let key_polynomial = Polynomial::new(key_coefficients);
+        let raw_key = key_polynomial
+            .modulo(modulus)
+            .to_cyclotomic(dimension_exponent);
 
         SecretKey {
             dimension_exponent,
             hamming_weight,
             mul_scaling,
             q_0,
-	    q,
+            q,
             level_max,
             standard_deviation,
             raw_key,
@@ -47,12 +48,11 @@ impl<T: BigInt> SecretKey<T> {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bnum::types::I256;
     use crate::algebra::big_int::BigInt;
+    use bnum::types::I256;
 
     #[test]
     fn test_secret_key_constructor() {
@@ -83,6 +83,5 @@ mod tests {
         assert_eq!(secret_key.q, q);
         assert_eq!(secret_key.level_max, level_max);
         assert_eq!(secret_key.standard_deviation, standard_deviation);
-        // Add more specific checks on raw_key if necessary
     }
 }
