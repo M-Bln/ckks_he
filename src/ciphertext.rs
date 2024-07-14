@@ -14,8 +14,24 @@ pub struct RawCiphertext<T: BigInt>(pub CiphertextRing<T>, pub CiphertextRing<T>
 pub struct Ciphertext<T: BigInt> {
     raw: RawCiphertext<T>,
     level: u32,
-    upper_bound_message: T,
-    upper_bound_error: T,
+    upper_bound_message: f64,
+    upper_bound_error: f64,
+}
+
+impl<T: BigInt> Ciphertext<T> {
+    pub fn new(
+        raw: RawCiphertext<T>,
+        level: u32,
+        upper_bound_message: f64,
+        upper_bound_error: f64,
+    ) -> Self {
+        Ciphertext {
+            raw,
+            level,
+            upper_bound_message,
+            upper_bound_error,
+        }
+    }
 }
 
 impl<'a, T: BigInt> Add<&'a RawCiphertext<T>> for RawCiphertext<T> {

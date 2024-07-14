@@ -18,23 +18,31 @@ pub struct KeyGenerationParameters<T: BigInt> {
     pub variance: f64,
 }
 
-pub fn generate_most_parameters<T: BigInt>(dimension_exponent: u32, q: T, level_max: u32) -> KeyGenerationParameters<T> {
-    let hamming_weight = 2_usize.pow(dimension_exponent/2);
+pub fn generate_most_parameters<T: BigInt>(
+    dimension_exponent: u32,
+    q: T,
+    level_max: u32,
+) -> KeyGenerationParameters<T> {
+    let hamming_weight = 2_usize.pow(dimension_exponent / 2);
     let mul_scaling = q.fast_exp(level_max);
     let q_0 = q;
-    let variance = 3.2*3.2;
+    let variance = 3.2 * 3.2;
     KeyGenerationParameters {
-	dimension_exponent,
-	hamming_weight,
-	mul_scaling,
-	q_0,
-	q,
-	level_max,
-	variance,
+        dimension_exponent,
+        hamming_weight,
+        mul_scaling,
+        q_0,
+        q,
+        level_max,
+        variance,
     }
 }
 
-pub fn generate_keys<T: BigInt>(dimension_exponent: u32, q: T, level_max: u32) -> (PublicKey<T>, EvaluationKey<T>, SecretKey<T>) {
+pub fn generate_keys<T: BigInt>(
+    dimension_exponent: u32,
+    q: T,
+    level_max: u32,
+) -> (PublicKey<T>, EvaluationKey<T>, SecretKey<T>) {
     generate_keys_all_parameters(generate_most_parameters(dimension_exponent, q, level_max))
 }
 
@@ -87,6 +95,7 @@ fn generate_public_key<T: BigInt>(
 
     PublicKey::<T>::new(
         params.dimension_exponent,
+        params.hamming_weight,
         params.mul_scaling.clone(),
         params.q_0.clone(),
         params.q.clone(),

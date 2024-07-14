@@ -52,6 +52,7 @@ pub fn sample_n<T: UniformSampler, R: Rng>(sampler: T, n: usize, rng: &mut R) ->
 //     }
 // }
 
+#[derive(Clone, Debug)]
 pub struct DiscreteGaussian {
     mean: f64,
     std_dev: f64,
@@ -89,6 +90,7 @@ impl DiscreteGaussian {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct ZODistribution {
     rho: f64,
     rng: ThreadRng,

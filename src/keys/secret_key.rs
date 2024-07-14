@@ -4,7 +4,7 @@ use crate::ciphertext::CiphertextRing;
 use crate::random_distributions::HWTDistribution;
 
 #[derive(Clone, Debug)]
-pub struct SecretKey<T: BigInt> { 
+pub struct SecretKey<T: BigInt> {
     pub dimension_exponent: u32, // Ciphertexts in cyclotomic ring $R[X]/(1+X^N)$ with N = 2^dimension_exponent
     pub hamming_weight: usize,   // Number of non zero coefficients in rawKey.1
     pub mul_scaling: T,          // Rescaling factor used in homomorphic multiplication
