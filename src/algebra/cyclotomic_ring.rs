@@ -158,6 +158,39 @@ impl<'a, T: BigInt> ScalarMul<&'a CyclotomicRing<T>> for T {
     }
 }
 
+impl<T: BigInt> ScalarMul<CyclotomicRing<RingMod<T>>> for T {
+    type Output = CyclotomicRing<RingMod<T>>;
+
+    fn scalar_mul(self, rhs: CyclotomicRing<RingMod<T>>) -> CyclotomicRing<RingMod<T>> {
+        CyclotomicRing::new(self.scalar_mul(rhs.polynomial).coefficients(), rhs.dimension)
+    }
+}
+
+impl<'a, T: BigInt> ScalarMul<&'a CyclotomicRing<RingMod<T>>> for T {
+    type Output = CyclotomicRing<RingMod<T>>;
+
+    fn scalar_mul(self, rhs: &'a CyclotomicRing<RingMod<T>>) -> CyclotomicRing<RingMod<T>> {
+        CyclotomicRing::new(self.scalar_mul(&rhs.polynomial).coefficients(), rhs.dimension)
+    }
+}
+
+impl<'a, T: BigInt> ScalarMul<CyclotomicRing<RingMod<T>>> for &'a T {
+    type Output = CyclotomicRing<RingMod<T>>;
+
+    fn scalar_mul(self, rhs: CyclotomicRing<RingMod<T>>) -> CyclotomicRing<RingMod<T>> {
+        CyclotomicRing::new(self.scalar_mul(rhs.polynomial).coefficients(), rhs.dimension)
+    }
+}
+
+impl<'a, 'b, T: BigInt> ScalarMul<&'a CyclotomicRing<RingMod<T>>> for &'b T {
+    type Output = CyclotomicRing<RingMod<T>>;
+
+    fn scalar_mul(self, rhs: &'a CyclotomicRing<RingMod<T>>) -> CyclotomicRing<RingMod<T>> {
+        CyclotomicRing::new(self.scalar_mul(&rhs.polynomial).coefficients(), rhs.dimension)
+    }
+}
+
+
 impl<T: BigInt> Rescale<T> for CyclotomicRing<RingMod<T>> {
     fn rescale(&mut self, scalar: T) {
         self.polynomial.rescale(scalar);
@@ -383,6 +416,106 @@ mod tests {
             assert_eq!(
                 coeff, &expected_coefficients[i],
                 "Coefficient mismatch at index {}: expected {}, got {}",
+                i, expected_coefficients[i], coeff
+            );
+        }
+    }
+
+    #[test]
+    fn test_cyclotomic_ring_ringmod_scalar_multiplication() {
+        let poly = Polynomial::new(vec![
+            RingMod::new(I256::from(1), I256::from(7)),
+            RingMod::new(I256::from(2), I256::from(7)),
+            RingMod::new(I256::from(3), I256::from(7)),
+        ]);
+        let cyclo = CyclotomicRing::new(poly.coefficients(), 3);
+        let scalar = I256::from(2);
+        let result = scalar.scalar_mul(cyclo);
+        let expected_coefficients = vec![
+            RingMod::new(I256::from(2), I256::from(7)),
+            RingMod::new(I256::from(4), I256::from(7)),
+            RingMod::new(I256::from(6), I256::from(7)),
+        ];
+
+        for (i, coeff) in result.polynomial.coefficients().iter().enumerate() {
+            assert_eq!(
+                coeff, &expected_coefficients[i],
+                "Coefficient mismatch at index {}: expected {:?}, got {:?}",
+                i, expected_coefficients[i], coeff
+            );
+        }
+    }
+
+    #[test]
+    fn test_cyclotomic_ring_ringmod_scalar_multiplication_ref() {
+        let poly = Polynomial::new(vec![
+            RingMod::new(I256::from(1), I256::from(7)),
+            RingMod::new(I256::from(2), I256::from(7)),
+            RingMod::new(I256::from(3), I256::from(7)),
+        ]);
+        let cyclo = CyclotomicRing::new(poly.coefficients(), 3);
+        let scalar = I256::from(2);
+        let result = scalar.scalar_mul(&cyclo);
+        let expected_coefficients = vec![
+            RingMod::new(I256::from(2), I256::from(7)),
+            RingMod::new(I256::from(4), I256::from(7)),
+            RingMod::new(I256::from(6), I256::from(7)),
+        ];
+
+        for (i, coeff) in result.polynomial.coefficients().iter().enumerate() {
+            assert_eq!(
+                coeff, &expected_coefficients[i],
+                "Coefficient mismatch at index {}: expected {:?}, got {:?}",
+                i, expected_coefficients[i], coeff
+            );
+        }
+    }
+
+    #[test]
+    fn test_cyclotomic_ring_ringmod_scalar_multiplication_ref_scalar() {
+        let poly = Polynomial::new(vec![
+            RingMod::new(I256::from(1), I256::from(7)),
+            RingMod::new(I256::from(2), I256::from(7)),
+            RingMod::new(I256::from(3), I256::from(7)),
+        ]);
+        let cyclo = CyclotomicRing::new(poly.coefficients(), 3);
+        let scalar = I256::from(2);
+        let result = (&scalar).scalar_mul(cyclo);
+        let expected_coefficients = vec![
+            RingMod::new(I256::from(2), I256::from(7)),
+            RingMod::new(I256::from(4), I256::from(7)),
+            RingMod::new(I256::from(6), I256::from(7)),
+        ];
+
+        for (i, coeff) in result.polynomial.coefficients().iter().enumerate() {
+            assert_eq!(
+                coeff, &expected_coefficients[i],
+                "Coefficient mismatch at index {}: expected {:?}, got {:?}",
+                i, expected_coefficients[i], coeff
+            );
+        }
+    }
+
+    #[test]
+    fn test_cyclotomic_ring_ringmod_scalar_multiplication_ref_all() {
+        let poly = Polynomial::new(vec![
+            RingMod::new(I256::from(1), I256::from(7)),
+            RingMod::new(I256::from(2), I256::from(7)),
+            RingMod::new(I256::from(3), I256::from(7)),
+        ]);
+        let cyclo = CyclotomicRing::new(poly.coefficients(), 3);
+        let scalar = I256::from(2);
+        let result = (&scalar).scalar_mul(&cyclo);
+        let expected_coefficients = vec![
+            RingMod::new(I256::from(2), I256::from(7)),
+            RingMod::new(I256::from(4), I256::from(7)),
+            RingMod::new(I256::from(6), I256::from(7)),
+        ];
+
+        for (i, coeff) in result.polynomial.coefficients().iter().enumerate() {
+            assert_eq!(
+                coeff, &expected_coefficients[i],
+                "Coefficient mismatch at index {}: expected {:?}, got {:?}",
                 i, expected_coefficients[i], coeff
             );
         }

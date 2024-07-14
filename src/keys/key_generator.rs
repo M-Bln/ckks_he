@@ -1,5 +1,5 @@
 use crate::algebra::big_int::BigInt;
-use crate::algebra::polynomial::Polynomial;
+use crate::algebra::polynomial::{Polynomial, ScalarMul};
 use crate::ciphertext::RawCiphertext;
 use crate::keys::evaluation_key::EvaluationKey;
 use crate::keys::public_key::PublicKey;
@@ -57,18 +57,18 @@ use rand::distributions::uniform::UniformSampler;
 
 //     let eval_error_coefficients = gaussian_sampler.sample_n(dimension);
 //     let eval_error = Polynomial::<T>::new(eval_error_coefficients).modulo(modulus_eval).to_cyclotomic(dimension_exponent);
-//     // let raw_eval_key = RawCiphertext::<T>(
-//     // 	eval_key_a,
-//     // 	(eval_error - &eval_key_a) + &((mul_scaling * &secret_key.key_s)*&secret_key.key_s)
-//     // );
+//     let raw_eval_key = RawCiphertext::<T>(
+//     	eval_key_a,
+//     	(eval_error - &eval_key_a) + &((mul_scaling.scalar_mul(secret_key.key_s))*&secret_key.key_s)
+//     );
 
-//     // let evaluation_key = EvaluationKey::<T>::new(
-//     // 	dimension_exponent,
-//     // 	mul_scaling,
-//     // 	q_0,
-//     // 	q,
-//     // 	level_max,
-//     // 	variance,
-//     // 	raw_public_key,
-//     // );
+//     let evaluation_key = EvaluationKey::<T>::new(
+//     	dimension_exponent,
+//     	mul_scaling,
+//     	q_0,
+//     	q,
+//     	level_max,
+//     	variance,
+//     	raw_public_key,
+//     );
 // }
