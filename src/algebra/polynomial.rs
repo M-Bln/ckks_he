@@ -131,6 +131,30 @@ where
     }
 }
 
+pub trait ScalarMul<RHS> {
+    type Output;
+
+    fn scalar_mul(self, rhs: RHS) -> Self::Output;
+}
+
+impl<T: BigInt> ScalarMul<Polynomial<T>> for T {
+    type Output = Polynomial<T>;
+
+    fn scalar_mul(self, rhs: Polynomial<T>) -> Polynomial<T> {
+        let coefficients = rhs.coefficients.iter().map(|c| self * *c).collect();
+        Polynomial::new(coefficients)
+    }
+}
+
+impl<'a, T: BigInt> ScalarMul<&'a Polynomial<T>> for T {
+    type Output = Polynomial<T>;
+
+    fn scalar_mul(self, rhs: &'a Polynomial<T>) -> Polynomial<T> {
+        let coefficients = rhs.coefficients.iter().map(|c| self * *c).collect();
+        Polynomial::new(coefficients)
+    }
+}
+
 impl<T: BigInt> Rescale<T> for Polynomial<T> {
     fn rescale(&mut self, scalar: T) {
         for coeff in &mut self.coefficients {
@@ -361,5 +385,21 @@ mod tests {
             polynomial.ref_coefficients()[1].modulus,
             modulus / scalar_value
         );
+    }
+
+    #[test]
+    fn test_polynomial_scalar_multiplication() {
+        let poly = Polynomial::new(vec![I256::from(1), I256::from(2), I256::from(3)]);
+        let scalar = I256::from(2);
+        let result = scalar.scalar_mul(poly);
+        let expected_coefficients = vec![I256::from(2), I256::from(4), I256::from(6)];
+
+        for (i, coeff) in result.coefficients().iter().enumerate() {
+            assert_eq!(
+                coeff, &expected_coefficients[i],
+                "Coefficient mismatch at index {}: expected {}, got {}",
+                i, expected_coefficients[i], coeff
+            );
+        }
     }
 }

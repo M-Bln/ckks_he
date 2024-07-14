@@ -8,7 +8,7 @@ use std::ops::{Add, Mul};
 pub type CiphertextRing<T: BigInt> = CyclotomicRing<RingMod<T>>;
 
 #[derive(Clone, Debug)]
-pub struct RawCiphertext<T: BigInt>(CiphertextRing<T>, CiphertextRing<T>);
+pub struct RawCiphertext<T: BigInt>(pub CiphertextRing<T>, pub CiphertextRing<T>);
 
 // Should I also keep a ref to public / eval key?
 pub struct Ciphertext<T: BigInt> {

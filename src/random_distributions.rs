@@ -27,6 +27,14 @@ impl UniformSamplable for i64 {
     }
 }
 
+pub fn sample_n<T: UniformSampler, R: Rng>(sampler: T, n: usize, rng: &mut R) -> Vec<T::X> {
+    let mut result = Vec::<T::X>::with_capacity(n);
+    for _ in 0..n {
+        result.push(sampler.sample(rng));
+    }
+    result
+}
+
 // impl UniformSampler for Sampler<I256> {
 //     type Item = I256;
 //     fn sample(&mut self, min: I256, max: I256) -> I256 {

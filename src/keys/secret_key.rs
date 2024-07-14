@@ -12,7 +12,7 @@ pub struct SecretKey<T: BigInt> {
     q: T, // modulus per level, the total modulus in coefficients ring is initialy mul_scaling * q_0 * q^{level_max}
     level_max: u32,
     standard_deviation: f64, // standard deviation of the Gaussian distribution of error sampling
-    key_s: CiphertextRing<T>,
+    pub key_s: CiphertextRing<T>,
 }
 
 impl<T: BigInt> SecretKey<T> {

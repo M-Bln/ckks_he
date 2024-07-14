@@ -1,7 +1,7 @@
 use crate::algebra::arithmetic::{Rescale, RingMod};
 use crate::algebra::big_int::{BigInt, Zero};
 use crate::algebra::complex::{Complex, C64};
-use crate::algebra::polynomial::Polynomial;
+use crate::algebra::polynomial::{Polynomial, ScalarMul};
 use std::ops::{Add, Mul, Sub};
 
 use bnum::types::I256;
@@ -133,6 +133,28 @@ where
         );
         let new_poly = self.polynomial * &other.polynomial;
         CyclotomicRing::new(new_poly.coefficients(), self.dimension)
+    }
+}
+
+impl<T: BigInt> ScalarMul<CyclotomicRing<T>> for T {
+    type Output = CyclotomicRing<T>;
+
+    fn scalar_mul(self, rhs: CyclotomicRing<T>) -> CyclotomicRing<T> {
+        CyclotomicRing::new(
+            self.scalar_mul(rhs.polynomial).coefficients(),
+            rhs.dimension,
+        )
+    }
+}
+
+impl<'a, T: BigInt> ScalarMul<&'a CyclotomicRing<T>> for T {
+    type Output = CyclotomicRing<T>;
+
+    fn scalar_mul(self, rhs: &'a CyclotomicRing<T>) -> CyclotomicRing<T> {
+        CyclotomicRing::new(
+            self.scalar_mul(&rhs.polynomial).coefficients(),
+            rhs.dimension,
+        )
     }
 }
 
@@ -338,5 +360,31 @@ mod tests {
             cyclotomic_ring.polynomial.ref_coefficients()[1].modulus,
             modulus / scalar
         );
+    }
+
+    #[test]
+    fn test_cyclotomic_ring_scalar_multiplication() {
+        let poly = Polynomial::new(vec![I256::from(1), I256::from(2), I256::from(3)]);
+        let cyclo = CyclotomicRing::new(poly.coefficients(), 8);
+        let scalar = I256::from(2);
+        let result = scalar.scalar_mul(cyclo);
+        let expected_coefficients = vec![
+            I256::from(2),
+            I256::from(4),
+            I256::from(6),
+            I256::from(0),
+            I256::from(0),
+            I256::from(0),
+            I256::from(0),
+            I256::from(0),
+        ];
+
+        for (i, coeff) in result.polynomial.coefficients().iter().enumerate() {
+            assert_eq!(
+                coeff, &expected_coefficients[i],
+                "Coefficient mismatch at index {}: expected {}, got {}",
+                i, expected_coefficients[i], coeff
+            );
+        }
     }
 }
