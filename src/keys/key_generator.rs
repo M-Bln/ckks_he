@@ -77,7 +77,7 @@ fn generate_public_key<T: BigInt>(
     let dimension = 2_usize.pow(params.dimension_exponent);
     let mut rng = rand::thread_rng();
     let modulus = params.q_0.clone() * params.q.fast_exp(params.level_max);
-    let sampler = T::sampler(T::from(0), modulus.clone());
+    let sampler = T::sampler(-modulus.clone()/T::from(2), modulus.clone()/T::from(2));
     let public_key_coefficients = sample_n(sampler, dimension, &mut rng);
     let public_key_a = Polynomial::<T>::new(public_key_coefficients)
         .modulo(modulus.clone())
@@ -89,8 +89,8 @@ fn generate_public_key<T: BigInt>(
         .modulo(modulus.clone())
         .to_cyclotomic(params.dimension_exponent);
     let raw_public_key = RawCiphertext::<T>(
-        public_key_a.clone(),
-        error - &(public_key_a * &secret_key.key_s),
+        error - &(public_key_a.clone() * &secret_key.key_s),
+	public_key_a,
     );
 
     PublicKey::<T>::new(
@@ -222,7 +222,8 @@ mod tests {
     use super::*;
     use crate::algebra::big_int::BigInt;
     use bnum::types::I256;
-
+    use crate::algebra::conversion_rounding::f64_to_i256;
+    
     #[test]
     fn test_generate_keys_all_parameters() {
         let params = KeyGenerationParameters {
@@ -265,6 +266,40 @@ mod tests {
         assert_eq!(evaluation_key.variance, params.variance);
     }
 
+    #[test]
+    fn test_encrypt_decrypt() {
+        // Define parameters for key generation
+        let dimension_exponent = 10;
+        let q = I256::from(16);
+        let level_max = 5;
+	let modulus = q.clone() * q.clone().fast_exp(level_max);
+
+        // Generate keys using the provided helper function
+        let (mut public_key, _evaluation_key, secret_key) = generate_keys(dimension_exponent, q.clone(), level_max);
+
+        // Create a sample message
+        let message_coefficients = vec![I256::from(0); 2_usize.pow(dimension_exponent)];
+        let message = Polynomial::new(message_coefficients)
+            .modulo(modulus)
+            .to_cyclotomic(dimension_exponent);
+
+        // Encrypt the message
+        let upper_bound_message = 100.0; // Example value, adjust as needed
+        let ciphertext = public_key.encrypt(&message, upper_bound_message);
+
+        // Decrypt the ciphertext
+        let decrypted_message = secret_key.decrypt_raw(&public_key.raw_key);
+
+        // Verify that the decrypted message is close to the original message
+        for (original, decrypted) in message.polynomial.coefficients().iter().zip(decrypted_message.polynomial.coefficients().iter()) {
+            let diff = (original.value - decrypted.value).remainder(&modulus);
+            println!("Original: {:?}, Decrypted: {:?}, Difference: {}", original, decrypted, diff);
+	    println!("theoretical encryption error: {:?} \n {:?} ", f64_to_i256(public_key.encryption_error), public_key.encryption_error);
+            assert!(diff < f64_to_i256(public_key.encryption_error), "Difference too large!");
+	    assert!(diff > f64_to_i256(-public_key.encryption_error), "Difference too large!");
+        }
+    }
+    
     // #[test]
     // fn test_generate_keys_all_parameters() {
     //     let dimension_exponent = 2;

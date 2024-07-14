@@ -12,10 +12,10 @@ pub struct RawCiphertext<T: BigInt>(pub CiphertextRing<T>, pub CiphertextRing<T>
 
 // Should I also keep a ref to public / eval key?
 pub struct Ciphertext<T: BigInt> {
-    raw: RawCiphertext<T>,
-    level: u32,
-    upper_bound_message: f64,
-    upper_bound_error: f64,
+    pub raw: RawCiphertext<T>,
+    pub level: u32,
+    pub upper_bound_message: f64,
+    pub upper_bound_error: f64,
 }
 
 impl<T: BigInt> Ciphertext<T> {

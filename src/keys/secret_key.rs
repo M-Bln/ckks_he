@@ -1,6 +1,6 @@
 use crate::algebra::big_int::BigInt;
 use crate::algebra::polynomial::Polynomial;
-use crate::ciphertext::CiphertextRing;
+use crate::ciphertext::{RawCiphertext, CiphertextRing, Ciphertext};
 use crate::random_distributions::HWTDistribution;
 
 #[derive(Clone, Debug)]
@@ -46,12 +46,23 @@ impl<T: BigInt> SecretKey<T> {
             key_s,
         }
     }
+
+    pub fn decrypt(&self, cipher: &Ciphertext<T>) -> CiphertextRing<T> {
+	self.decrypt_raw(&cipher.raw)
+	//cipher.raw.clone().0 + &(cipher.raw.clone().1 * &self.key_s)
+    }
+
+    pub fn decrypt_raw(&self, raw: &RawCiphertext<T>) -> CiphertextRing<T> {
+	raw.clone().0 + &(raw.clone().1 * &self.key_s)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::algebra::big_int::BigInt;
+    use crate::keys::public_key::PublicKey;
+    use crate::ciphertext::RawCiphertext;
     use bnum::types::I256;
 
     #[test]

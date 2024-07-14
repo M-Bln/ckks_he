@@ -1,6 +1,6 @@
 use bnum::types::I256;
 use std::fmt;
-use std::ops::{Add, Div, Mul, Rem, Sub};
+use std::ops::{Neg, Add, Div, Mul, Rem, Sub};
 
 use crate::algebra::arithmetic::RingMod;
 use crate::random_distributions::UniformSamplable;
@@ -13,6 +13,7 @@ pub trait BigInt:
     Sized
     + Add<Output = Self>
     + Sub<Output = Self>
+    + Neg<Output = Self>
     + Mul<Output = Self>
     + Div<Output = Self>
     + Rem<Output = Self>
