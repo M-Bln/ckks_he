@@ -278,7 +278,7 @@ mod tests {
         let (mut public_key, _evaluation_key, secret_key) = generate_keys(dimension_exponent, q.clone(), level_max);
 
         // Create a sample message
-        let message_coefficients = vec![I256::from(0); 2_usize.pow(dimension_exponent)];
+        let message_coefficients = vec![I256::from(1209); 2_usize.pow(dimension_exponent)];
         let message = Polynomial::new(message_coefficients)
             .modulo(modulus)
             .to_cyclotomic(dimension_exponent);
@@ -288,7 +288,7 @@ mod tests {
         let ciphertext = public_key.encrypt(&message, upper_bound_message);
 
         // Decrypt the ciphertext
-        let decrypted_message = secret_key.decrypt_raw(&public_key.raw_key);
+        let decrypted_message = secret_key.decrypt(&ciphertext);
 
         // Verify that the decrypted message is close to the original message
         for (original, decrypted) in message.polynomial.coefficients().iter().zip(decrypted_message.polynomial.coefficients().iter()) {
