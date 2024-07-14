@@ -2,6 +2,8 @@ use bnum::types::I256;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Rem, Sub};
 
+use crate::algebra::arithmetic::RingMod;
+
 pub trait Zero: Sized {
     fn zero(&self) -> Self;
 }
@@ -29,6 +31,10 @@ pub trait BigInt:
 {
     fn new(value: i64) -> Self {
         Self::from(value)
+    }
+
+    fn modulo(&self, modulus: Self) -> RingMod<Self> {
+	RingMod::new(self.clone() % modulus, modulus)
     }
 }
 

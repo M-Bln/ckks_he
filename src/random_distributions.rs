@@ -86,7 +86,7 @@ impl HWTDistribution {
     }
 
     /// Generates a random vector of length `n` with exactly `h` non-zero BigInt coefficients.
-    pub fn sample<T: BigInt>(&mut self) -> Vec<T> {
+    pub fn sample<T: From<i64> + Clone>(&mut self) -> Vec<T> {
         let mut vec = vec![T::from(0); self.n];
         let mut indices: Vec<usize> = (0..self.n).collect();
         indices.shuffle(&mut self.rng);

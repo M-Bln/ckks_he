@@ -1,12 +1,27 @@
 use crate::algebra::arithmetic::RingMod;
+use crate::algebra::big_int::BigInt;
 use crate::algebra::complex::{Complex, C64};
 use crate::algebra::cyclotomic_ring::CyclotomicRing;
 use crate::algebra::polynomial::Polynomial;
 use bnum::types::I256;
 
-impl Polynomial<RingMod<I256>> {
-    pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<RingMod<I256>> {
+impl<T: BigInt> Polynomial<RingMod<T>> {
+    pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<RingMod<T>> {
         CyclotomicRing::new(self.coefficients(), 2_usize.pow(dimension_exponent))
+    }
+}
+
+impl<T: BigInt> Polynomial<T> {
+    pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<T> {
+        CyclotomicRing::new(self.coefficients(), 2_usize.pow(dimension_exponent))
+    }
+}
+
+
+impl<T: BigInt> Polynomial<T> {
+    pub fn modulo(&self, modulus: T) -> Polynomial<RingMod<T>> {
+	let coefficients = self.ref_coefficients().iter().map(|c| c.modulo(modulus)).collect();
+	Polynomial::new(coefficients)
     }
 }
 

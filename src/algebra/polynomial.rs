@@ -155,16 +155,16 @@ impl<T: BigInt> Rescale<RingMod<T>> for Polynomial<RingMod<T>> {
     }
 }
 
-impl Polynomial<I256> {
-    pub fn modulo(&self, modulus: I256) -> Polynomial<RingMod<I256>> {
-        let coefficients = self
-            .coefficients
-            .iter()
-            .map(|&coeff| RingMod::<I256>::new(coeff, modulus))
-            .collect();
-        Polynomial { coefficients }
-    }
-}
+// impl Polynomial<I256> {
+//     pub fn modulo(&self, modulus: I256) -> Polynomial<RingMod<I256>> {
+//         let coefficients = self
+//             .coefficients
+//             .iter()
+//             .map(|&coeff| RingMod::<I256>::new(coeff, modulus))
+//             .collect();
+//         Polynomial { coefficients }
+//     }
+// }
 
 #[cfg(test)]
 mod tests {

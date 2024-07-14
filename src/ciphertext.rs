@@ -5,12 +5,12 @@ use bnum::types::I256;
 use std::ops::{Add, Mul};
 
 //type CiphertextRing = CyclotomicRing<RingMod<I256>>;
-type CiphertextRing<T: BigInt> = CyclotomicRing<RingMod<T>>;
+pub type CiphertextRing<T: BigInt> = CyclotomicRing<RingMod<T>>;
 
 struct RawCiphertext<T: BigInt>(CiphertextRing<T>, CiphertextRing<T>);
 
 // Should I also keep a ref to public / eval key?
-struct Ciphertext<T: BigInt> {
+pub struct Ciphertext<T: BigInt> {
     raw: RawCiphertext<T>,
     level: u32,
     upper_bound_message: T,
