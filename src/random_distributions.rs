@@ -27,15 +27,7 @@ impl UniformSamplable for i64 {
     }
 }
 
-// pub trait UniformSampler {
-//     type Item;
-//     fn sample(&mut self, min: Self::Item, max: Self::Item) -> Self::Item;
-// }
 
-pub struct Sampler<T: BigInt> {
-    rng: ThreadRng,
-    _marker: std::marker::PhantomData<T>,
-}
 
 // impl UniformSampler for Sampler<I256> {
 //     type Item = I256;
@@ -252,5 +244,32 @@ mod tests {
 
         let non_zero_count = result.iter().filter(|&&x| x != I256::from(0)).count();
         assert_eq!(non_zero_count, h);
+    }
+
+    
+    #[test]
+    fn test_uniform_sampler_i64() {
+        let min = -1;
+        let max = 1;
+        let sampler = i64::sampler(min, max);
+        let mut rng = rand::thread_rng();
+        for _ in 0..30 {
+            let sample = sampler.sample(&mut rng);
+            println!("Uniform sample (i64): {}", sample);
+            assert!(sample >= min && sample <= max);
+        }
+    }
+
+    #[test]
+    fn test_uniform_sampler_i256() {
+        let min = I256::from(-1);
+        let max = I256::from(1);
+        let sampler = I256::sampler(min.clone(), max.clone());
+        let mut rng = rand::thread_rng();
+        for _ in 0..30 {
+            let sample = sampler.sample(&mut rng);
+            println!("Uniform sample (I256): {}", sample);
+            assert!(sample >= min && sample <= max);
+        }
     }
 }
