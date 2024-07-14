@@ -3,11 +3,13 @@ use crate::algebra::polynomial::{Polynomial};
 use crate::ciphertext::CiphertextRing;
 use crate::random_distributions::HWTDistribution;
 
+#[derive(Clone, Debug)]
 pub struct SecretKey<T: BigInt> {
     dimension_exponent: u32, // Ciphertexts in cyclotomic ring $R[X]/(1+X^N)$ with N = 2^dimension_exponent
     hamming_weight: usize, // Number of non zero coefficients in rawKey.1
     mul_scaling: T, // Rescaling factor used in homomorphic multiplication
-    q: T,
+    q_0: T, // minimal modulus
+    q: T, // modulus per level, the total modulus in coefficients ring is initialy mul_scaling * q_0 * q^{level_max}
     level_max: u32,
     standard_deviation: f64, // standard deviation of the Gaussian distribution of error sampling
     raw_key: CiphertextRing<T>,
@@ -18,23 +20,69 @@ impl<T: BigInt> SecretKey<T> {
         dimension_exponent: u32,
         hamming_weight: usize,
         mul_scaling: T,
+	q_0: T,
         q: T,
         level_max: u32,
         standard_deviation: f64,
     ) -> Self {
         let n = 1 << dimension_exponent; // 2^dimension_exponent
+	let modulus = mul_scaling * q_0 * q.fast_exp(level_max); // the total modulus in coefficients ring is initialy mul_scaling * q_0 * q^{level_max}
 	let mut hwt_distribution = HWTDistribution::new(n, hamming_weight);
-	let raw_key = Polynomial::new(hwt_distribution.sample::<T>()).modulo(q).to_cyclotomic(2_u32.pow(dimension_exponent));
-//        let rawKey = CiphertextRing::new(secret_key_coefficients, 2_u32.pow(dimension_exponent));
+	
+	let key_coefficients = hwt_distribution.sample::<T>();
+	let key_polynomial = Polynomial::new(key_coefficients);
+	let raw_key = key_polynomial.modulo(modulus).to_cyclotomic(dimension_exponent);
+
 
         SecretKey {
             dimension_exponent,
             hamming_weight,
             mul_scaling,
-            q,
+            q_0,
+	    q,
             level_max,
             standard_deviation,
             raw_key,
         }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bnum::types::I256;
+    use crate::algebra::big_int::BigInt;
+
+    #[test]
+    fn test_secret_key_constructor() {
+        let dimension_exponent = 3;
+        let hamming_weight = 4;
+        let mul_scaling = I256::new(3);
+        let q_0 = I256::new(17);
+        let q = I256::new(19);
+        let level_max = 3;
+        let standard_deviation = 3.2;
+
+        let secret_key = SecretKey::new(
+            dimension_exponent,
+            hamming_weight,
+            mul_scaling.clone(),
+            q_0.clone(),
+            q.clone(),
+            level_max,
+            standard_deviation,
+        );
+
+        println!("SecretKey: {:?}", secret_key);
+
+        assert_eq!(secret_key.dimension_exponent, dimension_exponent);
+        assert_eq!(secret_key.hamming_weight, hamming_weight);
+        assert_eq!(secret_key.mul_scaling, mul_scaling);
+        assert_eq!(secret_key.q_0, q_0);
+        assert_eq!(secret_key.q, q);
+        assert_eq!(secret_key.level_max, level_max);
+        assert_eq!(secret_key.standard_deviation, standard_deviation);
+        // Add more specific checks on raw_key if necessary
     }
 }

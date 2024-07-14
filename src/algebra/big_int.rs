@@ -2,6 +2,7 @@ use bnum::types::I256;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Rem, Sub};
 
+
 use crate::algebra::arithmetic::RingMod;
 
 pub trait Zero: Sized {
@@ -35,6 +36,21 @@ pub trait BigInt:
 
     fn modulo(&self, modulus: Self) -> RingMod<Self> {
 	RingMod::new(self.clone() % modulus, modulus)
+    }
+
+    fn fast_exp(&self, exponent: u32) -> Self {
+        let mut base = *self;
+        let mut exp = exponent;
+        let mut result = Self::from(1);
+
+        while exp > 0 {
+            if exp % 2 == 1 {
+                result = result * base;
+            }
+            base = base * base;
+            exp /= 2;
+        }
+        result
     }
 }
 
@@ -231,6 +247,21 @@ mod tests {
         let b = I256::new(4);
         let result = a % &b;
         assert_eq!(result, I256::from(0));
+    }
+
+    #[test]
+    fn test_fast_exp() {
+        let base = I256::from(2);
+        let exponent = 10;
+        let result = base.fast_exp(exponent);
+        let expected = I256::from(1024);
+        assert_eq!(result, expected);
+
+        let base = I256::from(5);
+        let exponent = 3;
+        let result = base.fast_exp(exponent);
+        let expected = I256::from(125);
+        assert_eq!(result, expected);
     }
 
     // #[test]
