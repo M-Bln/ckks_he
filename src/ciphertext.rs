@@ -1,6 +1,6 @@
 use crate::algebra::arithmetic::{Rescale, RingMod};
+use crate::algebra::big_int::BigInt;
 use crate::algebra::cyclotomic_ring::CyclotomicRing;
-use crate::algebra::big_int::{BigInt};
 use bnum::types::I256;
 use std::ops::{Add, Mul};
 
@@ -8,7 +8,6 @@ use std::ops::{Add, Mul};
 type CiphertextRing<T: BigInt> = CyclotomicRing<RingMod<T>>;
 
 struct RawCiphertext<T: BigInt>(CiphertextRing<T>, CiphertextRing<T>);
-
 
 // Should I also keep a ref to public / eval key?
 struct Ciphertext<T: BigInt> {
@@ -25,10 +24,10 @@ impl<'a, T: BigInt> Add<&'a RawCiphertext<T>> for RawCiphertext<T> {
     }
 }
 
-impl<'a, T: BigInt> Mul<&'a RawCiphertext<T>> for CiphertextRing<T>  {
+impl<'a, T: BigInt> Mul<&'a RawCiphertext<T>> for CiphertextRing<T> {
     type Output = RawCiphertext<T>;
     fn mul(self, other: &'a RawCiphertext<T>) -> RawCiphertext<T> {
-	RawCiphertext(self.clone()*&other.0, self*&other.1)
+        RawCiphertext(self.clone() * &other.0, self * &other.1)
     }
 }
 
@@ -46,8 +45,8 @@ impl<T: BigInt> RawCiphertext<T> {
             self.0.clone() * &other.1 + &(self.1.clone() * &other.0),
             self.1.clone() * &other.1,
         );
-	let mut summand = d_2 * evk;
-	summand.rescale(P);
+        let mut summand = d_2 * evk;
+        summand.rescale(P);
         RawCiphertext(d_0, d_1) + &summand
     }
 }

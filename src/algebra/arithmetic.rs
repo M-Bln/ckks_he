@@ -58,7 +58,6 @@ impl<T: BigInt> Rescale<RingMod<T>> for RingMod<T> {
 impl<T: BigInt> Add for RingMod<T> {
     type Output = Self;
 
-
     fn add(self, other: Self) -> Self {
         if self.modulus < other.modulus {
             let value = (self.value + (other.value % self.modulus.clone())) % self.modulus.clone();
@@ -67,7 +66,8 @@ impl<T: BigInt> Add for RingMod<T> {
                 value,
             }
         } else {
-            let value = ((self.value % other.modulus.clone()) + other.value) % other.modulus.clone();
+            let value =
+                ((self.value % other.modulus.clone()) + other.value) % other.modulus.clone();
             RingMod {
                 modulus: other.modulus,
                 value,
@@ -75,7 +75,6 @@ impl<T: BigInt> Add for RingMod<T> {
         }
     }
 }
-
 
 /// Addition of RingMod with reference, it is performed modulo the smallest of each modulus
 impl<'a, T: BigInt> Add<&'a RingMod<T>> for RingMod<T> {
@@ -89,7 +88,8 @@ impl<'a, T: BigInt> Add<&'a RingMod<T>> for RingMod<T> {
                 value,
             }
         } else {
-            let value = ((self.value % other.modulus.clone()) + other.value) % other.modulus.clone();
+            let value =
+                ((self.value % other.modulus.clone()) + other.value) % other.modulus.clone();
             RingMod {
                 modulus: other.modulus,
                 value,
@@ -97,8 +97,6 @@ impl<'a, T: BigInt> Add<&'a RingMod<T>> for RingMod<T> {
         }
     }
 }
-
-
 
 /// Subtraction is performed modulo the smallest of each modulus
 impl<T: BigInt> Sub for RingMod<T> {
@@ -112,7 +110,8 @@ impl<T: BigInt> Sub for RingMod<T> {
                 value,
             }
         } else {
-            let value = ((self.value % other.modulus.clone()) - other.value) % other.modulus.clone();
+            let value =
+                ((self.value % other.modulus.clone()) - other.value) % other.modulus.clone();
             RingMod {
                 modulus: other.modulus,
                 value,
@@ -133,7 +132,8 @@ impl<'a, T: BigInt> Sub<&'a RingMod<T>> for RingMod<T> {
                 value,
             }
         } else {
-            let value = ((self.value % other.modulus.clone()) - other.value) % other.modulus.clone();
+            let value =
+                ((self.value % other.modulus.clone()) - other.value) % other.modulus.clone();
             RingMod {
                 modulus: other.modulus,
                 value,
@@ -154,7 +154,8 @@ impl<T: BigInt> Mul for RingMod<T> {
                 value,
             }
         } else {
-            let value = ((self.value % other.modulus.clone()) * other.value) % other.modulus.clone();
+            let value =
+                ((self.value % other.modulus.clone()) * other.value) % other.modulus.clone();
             RingMod {
                 modulus: other.modulus,
                 value,
@@ -175,7 +176,8 @@ impl<'a, T: BigInt> Mul<&'a RingMod<T>> for RingMod<T> {
                 value,
             }
         } else {
-            let value = ((self.value % other.modulus.clone()) * other.value) % other.modulus.clone();
+            let value =
+                ((self.value % other.modulus.clone()) * other.value) % other.modulus.clone();
             RingMod {
                 modulus: other.modulus,
                 value,
@@ -405,16 +407,21 @@ mod tests {
         assert_eq!(ringmod.modulus, modulus / scalar);
     }
 
-    
     #[test]
     fn test_add_ringmod_different_moduli() {
         let modulus1 = I256::new(100);
         let value1 = I256::new(50);
-        let ringmod1 = RingMod { modulus: modulus1, value: value1 };
+        let ringmod1 = RingMod {
+            modulus: modulus1,
+            value: value1,
+        };
 
         let modulus2 = I256::new(200);
         let value2 = I256::new(75);
-        let ringmod2 = RingMod { modulus: modulus2, value: value2 };
+        let ringmod2 = RingMod {
+            modulus: modulus2,
+            value: value2,
+        };
 
         // Addition should be done in the smaller ring
         let result = ringmod1 + ringmod2;
@@ -424,15 +431,21 @@ mod tests {
         assert_eq!(result.value, I256::new((50 + (75 % 100)) % 100));
     }
 
-        #[test]
+    #[test]
     fn test_sub_ringmod_different_moduli() {
         let modulus1 = I256::new(100);
         let value1 = I256::new(50);
-        let ringmod1 = RingMod { modulus: modulus1, value: value1 };
+        let ringmod1 = RingMod {
+            modulus: modulus1,
+            value: value1,
+        };
 
         let modulus2 = I256::new(200);
         let value2 = I256::new(75);
-        let ringmod2 = RingMod { modulus: modulus2, value: value2 };
+        let ringmod2 = RingMod {
+            modulus: modulus2,
+            value: value2,
+        };
 
         // Subtraction should be done in the smaller ring
         let result = ringmod1 - ringmod2;
@@ -446,15 +459,24 @@ mod tests {
     fn test_mul_ringmod_different_moduli() {
         let modulus1 = I256::new(100);
         let value1 = I256::new(50);
-        let ringmod1 = RingMod { modulus: modulus1, value: value1 };
+        let ringmod1 = RingMod {
+            modulus: modulus1,
+            value: value1,
+        };
 
         let modulus2 = I256::new(200);
         let value2 = I256::new(75);
-        let ringmod2 = RingMod { modulus: modulus2, value: value2 };
+        let ringmod2 = RingMod {
+            modulus: modulus2,
+            value: value2,
+        };
 
         // Multiplication should be done in the smaller ring
         let result = ringmod1 * ringmod2;
-        println!("Result of multiplication with different moduli: {:?}", result);
+        println!(
+            "Result of multiplication with different moduli: {:?}",
+            result
+        );
 
         assert_eq!(result.modulus, I256::new(100));
         assert_eq!(result.value, I256::new((50 * (75 % 100)) % 100));
