@@ -82,3 +82,60 @@ pub fn generate_keys_all_parameters<T: BigInt>(
     );
     (public_key, evaluation_key, secret_key)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bnum::types::I256;
+    use crate::algebra::big_int::BigInt;
+
+
+    #[test]
+    fn test_generate_keys_all_parameters() {
+        let dimension_exponent = 2;
+        let hamming_weight = 2;
+        let mul_scaling = I256::from(3);
+        let q_0 = I256::from(5);
+        let q = I256::from(4);
+        let level_max = 2;
+        let variance = 9.0;
+
+        let (public_key, evaluation_key, secret_key) = generate_keys_all_parameters(
+            dimension_exponent,
+            hamming_weight,
+            mul_scaling.clone(),
+            q_0.clone(),
+            q.clone(),
+            level_max,
+            variance,
+        );
+
+        println!("PublicKey: {:?}", public_key);
+        println!("EvaluationKey: {:?}", evaluation_key);
+        println!("SecretKey: {:?}", secret_key);
+
+        // Verify that the keys are generated correctly
+        assert_eq!(secret_key.dimension_exponent, dimension_exponent);
+        assert_eq!(secret_key.hamming_weight, hamming_weight);
+        assert_eq!(secret_key.mul_scaling, mul_scaling);
+        assert_eq!(secret_key.q_0, q_0);
+        assert_eq!(secret_key.q, q);
+        assert_eq!(secret_key.level_max, level_max);
+        assert_eq!(secret_key.variance, variance);
+
+        assert_eq!(public_key.dimension_exponent, dimension_exponent);
+        assert_eq!(public_key.mul_scaling, mul_scaling);
+        assert_eq!(public_key.q_0, q_0);
+        assert_eq!(public_key.q, q);
+        assert_eq!(public_key.level_max, level_max);
+        assert_eq!(public_key.variance, variance);
+
+        assert_eq!(evaluation_key.dimension_exponent, dimension_exponent);
+        assert_eq!(evaluation_key.mul_scaling, mul_scaling);
+        assert_eq!(evaluation_key.q_0, q_0);
+        assert_eq!(evaluation_key.q, q);
+        assert_eq!(evaluation_key.level_max, level_max);
+        assert_eq!(evaluation_key.variance, variance);
+    }
+}
+

@@ -5,13 +5,13 @@ use crate::random_distributions::HWTDistribution;
 
 #[derive(Clone, Debug)]
 pub struct SecretKey<T: BigInt> {
-    dimension_exponent: u32, // Ciphertexts in cyclotomic ring $R[X]/(1+X^N)$ with N = 2^dimension_exponent
-    hamming_weight: usize,   // Number of non zero coefficients in rawKey.1
-    mul_scaling: T,          // Rescaling factor used in homomorphic multiplication
-    q_0: T,                  // minimal modulus
-    q: T, // modulus per level, the total modulus in coefficients ring is initialy mul_scaling * q_0 * q^{level_max}
-    level_max: u32,
-    standard_deviation: f64, // standard deviation of the Gaussian distribution of error sampling
+    pub dimension_exponent: u32, // Ciphertexts in cyclotomic ring $R[X]/(1+X^N)$ with N = 2^dimension_exponent
+    pub hamming_weight: usize,   // Number of non zero coefficients in rawKey.1
+    pub mul_scaling: T,          // Rescaling factor used in homomorphic multiplication
+    pub q_0: T,                  // minimal modulus
+    pub q: T, // modulus per level, the total modulus in coefficients ring is initialy mul_scaling * q_0 * q^{level_max}
+    pub level_max: u32,
+    pub variance: f64, // standard deviation of the Gaussian distribution of error sampling
     pub key_s: CiphertextRing<T>,
 }
 
@@ -23,7 +23,7 @@ impl<T: BigInt> SecretKey<T> {
         q_0: T,
         q: T,
         level_max: u32,
-        standard_deviation: f64,
+        variance: f64,
     ) -> Self {
         let n = 1 << dimension_exponent; // 2^dimension_exponent
         let modulus = mul_scaling * q_0 * q.fast_exp(level_max); // the total modulus in coefficients ring is initialy mul_scaling * q_0 * q^{level_max}
@@ -42,7 +42,7 @@ impl<T: BigInt> SecretKey<T> {
             q_0,
             q,
             level_max,
-            standard_deviation,
+            variance,
             key_s,
         }
     }
@@ -62,7 +62,7 @@ mod tests {
         let q_0 = I256::new(17);
         let q = I256::new(19);
         let level_max = 3;
-        let standard_deviation = 3.2;
+        let variance = 3.2;
 
         let secret_key = SecretKey::new(
             dimension_exponent,
@@ -71,7 +71,7 @@ mod tests {
             q_0.clone(),
             q.clone(),
             level_max,
-            standard_deviation,
+            variance,
         );
 
         println!("SecretKey: {:?}", secret_key);
@@ -82,6 +82,6 @@ mod tests {
         assert_eq!(secret_key.q_0, q_0);
         assert_eq!(secret_key.q, q);
         assert_eq!(secret_key.level_max, level_max);
-        assert_eq!(secret_key.standard_deviation, standard_deviation);
+        assert_eq!(secret_key.variance, variance);
     }
 }
