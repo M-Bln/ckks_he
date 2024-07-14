@@ -30,7 +30,6 @@ pub fn generate_keys_all_parameters<T: BigInt>(
     (public_key, evaluation_key, secret_key)
 }
 
-
 fn generate_secret_key<T: BigInt>(params: &KeyGenerationParameters<T>) -> SecretKey<T> {
     SecretKey::<T>::new(
         params.dimension_exponent,
@@ -113,8 +112,6 @@ fn generate_evaluation_key<T: BigInt>(
     )
 }
 
-
-
 // pub fn generate_keys_all_parameters<T: BigInt>(
 //     dimension_exponent: u32,
 //     hamming_weight: usize,
@@ -194,10 +191,8 @@ fn generate_evaluation_key<T: BigInt>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bnum::types::I256;
     use crate::algebra::big_int::BigInt;
-
-
+    use bnum::types::I256;
 
     #[test]
     fn test_generate_keys_all_parameters() {
@@ -240,7 +235,7 @@ mod tests {
         assert_eq!(evaluation_key.level_max, params.level_max);
         assert_eq!(evaluation_key.variance, params.variance);
     }
-    
+
     // #[test]
     // fn test_generate_keys_all_parameters() {
     //     let dimension_exponent = 2;
@@ -289,4 +284,3 @@ mod tests {
     //     assert_eq!(evaluation_key.variance, variance);
     // }
 }
-

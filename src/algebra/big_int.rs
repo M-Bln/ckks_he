@@ -28,6 +28,7 @@ pub trait BigInt:
     + From<i64>
     + Eq
     + PartialOrd
+    + Ord
     + UniformSamplable
     + Zero
 {
@@ -52,6 +53,17 @@ pub trait BigInt:
             exp /= 2;
         }
         result
+    }
+
+    /// Assuming other >=0, pick a representative of self modulo other in the range ]-other/2, other/2]
+    fn remainder(&self, other: &Self) -> Self {
+        let mut remainder = *self % other;
+        if Self::from(2) * remainder > *other {
+            remainder = remainder - other;
+        } else if Self::from(-2) * remainder >= *other {
+            remainder = remainder + other;
+        }
+        remainder
     }
 }
 
@@ -263,6 +275,46 @@ mod tests {
         let result = base.fast_exp(exponent);
         let expected = I256::from(125);
         assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_remainder() {
+        let modulus = I256::from(10);
+
+        let a = I256::from(25);
+        let rem = a.remainder(&modulus);
+        println!("a = {}, modulus = {}, remainder = {}", a, modulus, rem);
+        assert_eq!(rem, I256::from(5));
+
+        let b = I256::from(-25);
+        let rem = b.remainder(&modulus);
+        println!("b = {}, modulus = {}, remainder = {}", b, modulus, rem);
+        assert_eq!(rem, I256::from(5));
+
+        let f = I256::from(7);
+        let rem = f.remainder(&modulus);
+        println!("f = {}, modulus = {}, remainder = {}", f, modulus, rem);
+        assert_eq!(rem, I256::from(-3));
+
+        let e = I256::from(-9);
+        let rem = e.remainder(&modulus);
+        println!("e = {}, modulus = {}, remainder = {}", e, modulus, rem);
+        assert_eq!(rem, I256::from(1));
+
+        let f = I256::from(-19);
+        let rem = f.remainder(&modulus);
+        println!("f = {}, modulus = {}, remainder = {}", f, modulus, rem);
+        assert_eq!(rem, I256::from(1));
+
+        let f = I256::from(5);
+        let rem = f.remainder(&modulus);
+        println!("f = {}, modulus = {}, remainder = {}", f, modulus, rem);
+        assert_eq!(rem, I256::from(5));
+
+        let f = I256::from(-5);
+        let rem = f.remainder(&modulus);
+        println!("f = {}, modulus = {}, remainder = {}", f, modulus, rem);
+        assert_eq!(rem, I256::from(5));
     }
 
     // #[test]

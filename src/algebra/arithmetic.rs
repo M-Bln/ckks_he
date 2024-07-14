@@ -21,7 +21,7 @@ impl<T: BigInt> RingMod<T> {
     pub fn new(value: T, modulus: T) -> Self {
         RingMod {
             modulus,
-            value: value % &modulus,
+            value: value.remainder(&modulus),
         }
     }
 
@@ -54,25 +54,36 @@ impl<T: BigInt> Rescale<RingMod<T>> for RingMod<T> {
     }
 }
 
+// /// Addition is performed modulo the smallest of each modulus
+// impl<T: BigInt> Add for RingMod<T> {
+//     type Output = Self;
+
+//     fn add(self, other: Self) -> Self {
+//         if self.modulus < other.modulus {
+//             let value = self.value + other.value
+//             RingMod {
+//                 modulus: self.modulus,
+//                 value,
+//             }
+//         } else {
+//             let value =
+//                 ((self.value % other.modulus.clone()) + other.value) % other.modulus.clone();
+//             RingMod {
+//                 modulus: other.modulus,
+//                 value,
+//             }
+//         }
+//     }
+// }
+
 /// Addition is performed modulo the smallest of each modulus
 impl<T: BigInt> Add for RingMod<T> {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
-        if self.modulus < other.modulus {
-            let value = (self.value + (other.value % self.modulus.clone())) % self.modulus.clone();
-            RingMod {
-                modulus: self.modulus,
-                value,
-            }
-        } else {
-            let value =
-                ((self.value % other.modulus.clone()) + other.value) % other.modulus.clone();
-            RingMod {
-                modulus: other.modulus,
-                value,
-            }
-        }
+        let modulus = std::cmp::min(self.modulus, other.modulus);
+        let value = self.value + other.value;
+        Self::new(value, modulus)
     }
 }
 
@@ -81,20 +92,9 @@ impl<'a, T: BigInt> Add<&'a RingMod<T>> for RingMod<T> {
     type Output = Self;
 
     fn add(self, other: &Self) -> Self {
-        if self.modulus < other.modulus {
-            let value = (self.value + (other.value % self.modulus.clone())) % self.modulus.clone();
-            RingMod {
-                modulus: self.modulus,
-                value,
-            }
-        } else {
-            let value =
-                ((self.value % other.modulus.clone()) + other.value) % other.modulus.clone();
-            RingMod {
-                modulus: other.modulus,
-                value,
-            }
-        }
+        let modulus = std::cmp::min(self.modulus.clone(), other.modulus.clone());
+        let value = self.value + other.value.clone();
+        Self::new(value, modulus)
     }
 }
 
@@ -103,20 +103,9 @@ impl<T: BigInt> Sub for RingMod<T> {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self {
-        if self.modulus < other.modulus {
-            let value = (self.value - (other.value % self.modulus.clone())) % self.modulus.clone();
-            RingMod {
-                modulus: self.modulus,
-                value,
-            }
-        } else {
-            let value =
-                ((self.value % other.modulus.clone()) - other.value) % other.modulus.clone();
-            RingMod {
-                modulus: other.modulus,
-                value,
-            }
-        }
+        let modulus = std::cmp::min(self.modulus.clone(), other.modulus.clone());
+        let value = self.value - other.value;
+        Self::new(value, modulus)
     }
 }
 
@@ -125,20 +114,9 @@ impl<'a, T: BigInt> Sub<&'a RingMod<T>> for RingMod<T> {
     type Output = Self;
 
     fn sub(self, other: &'a RingMod<T>) -> Self {
-        if self.modulus < other.modulus {
-            let value = (self.value - (other.value % self.modulus.clone())) % self.modulus.clone();
-            RingMod {
-                modulus: self.modulus,
-                value,
-            }
-        } else {
-            let value =
-                ((self.value % other.modulus.clone()) - other.value) % other.modulus.clone();
-            RingMod {
-                modulus: other.modulus,
-                value,
-            }
-        }
+        let modulus = std::cmp::min(self.modulus.clone(), other.modulus.clone());
+        let value = self.value - other.value.clone();
+        Self::new(value, modulus)
     }
 }
 
@@ -147,20 +125,9 @@ impl<T: BigInt> Mul for RingMod<T> {
     type Output = Self;
 
     fn mul(self, other: Self) -> Self {
-        if self.modulus < other.modulus {
-            let value = (self.value * (other.value % self.modulus.clone())) % self.modulus.clone();
-            RingMod {
-                modulus: self.modulus,
-                value,
-            }
-        } else {
-            let value =
-                ((self.value % other.modulus.clone()) * other.value) % other.modulus.clone();
-            RingMod {
-                modulus: other.modulus,
-                value,
-            }
-        }
+        let modulus = std::cmp::min(self.modulus.clone(), other.modulus.clone());
+        let value = self.value * other.value;
+        Self::new(value, modulus)
     }
 }
 
@@ -169,22 +136,121 @@ impl<'a, T: BigInt> Mul<&'a RingMod<T>> for RingMod<T> {
     type Output = Self;
 
     fn mul(self, other: &'a RingMod<T>) -> Self {
-        if self.modulus < other.modulus {
-            let value = (self.value * (other.value % self.modulus.clone())) % self.modulus.clone();
-            RingMod {
-                modulus: self.modulus,
-                value,
-            }
-        } else {
-            let value =
-                ((self.value % other.modulus.clone()) * other.value) % other.modulus.clone();
-            RingMod {
-                modulus: other.modulus,
-                value,
-            }
-        }
+        let modulus = std::cmp::min(self.modulus.clone(), other.modulus.clone());
+        let value = self.value * other.value.clone();
+        Self::new(value, modulus)
     }
 }
+
+// /// Addition of RingMod with reference, it is performed modulo the smallest of each modulus
+// impl<'a, T: BigInt> Add<&'a RingMod<T>> for RingMod<T> {
+//     type Output = Self;
+
+//     fn add(self, other: &Self) -> Self {
+//         if self.modulus < other.modulus {
+//             let value = (self.value + (other.value % self.modulus.clone())) % self.modulus.clone();
+//             RingMod {
+//                 modulus: self.modulus,
+//                 value,
+//             }
+//         } else {
+//             let value =
+//                 ((self.value % other.modulus.clone()) + other.value) % other.modulus.clone();
+//             RingMod {
+//                 modulus: other.modulus,
+//                 value,
+//             }
+//         }
+//     }
+// }
+
+// /// Subtraction is performed modulo the smallest of each modulus
+// impl<T: BigInt> Sub for RingMod<T> {
+//     type Output = Self;
+
+//     fn sub(self, other: Self) -> Self {
+//         if self.modulus < other.modulus {
+//             let value = (self.value - (other.value % self.modulus.clone())) % self.modulus.clone();
+//             RingMod {
+//                 modulus: self.modulus,
+//                 value,
+//             }
+//         } else {
+//             let value =
+//                 ((self.value % other.modulus.clone()) - other.value) % other.modulus.clone();
+//             RingMod {
+//                 modulus: other.modulus,
+//                 value,
+//             }
+//         }
+//     }
+// }
+
+// /// Subtraction of RingMod with reference
+// impl<'a, T: BigInt> Sub<&'a RingMod<T>> for RingMod<T> {
+//     type Output = Self;
+
+//     fn sub(self, other: &'a RingMod<T>) -> Self {
+//         if self.modulus < other.modulus {
+//             let value = (self.value - (other.value % self.modulus.clone())) % self.modulus.clone();
+//             RingMod {
+//                 modulus: self.modulus,
+//                 value,
+//             }
+//         } else {
+//             let value =
+//                 ((self.value % other.modulus.clone()) - other.value) % other.modulus.clone();
+//             RingMod {
+//                 modulus: other.modulus,
+//                 value,
+//             }
+//         }
+//     }
+// }
+
+// /// Multiplication is performed modulo the smallest of each modulus
+// impl<T: BigInt> Mul for RingMod<T> {
+//     type Output = Self;
+
+//     fn mul(self, other: Self) -> Self {
+//         if self.modulus < other.modulus {
+//             let value = (self.value * (other.value % self.modulus.clone())) % self.modulus.clone();
+//             RingMod {
+//                 modulus: self.modulus,
+//                 value,
+//             }
+//         } else {
+//             let value =
+//                 ((self.value % other.modulus.clone()) * other.value) % other.modulus.clone();
+//             RingMod {
+//                 modulus: other.modulus,
+//                 value,
+//             }
+//         }
+//     }
+// }
+
+// /// Multiplication of RingMod with reference
+// impl<'a, T: BigInt> Mul<&'a RingMod<T>> for RingMod<T> {
+//     type Output = Self;
+
+//     fn mul(self, other: &'a RingMod<T>) -> Self {
+//         if self.modulus < other.modulus {
+//             let value = (self.value * (other.value % self.modulus.clone())) % self.modulus.clone();
+//             RingMod {
+//                 modulus: self.modulus,
+//                 value,
+//             }
+//         } else {
+//             let value =
+//                 ((self.value % other.modulus.clone()) * other.value) % other.modulus.clone();
+//             RingMod {
+//                 modulus: other.modulus,
+//                 value,
+//             }
+//         }
+//     }
+// }
 
 // impl<T: BigInt> Sub for RingMod<T> {
 //     type Output = Self;

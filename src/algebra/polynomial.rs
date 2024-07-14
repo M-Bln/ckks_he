@@ -380,14 +380,14 @@ mod tests {
     fn test_rescale_ringmod_polynomial_by_bigint() {
         let modulus = I256::new(100);
         let value1 = I256::new(50);
-        let value2 = I256::new(75);
+        let value2 = I256::new(-25);
         let ringmod1 = RingMod::new(value1.clone(), modulus.clone());
         let ringmod2 = RingMod::new(value2.clone(), modulus.clone());
         let mut polynomial = Polynomial::new(vec![ringmod1.clone(), ringmod2.clone()]);
 
         println!("Original Polynomial<RingMod<I256>>: {:?}", polynomial);
 
-        let scalar = I256::new(5);
+        let scalar = I256::new(4);
         polynomial.rescale(scalar.clone());
 
         println!(
@@ -405,7 +405,7 @@ mod tests {
     fn test_rescale_ringmod_polynomial() {
         let modulus = I256::new(100);
         let value1 = I256::new(50);
-        let value2 = I256::new(75);
+        let value2 = I256::new(-25);
         let ringmod1 = RingMod::new(value1.clone(), modulus.clone());
         let ringmod2 = RingMod::new(value2.clone(), modulus.clone());
         let mut polynomial = Polynomial::new(vec![ringmod1.clone(), ringmod2.clone()]);

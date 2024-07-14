@@ -366,7 +366,7 @@ mod tests {
     fn test_rescale_cyclotomic_ring() {
         let modulus = I256::new(100);
         let value1 = I256::new(50);
-        let value2 = I256::new(75);
+        let value2 = I256::new(-25);
         let ringmod1 = RingMod::new(value1.clone(), modulus.clone());
         let ringmod2 = RingMod::new(value2.clone(), modulus.clone());
         let polynomial = Polynomial::new(vec![ringmod1.clone(), ringmod2.clone()]);
