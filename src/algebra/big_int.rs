@@ -24,6 +24,7 @@ pub trait BigInt:
     + fmt::Debug
     + From<i64>
     + Eq
+    + PartialOrd
     + Zero
 {
     fn new(value: i64) -> Self {

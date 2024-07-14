@@ -54,106 +54,202 @@ impl<T: BigInt> Rescale<RingMod<T>> for RingMod<T> {
     }
 }
 
-// Addition of RingMod
+/// Addition is performed modulo the smallest of each modulus
 impl<T: BigInt> Add for RingMod<T> {
     type Output = Self;
 
+
     fn add(self, other: Self) -> Self {
-        assert!(
-            self.modulus == other.modulus,
-            "Moduli must be equal for addition"
-        );
-        let value = (self.value + other.value) % self.modulus;
-        RingMod {
-            modulus: self.modulus,
-            value,
+        if self.modulus < other.modulus {
+            let value = (self.value + (other.value % self.modulus.clone())) % self.modulus.clone();
+            RingMod {
+                modulus: self.modulus,
+                value,
+            }
+        } else {
+            let value = ((self.value % other.modulus.clone()) + other.value) % other.modulus.clone();
+            RingMod {
+                modulus: other.modulus,
+                value,
+            }
         }
     }
 }
 
-// Addition of RingMod with reference
+
+/// Addition of RingMod with reference, it is performed modulo the smallest of each modulus
 impl<'a, T: BigInt> Add<&'a RingMod<T>> for RingMod<T> {
     type Output = Self;
 
-    fn add(self, other: &'a RingMod<T>) -> Self {
-        assert!(
-            self.modulus == other.modulus,
-            "Moduli must be equal for addition"
-        );
-        let value = (self.value + other.value) % self.modulus;
-        RingMod {
-            modulus: self.modulus,
-            value,
+    fn add(self, other: &Self) -> Self {
+        if self.modulus < other.modulus {
+            let value = (self.value + (other.value % self.modulus.clone())) % self.modulus.clone();
+            RingMod {
+                modulus: self.modulus,
+                value,
+            }
+        } else {
+            let value = ((self.value % other.modulus.clone()) + other.value) % other.modulus.clone();
+            RingMod {
+                modulus: other.modulus,
+                value,
+            }
         }
     }
 }
 
+
+
+/// Subtraction is performed modulo the smallest of each modulus
 impl<T: BigInt> Sub for RingMod<T> {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self {
-        assert!(
-            self.modulus == other.modulus,
-            "Moduli must be equal for addition"
-        );
-        let value = (self.value - other.value) % self.modulus;
-        RingMod {
-            modulus: self.modulus,
-            value,
+        if self.modulus < other.modulus {
+            let value = (self.value - (other.value % self.modulus.clone())) % self.modulus.clone();
+            RingMod {
+                modulus: self.modulus,
+                value,
+            }
+        } else {
+            let value = ((self.value % other.modulus.clone()) - other.value) % other.modulus.clone();
+            RingMod {
+                modulus: other.modulus,
+                value,
+            }
         }
     }
 }
 
-// Addition of RingMod with reference
+/// Subtraction of RingMod with reference
 impl<'a, T: BigInt> Sub<&'a RingMod<T>> for RingMod<T> {
     type Output = Self;
 
     fn sub(self, other: &'a RingMod<T>) -> Self {
-        assert!(
-            self.modulus == other.modulus,
-            "Moduli must be equal for addition"
-        );
-        let value = (self.value - other.value) % self.modulus;
-        RingMod {
-            modulus: self.modulus,
-            value,
+        if self.modulus < other.modulus {
+            let value = (self.value - (other.value % self.modulus.clone())) % self.modulus.clone();
+            RingMod {
+                modulus: self.modulus,
+                value,
+            }
+        } else {
+            let value = ((self.value % other.modulus.clone()) - other.value) % other.modulus.clone();
+            RingMod {
+                modulus: other.modulus,
+                value,
+            }
         }
     }
 }
 
-// Multiplication of RingMod
+/// Multiplication is performed modulo the smallest of each modulus
 impl<T: BigInt> Mul for RingMod<T> {
     type Output = Self;
 
     fn mul(self, other: Self) -> Self {
-        assert!(
-            self.modulus == other.modulus,
-            "Moduli must be equal for multiplication"
-        );
-        let value = (self.value * other.value) % self.modulus;
-        RingMod {
-            modulus: self.modulus,
-            value,
+        if self.modulus < other.modulus {
+            let value = (self.value * (other.value % self.modulus.clone())) % self.modulus.clone();
+            RingMod {
+                modulus: self.modulus,
+                value,
+            }
+        } else {
+            let value = ((self.value % other.modulus.clone()) * other.value) % other.modulus.clone();
+            RingMod {
+                modulus: other.modulus,
+                value,
+            }
         }
     }
 }
 
-// Multiplication of RingMod with reference
+/// Multiplication of RingMod with reference
 impl<'a, T: BigInt> Mul<&'a RingMod<T>> for RingMod<T> {
     type Output = Self;
 
     fn mul(self, other: &'a RingMod<T>) -> Self {
-        assert!(
-            self.modulus == other.modulus,
-            "Moduli must be equal for multiplication"
-        );
-        let value = (self.value * other.value) % self.modulus;
-        RingMod {
-            modulus: self.modulus,
-            value,
+        if self.modulus < other.modulus {
+            let value = (self.value * (other.value % self.modulus.clone())) % self.modulus.clone();
+            RingMod {
+                modulus: self.modulus,
+                value,
+            }
+        } else {
+            let value = ((self.value % other.modulus.clone()) * other.value) % other.modulus.clone();
+            RingMod {
+                modulus: other.modulus,
+                value,
+            }
         }
     }
 }
+
+// impl<T: BigInt> Sub for RingMod<T> {
+//     type Output = Self;
+
+//     fn sub(self, other: Self) -> Self {
+//         assert!(
+//             self.modulus == other.modulus,
+//             "Moduli must be equal for addition"
+//         );
+//         let value = (self.value - other.value) % self.modulus;
+//         RingMod {
+//             modulus: self.modulus,
+//             value,
+//         }
+//     }
+// }
+
+// // Addition of RingMod with reference
+// impl<'a, T: BigInt> Sub<&'a RingMod<T>> for RingMod<T> {
+//     type Output = Self;
+
+//     fn sub(self, other: &'a RingMod<T>) -> Self {
+//         assert!(
+//             self.modulus == other.modulus,
+//             "Moduli must be equal for addition"
+//         );
+//         let value = (self.value - other.value) % self.modulus;
+//         RingMod {
+//             modulus: self.modulus,
+//             value,
+//         }
+//     }
+// }
+
+// // Multiplication of RingMod
+// impl<T: BigInt> Mul for RingMod<T> {
+//     type Output = Self;
+
+//     fn mul(self, other: Self) -> Self {
+//         assert!(
+//             self.modulus == other.modulus,
+//             "Moduli must be equal for multiplication"
+//         );
+//         let value = (self.value * other.value) % self.modulus;
+//         RingMod {
+//             modulus: self.modulus,
+//             value,
+//         }
+//     }
+// }
+
+// // Multiplication of RingMod with reference
+// impl<'a, T: BigInt> Mul<&'a RingMod<T>> for RingMod<T> {
+//     type Output = Self;
+
+//     fn mul(self, other: &'a RingMod<T>) -> Self {
+//         assert!(
+//             self.modulus == other.modulus,
+//             "Moduli must be equal for multiplication"
+//         );
+//         let value = (self.value * other.value) % self.modulus;
+//         RingMod {
+//             modulus: self.modulus,
+//             value,
+//         }
+//     }
+// }
 
 impl<T: BigInt> PartialEq for RingMod<T> {
     fn eq(&self, other: &Self) -> bool {
@@ -307,5 +403,60 @@ mod tests {
 
         assert_eq!(ringmod.value, value / scalar.clone());
         assert_eq!(ringmod.modulus, modulus / scalar);
+    }
+
+    
+    #[test]
+    fn test_add_ringmod_different_moduli() {
+        let modulus1 = I256::new(100);
+        let value1 = I256::new(50);
+        let ringmod1 = RingMod { modulus: modulus1, value: value1 };
+
+        let modulus2 = I256::new(200);
+        let value2 = I256::new(75);
+        let ringmod2 = RingMod { modulus: modulus2, value: value2 };
+
+        // Addition should be done in the smaller ring
+        let result = ringmod1 + ringmod2;
+        println!("Result of addition with different moduli: {:?}", result);
+
+        assert_eq!(result.modulus, I256::new(100));
+        assert_eq!(result.value, I256::new((50 + (75 % 100)) % 100));
+    }
+
+        #[test]
+    fn test_sub_ringmod_different_moduli() {
+        let modulus1 = I256::new(100);
+        let value1 = I256::new(50);
+        let ringmod1 = RingMod { modulus: modulus1, value: value1 };
+
+        let modulus2 = I256::new(200);
+        let value2 = I256::new(75);
+        let ringmod2 = RingMod { modulus: modulus2, value: value2 };
+
+        // Subtraction should be done in the smaller ring
+        let result = ringmod1 - ringmod2;
+        println!("Result of subtraction with different moduli: {:?}", result);
+
+        assert_eq!(result.modulus, I256::new(100));
+        assert_eq!(result.value, I256::new((50 - (75 % 100)) % 100));
+    }
+
+    #[test]
+    fn test_mul_ringmod_different_moduli() {
+        let modulus1 = I256::new(100);
+        let value1 = I256::new(50);
+        let ringmod1 = RingMod { modulus: modulus1, value: value1 };
+
+        let modulus2 = I256::new(200);
+        let value2 = I256::new(75);
+        let ringmod2 = RingMod { modulus: modulus2, value: value2 };
+
+        // Multiplication should be done in the smaller ring
+        let result = ringmod1 * ringmod2;
+        println!("Result of multiplication with different moduli: {:?}", result);
+
+        assert_eq!(result.modulus, I256::new(100));
+        assert_eq!(result.value, I256::new((50 * (75 % 100)) % 100));
     }
 }
