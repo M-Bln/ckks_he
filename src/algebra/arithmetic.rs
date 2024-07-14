@@ -9,7 +9,7 @@ use bnum::types::I256;
 #[derive(Copy, Clone, Debug)]
 pub struct RingMod<T: BigInt> {
     pub value: T,
-    modulus: T,
+    pub modulus: T,
 }
 
 impl<T: BigInt> Zero for RingMod<T> {
@@ -33,6 +33,24 @@ impl<T: BigInt> RingMod<T> {
     // Getter for the modulus
     pub fn modulus(&self) -> T {
         self.modulus
+    }
+}
+
+pub trait Rescale<T> {
+    fn rescale(&mut self, scalar: T);
+}
+
+impl<T: BigInt> Rescale<T> for RingMod<T> {
+    fn rescale(&mut self, scalar: T) {
+        self.value = self.value / scalar;
+        self.modulus = self.modulus / scalar;
+    }
+}
+
+impl<T: BigInt> Rescale<RingMod<T>> for RingMod<T> {
+    fn rescale(&mut self, scalar: RingMod<T>) {
+        self.value = self.value / scalar.value;
+        self.modulus = self.modulus / scalar.value;
     }
 }
 
@@ -272,5 +290,22 @@ mod tests {
         let ring_mod2 = RingMod::new(value2, modulus);
 
         assert_ne!(ring_mod1, ring_mod2);
+    }
+
+    #[test]
+    fn test_ring_mod_rescale() {
+        let modulus = I256::new(100);
+        let value = I256::new(50);
+        let mut ringmod = RingMod::new(value.clone(), modulus.clone());
+
+        println!("Original RingMod: {:?}", ringmod);
+
+        let scalar = I256::new(2);
+        ringmod.rescale(scalar.clone());
+
+        println!("Rescaled RingMod: {:?}", ringmod);
+
+        assert_eq!(ringmod.value, value / scalar.clone());
+        assert_eq!(ringmod.modulus, modulus / scalar);
     }
 }

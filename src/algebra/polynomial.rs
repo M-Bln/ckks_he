@@ -1,5 +1,5 @@
-use crate::algebra::arithmetic::RingMod;
-use crate::algebra::big_int::Zero;
+use crate::algebra::arithmetic::{Rescale, RingMod};
+use crate::algebra::big_int::{BigInt, Zero};
 use crate::algebra::complex::{Complex, C64};
 use crate::algebra::cyclotomic_ring::CyclotomicRing;
 use bnum::types::I256;
@@ -131,16 +131,31 @@ where
     }
 }
 
-impl Polynomial<I256> {
-    // pub fn to_f64(&self) -> Polynomial<f64> {
-    //     let coefficients = self
-    //         .coefficients
-    //         .iter()
-    //         .map(|&coeff| i256_to_f64(coeff))
-    //         .collect();
-    //     Polynomial { coefficients }
-    // }
+impl<T: BigInt> Rescale<T> for Polynomial<T> {
+    fn rescale(&mut self, scalar: T) {
+        for coeff in &mut self.coefficients {
+            *coeff = coeff.clone() / scalar.clone();
+        }
+    }
+}
 
+impl<T: BigInt> Rescale<T> for Polynomial<RingMod<T>> {
+    fn rescale(&mut self, scalar: T) {
+        for coeff in &mut self.coefficients {
+            coeff.rescale(scalar)
+        }
+    }
+}
+
+impl<T: BigInt> Rescale<RingMod<T>> for Polynomial<RingMod<T>> {
+    fn rescale(&mut self, scalar: RingMod<T>) {
+        for coeff in &mut self.coefficients {
+            coeff.rescale(scalar.value)
+        }
+    }
+}
+
+impl Polynomial<I256> {
     pub fn modulo(&self, modulus: I256) -> Polynomial<RingMod<I256>> {
         let coefficients = self
             .coefficients
@@ -150,45 +165,6 @@ impl Polynomial<I256> {
         Polynomial { coefficients }
     }
 }
-
-// impl Polynomial<RingMod<I256>> {
-//     pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<RingMod<I256>> {
-//         CyclotomicRing::new(self.coefficients(), 2_usize.pow(dimension_exponent))
-//     }
-// }
-
-// impl Polynomial<f64> {
-//     pub fn to_i256(&self) -> Polynomial<I256> {
-//         let coefficients = self
-//             .coefficients
-//             .iter()
-//             .map(|&coeff| f64_to_i256(coeff))
-//             .collect();
-//         Polynomial { coefficients }
-//     }
-// }
-
-// impl Polynomial<C64> {
-//     pub fn to_i256(&self) -> Polynomial<I256> {
-//         let coefficients = self
-//             .coefficients
-//             .iter()
-//             .map(|&coeff| f64_to_i256(coeff.real()))
-//             .collect();
-//         Polynomial { coefficients }
-//     }
-// }
-
-// impl Polynomial<RingMod<I256>> {
-//     pub fn to_c64(&self) -> Polynomial<C64> {
-//         let coefficients = self
-//             .coefficients
-//             .iter()
-//             .map(|coeff| coeff.to_c64())
-//             .collect();
-//         Polynomial { coefficients }
-//     }
-// }
 
 #[cfg(test)]
 mod tests {
@@ -307,46 +283,83 @@ mod tests {
         assert_eq!(value.value(), I256::from(17 % 13)); // 1 + 2*2 + 3*2^2 = 17 % 13 = 4
     }
 
-    // #[test]
-    // fn test_polynomial_conversion() {
-    //     // Create a Polynomial<I256>
-    //     let poly_i256 = Polynomial {
-    //         coefficients: vec![I256::from(1), I256::from(2), I256::from(3)],
-    //     };
+    #[test]
+    fn test_rescale_polynomial() {
+        let coefficients = vec![I256::new(10), I256::new(20), I256::new(30)];
+        let mut polynomial = Polynomial::new(coefficients.clone());
 
-    //     // Convert to Polynomial<f64>
-    //     let poly_f64 = poly_i256.to_f64();
-    //     assert_eq!(poly_f64.coefficients, vec![1.0, 2.0, 3.0]);
+        println!("Original Polynomial: {:?}", polynomial);
 
-    //     // Convert back to Polynomial<I256>
-    //     let poly_i256_converted_back = poly_f64.to_i256();
-    //     assert_eq!(poly_i256, poly_i256_converted_back);
-    // }
+        let scalar = I256::new(2);
+        polynomial.rescale(scalar.clone());
 
-    // #[test]
-    // fn test_polynomial_conversion() {
-    //     // Create a Polynomial<I256> with large coefficients
-    //     let poly_i256 = Polynomial {
-    //         coefficients: vec![
-    //             I256::from(12345678901234567890u64),
-    //             I256::from(3765432109876543210u64),
-    //             I256::from(11223344556677889900u64),
-    //         ],
-    //     };
+        println!("Rescaled Polynomial: {:?}", polynomial);
 
-    //     println!("Original Polynomial<I256>: {:?}", poly_i256);
+        for (i, coeff) in polynomial.coefficients().iter().enumerate() {
+            assert_eq!(*coeff, coefficients[i].clone() / scalar.clone());
+        }
+    }
 
-    //     // Convert to Polynomial<f64>
-    //     let poly_f64 = poly_i256.to_f64();
-    //     println!("Converted to Polynomial<f64>: {:?}", poly_f64);
+    #[test]
+    fn test_rescale_ringmod_polynomial_by_bigint() {
+        let modulus = I256::new(100);
+        let value1 = I256::new(50);
+        let value2 = I256::new(75);
+        let ringmod1 = RingMod::new(value1.clone(), modulus.clone());
+        let ringmod2 = RingMod::new(value2.clone(), modulus.clone());
+        let mut polynomial = Polynomial::new(vec![ringmod1.clone(), ringmod2.clone()]);
 
-    //     // Convert back to Polynomial<I256>
-    //     let poly_i256_converted_back = poly_f64.to_i256();
-    //     println!("Converted back to Polynomial<I256>: {:?}", poly_i256_converted_back);
+        println!("Original Polynomial<RingMod<I256>>: {:?}", polynomial);
 
-    //     // Check if the original polynomial and the converted-back polynomial are equal
-    //     for (a, b) in poly_i256.coefficients.iter().zip(poly_i256_converted_back.coefficients.iter()) {
-    //         assert_eq!(a, b, "Mismatch: original {} != converted back {}", a, b);
-    //     }
-    // }
+        let scalar = I256::new(5);
+        polynomial.rescale(scalar.clone());
+
+        println!(
+            "Rescaled Polynomial<RingMod<I256>> with scalar I256: {:?}",
+            polynomial
+        );
+
+        assert_eq!(polynomial.ref_coefficients()[0].value, value1 / scalar);
+        assert_eq!(polynomial.ref_coefficients()[0].modulus, modulus / scalar);
+        assert_eq!(polynomial.ref_coefficients()[1].value, value2 / scalar);
+        assert_eq!(polynomial.ref_coefficients()[1].modulus, modulus / scalar);
+    }
+
+    #[test]
+    fn test_rescale_ringmod_polynomial() {
+        let modulus = I256::new(100);
+        let value1 = I256::new(50);
+        let value2 = I256::new(75);
+        let ringmod1 = RingMod::new(value1.clone(), modulus.clone());
+        let ringmod2 = RingMod::new(value2.clone(), modulus.clone());
+        let mut polynomial = Polynomial::new(vec![ringmod1.clone(), ringmod2.clone()]);
+
+        println!("Original Polynomial<RingMod<I256>>: {:?}", polynomial);
+
+        let scalar_value = I256::new(5);
+        let scalar_ringmod = RingMod::new(scalar_value.clone(), modulus.clone());
+        polynomial.rescale(scalar_ringmod);
+
+        println!(
+            "Rescaled Polynomial<RingMod<I256>> with scalar RingMod<I256>: {:?}",
+            polynomial
+        );
+
+        assert_eq!(
+            polynomial.ref_coefficients()[0].value,
+            value1 / scalar_value
+        );
+        assert_eq!(
+            polynomial.ref_coefficients()[0].modulus,
+            modulus / scalar_value
+        );
+        assert_eq!(
+            polynomial.ref_coefficients()[1].value,
+            value2 / scalar_value
+        );
+        assert_eq!(
+            polynomial.ref_coefficients()[1].modulus,
+            modulus / scalar_value
+        );
+    }
 }

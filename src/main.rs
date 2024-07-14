@@ -1,6 +1,6 @@
 mod algebra;
-mod encoding;
 mod ciphertext;
+mod encoding;
 
 fn main() {
     println!("Hello, world!");

@@ -4,14 +4,11 @@ use crate::algebra::cyclotomic_ring::CyclotomicRing;
 use crate::algebra::polynomial::Polynomial;
 use bnum::types::I256;
 
-
-
 impl Polynomial<RingMod<I256>> {
     pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<RingMod<I256>> {
         CyclotomicRing::new(self.coefficients(), 2_usize.pow(dimension_exponent))
     }
 }
-
 
 // Conversion involving floats, thus  with loss of precision
 /// Convert a big integer to a float, loses precision
@@ -57,7 +54,6 @@ impl Polynomial<I256> {
         Polynomial::new(coefficients)
     }
 }
-
 
 // impl Polynomial<f64> {
 //     pub fn to_i256(&self) -> Polynomial<I256> {

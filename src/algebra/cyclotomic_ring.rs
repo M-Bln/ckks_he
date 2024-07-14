@@ -1,5 +1,5 @@
-use crate::algebra::arithmetic::RingMod;
-use crate::algebra::big_int::Zero;
+use crate::algebra::arithmetic::{Rescale, RingMod};
+use crate::algebra::big_int::{BigInt, Zero};
 use crate::algebra::complex::{Complex, C64};
 use crate::algebra::polynomial::Polynomial;
 use std::ops::{Add, Mul, Sub};
@@ -133,6 +133,12 @@ where
         );
         let new_poly = self.polynomial * &other.polynomial;
         CyclotomicRing::new(new_poly.coefficients(), self.dimension)
+    }
+}
+
+impl<T: BigInt> Rescale<T> for CyclotomicRing<RingMod<T>> {
+    fn rescale(&mut self, scalar: T) {
+        self.polynomial.rescale(scalar);
     }
 }
 
@@ -287,6 +293,50 @@ mod tests {
         assert_eq!(
             result_product.polynomial.coefficients(),
             expected_product.polynomial.coefficients()
+        );
+    }
+
+    #[test]
+    fn test_rescale_cyclotomic_ring() {
+        let modulus = I256::new(100);
+        let value1 = I256::new(50);
+        let value2 = I256::new(75);
+        let ringmod1 = RingMod::new(value1.clone(), modulus.clone());
+        let ringmod2 = RingMod::new(value2.clone(), modulus.clone());
+        let polynomial = Polynomial::new(vec![ringmod1.clone(), ringmod2.clone()]);
+        let mut cyclotomic_ring = CyclotomicRing {
+            polynomial,
+            dimension: 2,
+        };
+
+        println!(
+            "Original CyclotomicRing<RingMod<I256>>: {:?}",
+            cyclotomic_ring
+        );
+
+        let scalar = I256::new(5);
+        cyclotomic_ring.rescale(scalar.clone());
+
+        println!(
+            "Rescaled CyclotomicRing<RingMod<I256>> with scalar I256: {:?}",
+            cyclotomic_ring
+        );
+
+        assert_eq!(
+            cyclotomic_ring.polynomial.ref_coefficients()[0].value,
+            value1 / scalar
+        );
+        assert_eq!(
+            cyclotomic_ring.polynomial.ref_coefficients()[0].modulus,
+            modulus / scalar
+        );
+        assert_eq!(
+            cyclotomic_ring.polynomial.ref_coefficients()[1].value,
+            value2 / scalar
+        );
+        assert_eq!(
+            cyclotomic_ring.polynomial.ref_coefficients()[1].modulus,
+            modulus / scalar
         );
     }
 }
