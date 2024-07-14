@@ -162,7 +162,10 @@ impl<T: BigInt> ScalarMul<CyclotomicRing<RingMod<T>>> for T {
     type Output = CyclotomicRing<RingMod<T>>;
 
     fn scalar_mul(self, rhs: CyclotomicRing<RingMod<T>>) -> CyclotomicRing<RingMod<T>> {
-        CyclotomicRing::new(self.scalar_mul(rhs.polynomial).coefficients(), rhs.dimension)
+        CyclotomicRing::new(
+            self.scalar_mul(rhs.polynomial).coefficients(),
+            rhs.dimension,
+        )
     }
 }
 
@@ -170,7 +173,10 @@ impl<'a, T: BigInt> ScalarMul<&'a CyclotomicRing<RingMod<T>>> for T {
     type Output = CyclotomicRing<RingMod<T>>;
 
     fn scalar_mul(self, rhs: &'a CyclotomicRing<RingMod<T>>) -> CyclotomicRing<RingMod<T>> {
-        CyclotomicRing::new(self.scalar_mul(&rhs.polynomial).coefficients(), rhs.dimension)
+        CyclotomicRing::new(
+            self.scalar_mul(&rhs.polynomial).coefficients(),
+            rhs.dimension,
+        )
     }
 }
 
@@ -178,7 +184,10 @@ impl<'a, T: BigInt> ScalarMul<CyclotomicRing<RingMod<T>>> for &'a T {
     type Output = CyclotomicRing<RingMod<T>>;
 
     fn scalar_mul(self, rhs: CyclotomicRing<RingMod<T>>) -> CyclotomicRing<RingMod<T>> {
-        CyclotomicRing::new(self.scalar_mul(rhs.polynomial).coefficients(), rhs.dimension)
+        CyclotomicRing::new(
+            self.scalar_mul(rhs.polynomial).coefficients(),
+            rhs.dimension,
+        )
     }
 }
 
@@ -186,10 +195,12 @@ impl<'a, 'b, T: BigInt> ScalarMul<&'a CyclotomicRing<RingMod<T>>> for &'b T {
     type Output = CyclotomicRing<RingMod<T>>;
 
     fn scalar_mul(self, rhs: &'a CyclotomicRing<RingMod<T>>) -> CyclotomicRing<RingMod<T>> {
-        CyclotomicRing::new(self.scalar_mul(&rhs.polynomial).coefficients(), rhs.dimension)
+        CyclotomicRing::new(
+            self.scalar_mul(&rhs.polynomial).coefficients(),
+            rhs.dimension,
+        )
     }
 }
-
 
 impl<T: BigInt> Rescale<T> for CyclotomicRing<RingMod<T>> {
     fn rescale(&mut self, scalar: T) {

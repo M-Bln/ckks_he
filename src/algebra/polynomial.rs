@@ -159,7 +159,11 @@ impl<T: BigInt> ScalarMul<Polynomial<RingMod<T>>> for T {
     type Output = Polynomial<RingMod<T>>;
 
     fn scalar_mul(self, rhs: Polynomial<RingMod<T>>) -> Polynomial<RingMod<T>> {
-        let coefficients = rhs.coefficients.iter().map(|c| RingMod::new(self * c.value, c.modulus.clone())).collect();
+        let coefficients = rhs
+            .coefficients
+            .iter()
+            .map(|c| RingMod::new(self * c.value, c.modulus.clone()))
+            .collect();
         Polynomial::new(coefficients)
     }
 }
@@ -168,7 +172,11 @@ impl<'a, T: BigInt> ScalarMul<&'a Polynomial<RingMod<T>>> for T {
     type Output = Polynomial<RingMod<T>>;
 
     fn scalar_mul(self, rhs: &'a Polynomial<RingMod<T>>) -> Polynomial<RingMod<T>> {
-        let coefficients = rhs.coefficients.iter().map(|c| RingMod::new(self * c.value, c.modulus.clone())).collect();
+        let coefficients = rhs
+            .coefficients
+            .iter()
+            .map(|c| RingMod::new(self * c.value, c.modulus.clone()))
+            .collect();
         Polynomial::new(coefficients)
     }
 }
@@ -177,7 +185,11 @@ impl<'a, T: BigInt> ScalarMul<Polynomial<RingMod<T>>> for &'a T {
     type Output = Polynomial<RingMod<T>>;
 
     fn scalar_mul(self, rhs: Polynomial<RingMod<T>>) -> Polynomial<RingMod<T>> {
-        let coefficients = rhs.coefficients.iter().map(|c| RingMod::new(*self * c.value, c.modulus.clone())).collect();
+        let coefficients = rhs
+            .coefficients
+            .iter()
+            .map(|c| RingMod::new(*self * c.value, c.modulus.clone()))
+            .collect();
         Polynomial::new(coefficients)
     }
 }
@@ -186,11 +198,14 @@ impl<'a, 'b, T: BigInt> ScalarMul<&'a Polynomial<RingMod<T>>> for &'b T {
     type Output = Polynomial<RingMod<T>>;
 
     fn scalar_mul(self, rhs: &'a Polynomial<RingMod<T>>) -> Polynomial<RingMod<T>> {
-        let coefficients = rhs.coefficients.iter().map(|c| RingMod::new(*self * c.value, c.modulus.clone())).collect();
+        let coefficients = rhs
+            .coefficients
+            .iter()
+            .map(|c| RingMod::new(*self * c.value, c.modulus.clone()))
+            .collect();
         Polynomial::new(coefficients)
     }
 }
-
 
 impl<T: BigInt> Rescale<T> for Polynomial<T> {
     fn rescale(&mut self, scalar: T) {
@@ -440,7 +455,7 @@ mod tests {
         }
     }
 
-        #[test]
+    #[test]
     fn test_polynomial_ringmod_scalar_multiplication() {
         let poly = Polynomial::new(vec![
             RingMod::new(I256::from(1), I256::from(7)),
