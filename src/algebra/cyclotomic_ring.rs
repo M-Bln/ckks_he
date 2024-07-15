@@ -57,7 +57,23 @@ where
             .splice(.., new_coefficients);
         self.polynomial.mut_coefficients().truncate(n);
     }
+
+    pub fn ref_coefficients(&self) -> &[T] {
+	self.polynomial.ref_coefficients()
+    }
 }
+
+impl<T: BigInt> CyclotomicRing<T> {
+    pub fn modulo(&self, modulus: T) -> CyclotomicRing<RingMod<T>> {
+        let coefficients = self.polynomial
+            .ref_coefficients()
+            .iter()
+            .map(|c| c.modulo(modulus))
+            .collect();
+        CyclotomicRing::new(coefficients, self.dimension)
+    }
+}
+
 
 fn extend_by_zero<T: Zero + Clone>(coefficients: &mut Vec<T>, minimal_length: usize) {
     assert!(

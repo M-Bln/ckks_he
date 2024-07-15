@@ -1,21 +1,37 @@
 use crate::algebra::arithmetic::RingMod;
-use crate::algebra::big_int::BigInt;
+use crate::algebra::big_int::{BigInt, Zero, ToFloat};
 use crate::algebra::complex::{Complex, C64};
 use crate::algebra::cyclotomic_ring::CyclotomicRing;
 use crate::algebra::polynomial::Polynomial;
 use bnum::types::I256;
+use std::ops::{Add, Sub};
 
-impl<T: BigInt> Polynomial<RingMod<T>> {
-    pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<RingMod<T>> {
-        CyclotomicRing::new(self.coefficients(), 2_usize.pow(dimension_exponent))
-    }
-}
 
-impl<T: BigInt> Polynomial<T> {
+impl<T> Polynomial<T>
+where
+    T: Add<Output = T>
+    + for<'a> Add<&'a T, Output = T>
+    + Sub<Output = T>
+    + for<'a> Sub<&'a T, Output = T>
+    + Clone
+    + Zero
+{
     pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<T> {
         CyclotomicRing::new(self.coefficients(), 2_usize.pow(dimension_exponent))
     }
 }
+
+// impl<T: BigInt> Polynomial<RingMod<T>> {
+//     pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<RingMod<T>> {
+//         CyclotomicRing::new(self.coefficients(), 2_usize.pow(dimension_exponent))
+//     }
+// }
+
+// impl<T: BigInt> Polynomial<T> {
+//     pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<T> {
+//         CyclotomicRing::new(self.coefficients(), 2_usize.pow(dimension_exponent))
+//     }
+// }
 
 impl<T: BigInt> Polynomial<T> {
     pub fn modulo(&self, modulus: T) -> Polynomial<RingMod<T>> {
@@ -62,16 +78,47 @@ impl CyclotomicRing<RingMod<I256>> {
     }
 }
 
-impl Polynomial<I256> {
-    pub fn to_f64(&self) -> Polynomial<f64> {
+impl<T> CyclotomicRing<T>
+where
+    T: Add<Output = T>
+    + for<'a> Add<&'a T, Output = T>
+    + Sub<Output = T>
+    + for<'a> Sub<&'a T, Output = T>
+    + Clone
+    + Zero
+    + ToFloat
+{
+    pub fn to_c64(&self) -> Polynomial<C64> {
         let coefficients = self
             .ref_coefficients()
             .iter()
-            .map(|coeff| i256_to_f64(coeff.clone()))
+            .map(|coeff| C64::new(coeff.to_float(),0.0))
             .collect();
         Polynomial::new(coefficients)
     }
 }
+
+impl<T: BigInt> CyclotomicRing<RingMod<T>> {
+    pub fn to_integer(&self) -> CyclotomicRing<T> {
+        let coefficients = self
+            .ref_coefficients()
+            .iter()
+            .map(|coeff| coeff.value)
+            .collect();
+        CyclotomicRing::new(coefficients, self.dimension)
+    }
+}
+
+// impl Polynomial<I256> {
+//     pub fn to_f64(&self) -> Polynomial<f64> {
+//         let coefficients = self
+//             .ref_coefficients()
+//             .iter()
+//             .map(|coeff| i256_to_f64(coeff.clone()))
+//             .collect();
+//         Polynomial::new(coefficients)
+//     }
+// }
 
 // impl Polynomial<f64> {
 //     pub fn to_i256(&self) -> Polynomial<I256> {

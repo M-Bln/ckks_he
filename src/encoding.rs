@@ -18,7 +18,7 @@ pub struct Encoder<T: BigInt> {
 }
 
 impl Encoder<I256> {
-    pub fn encode(&self, plaintext: &[C64]) -> CyclotomicRing<RingMod<I256>> {
+    pub fn encode_to_integer(&self, plaintext: &[C64]) -> CyclotomicRing<I256> {
         let expected_length = 2_usize.pow(self.dimension_exponent - 1);
         assert_eq!(
             plaintext.len(),
@@ -33,20 +33,26 @@ impl Encoder<I256> {
         let sigma_inverse_result = self.sigma_inverse(&projection_inverse_result);
 
         // Step 3: Convert the polynomial to I256
+	//	sigma_inverse_result.to_i256()
         let integer_polynomial = sigma_inverse_result.to_i256();
+	integer_polynomial.to_cyclotomic(self.dimension_exponent)
+        // // Step 4: Reduce the polynomial modulo modulus
+        // let modular_polynomial = integer_polynomial.modulo(self.modulus.clone());
+        // println!("Modular Polynomial: {:?}", modular_polynomial);
 
-        // Step 4: Reduce the polynomial modulo modulus
-        let modular_polynomial = integer_polynomial.modulo(self.modulus.clone());
-        println!("Modular Polynomial: {:?}", modular_polynomial);
+        // // Step 5: Reduce modulo the cyclotomic polynomial
+        // let cyclotomic_polynomial = modular_polynomial.to_cyclotomic(self.dimension_exponent);
+        // println!("Cyclotomic Polynomial: {:?}", cyclotomic_polynomial);
 
-        // Step 5: Reduce modulo the cyclotomic polynomial
-        let cyclotomic_polynomial = modular_polynomial.to_cyclotomic(self.dimension_exponent);
-        println!("Cyclotomic Polynomial: {:?}", cyclotomic_polynomial);
-
-        cyclotomic_polynomial
+        // cyclotomic_polynomial
     }
 
-    pub fn decode(&self, message: CyclotomicRing<RingMod<I256>>) -> Vec<C64> {
+    pub fn encode(&self, plaintext: &[C64]) -> CyclotomicRing<RingMod<I256>> {
+	let integer_cyclotomic = self.encode_to_integer(plaintext);
+	integer_cyclotomic.modulo(self.modulus)
+    }
+
+    pub fn decode_integer(&self, message: CyclotomicRing<I256>) -> Vec<C64> {
         let expected_dimension = 2_usize.pow(self.dimension_exponent);
         assert_eq!(
             message.dimension, expected_dimension,
@@ -67,6 +73,33 @@ impl Encoder<I256> {
 
         projection_result
     }
+
+    pub fn decode(&self, message: CyclotomicRing<RingMod<I256>>) -> Vec<C64> {
+	let integer_polynomial = message.to_integer();
+	self.decode_integer(integer_polynomial)
+    }
+
+    // pub fn decode(&self, message: CyclotomicRing<RingMod<I256>>) -> Vec<C64> {
+    //     let expected_dimension = 2_usize.pow(self.dimension_exponent);
+    //     assert_eq!(
+    //         message.dimension, expected_dimension,
+    //         "Message dimension does not match expected dimension"
+    //     );
+
+    //     // Step 1: Convert to complex coefficients
+    //     let complex_polynomial = message.to_c64();
+    //     println!("Complex Polynomial: {:?}", complex_polynomial);
+
+    //     // Step 2: Apply sigma
+    //     let canonical_embedding = self.sigma(&complex_polynomial);
+    //     println!("Canonical Embedding: {:?}", canonical_embedding);
+
+    //     // Step 3: Project to message space
+    //     let projection_result = self.projection(&canonical_embedding);
+    //     println!("Projection Result: {:?}", projection_result);
+
+    //     projection_result
+    // }
 }
 
 /// Encoder with functions encode to go from plaintext to ciphertext ring and decode from ciphertext ring to plaintext.
