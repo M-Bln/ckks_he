@@ -123,24 +123,25 @@ fn generate_evaluation_key<T: BigInt>(
     let eval_key_a = Polynomial::<T>::new(eval_key_coefficients)
         .modulo(modulus_eval.clone())
         .to_cyclotomic(params.dimension_exponent);
-//    println!("eval_key_a: {:?}", eval_key_a);
-//    println!("secret_key: {:?}", secret_key);
+    //    println!("eval_key_a: {:?}", eval_key_a);
+    //    println!("secret_key: {:?}", secret_key);
     let secret_key_modulo_eval = secret_key.key_s.to_integer().modulo(modulus_eval);
-//    println!("secret_key_modulo_eval: {:?}", secret_key_modulo_eval);
+    //    println!("secret_key_modulo_eval: {:?}", secret_key_modulo_eval);
     let secret_key_squared = secret_key_modulo_eval.clone() * &secret_key_modulo_eval;
-//    println!("secret_key_squared: {:?}", secret_key_squared);
+    //    println!("secret_key_squared: {:?}", secret_key_squared);
     let mut gaussian_sampler = DiscreteGaussian::new(0.0, params.standard_deviation);
     let eval_error_coefficients = gaussian_sampler.sample_n(dimension);
     let eval_error = Polynomial::<T>::new(eval_error_coefficients)
         .modulo(modulus_eval.clone())
         .to_cyclotomic(params.dimension_exponent);
-//    println!("eval_error: {:?}", eval_error);
+    //    println!("eval_error: {:?}", eval_error);
     let raw_eval_key = RawCiphertext::<T>(
-        (eval_error - &(secret_key_modulo_eval* &eval_key_a)) + &params.mul_scaling.scalar_mul(secret_key_squared), 
-//             &(params.mul_scaling.scalar_mul(secret_key.key_s.clone()) * &secret_key.key_s),
-	eval_key_a.clone(),
+        (eval_error - &(secret_key_modulo_eval * &eval_key_a))
+            + &params.mul_scaling.scalar_mul(secret_key_squared),
+        //             &(params.mul_scaling.scalar_mul(secret_key.key_s.clone()) * &secret_key.key_s),
+        eval_key_a.clone(),
     );
-//    println!("raw_eval_key: {:?}", raw_eval_key);
+    //    println!("raw_eval_key: {:?}", raw_eval_key);
 
     EvaluationKey::<T>::new(
         // params.dimension_exponent,
@@ -345,14 +346,15 @@ mod tests {
         let level_max = 5;
 
         // Generate keys using the provided helper function
-        let (public_key, evaluation_key, secret_key) = generate_keys(dimension_exponent, q.clone(), level_max);
+        let (public_key, evaluation_key, secret_key) =
+            generate_keys(dimension_exponent, q.clone(), level_max);
 
         // Decrypt the raw evaluation key
         let decrypted_eval_key = secret_key.decrypt(&Ciphertext::new(
             evaluation_key.raw_key.clone(),
             level_max,
-            (1 << dimension_exponent) as f64,  // Not used in this context
-            evaluation_key.noise.clean_noise,  // Not used in this context
+            (1 << dimension_exponent) as f64, // Not used in this context
+            evaluation_key.noise.clean_noise, // Not used in this context
         ));
 
         // Compute the expected value: mul_scaling * key_s * key_s
@@ -360,13 +362,24 @@ mod tests {
         let expected_value = secret_key.parameters.mul_scaling.scalar_mul(key_s_squared);
 
         // Verify that the decrypted evaluation key is close to the expected value
-        for (expected, decrypted) in expected_value.polynomial.coefficients().iter().zip(decrypted_eval_key.polynomial.coefficients().iter()) {
+        for (expected, decrypted) in expected_value
+            .polynomial
+            .coefficients()
+            .iter()
+            .zip(decrypted_eval_key.polynomial.coefficients().iter())
+        {
             let diff = *expected - decrypted;
-            println!("Expected: {:?}, Decrypted: {:?}, Difference: {:?}", expected, decrypted, diff);
-            assert!(diff.value < I256::from_float(evaluation_key.noise.clean_noise), "Difference too large!");
+            println!(
+                "Expected: {:?}, Decrypted: {:?}, Difference: {:?}",
+                expected, decrypted, diff
+            );
+            assert!(
+                diff.value < I256::from_float(evaluation_key.noise.clean_noise),
+                "Difference too large!"
+            );
         }
     }
-    
+
     // #[test]
     // fn test_generate_keys_all_parameters() {
     //     let dimension_exponent = 2;
