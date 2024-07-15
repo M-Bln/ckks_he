@@ -123,17 +123,24 @@ fn generate_evaluation_key<T: BigInt>(
     let eval_key_a = Polynomial::<T>::new(eval_key_coefficients)
         .modulo(modulus_eval.clone())
         .to_cyclotomic(params.dimension_exponent);
-
+    println!("eval_key_a: {:?}", eval_key_a);
+    println!("secret_key: {:?}", secret_key);
+    let secret_key_modulo_eval = secret_key.key_s.to_integer().modulo(modulus_eval);
+    println!("secret_key_modulo_eval: {:?}", secret_key_modulo_eval);
+    let secret_key_squared = secret_key_modulo_eval.clone() * &secret_key_modulo_eval;
+    println!("secret_key_squared: {:?}", secret_key_squared);
     let mut gaussian_sampler = DiscreteGaussian::new(0.0, params.standard_deviation);
     let eval_error_coefficients = gaussian_sampler.sample_n(dimension);
     let eval_error = Polynomial::<T>::new(eval_error_coefficients)
         .modulo(modulus_eval.clone())
         .to_cyclotomic(params.dimension_exponent);
+    println!("eval_error: {:?}", eval_error);
     let raw_eval_key = RawCiphertext::<T>(
-        eval_key_a.clone(),
-        (eval_error - &eval_key_a)
-            + &(params.mul_scaling.scalar_mul(secret_key.key_s.clone()) * &secret_key.key_s),
+        (eval_error - &(secret_key_modulo_eval* &eval_key_a)) + &params.mul_scaling.scalar_mul(secret_key_squared), 
+//             &(params.mul_scaling.scalar_mul(secret_key.key_s.clone()) * &secret_key.key_s),
+	eval_key_a.clone(),
     );
+    println!("raw_eval_key: {:?}", raw_eval_key);
 
     EvaluationKey::<T>::new(
         // params.dimension_exponent,

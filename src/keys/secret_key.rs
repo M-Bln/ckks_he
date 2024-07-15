@@ -30,7 +30,7 @@ impl<T: BigInt> SecretKey<T> {
     ) -> Self {
         let n = 1 << parameters.dimension_exponent; // 2^dimension_exponent
         let modulus =
-            parameters.mul_scaling * parameters.q_0 * parameters.q.fast_exp(parameters.level_max); // the total modulus in coefficients ring is initialy mul_scaling * q_0 * q^{level_max}
+            parameters.q_0 * parameters.q.fast_exp(parameters.level_max); // the total modulus in coefficients ring is initialy mul_scaling * q_0 * q^{level_max}
         let mut hwt_distribution = HWTDistribution::new(n, parameters.hamming_weight);
 
         let key_coefficients = hwt_distribution.sample::<T>();

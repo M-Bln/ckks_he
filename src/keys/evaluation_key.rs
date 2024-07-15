@@ -97,7 +97,9 @@ impl<T: BigInt> EvaluationKey<T> {
             rct1.1.clone() * &rct2.1,
         );
         let mut summand = self.raw_key.scalar_mul(&d2);
+	println!("summand modulus: {:?}", summand.0.polynomial.ref_coefficients()[0].modulus);
         summand.rescale(self.parameters.mul_scaling);
+	println!("rescaled summand modulus: {:?}", summand.0.polynomial.ref_coefficients()[0].modulus);
         RawCiphertext(d0 + &summand.0, d1 + &summand.1)
     }
 
@@ -154,11 +156,130 @@ pub enum OperationError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::algebra::big_int::BigInt;
+    use crate::algebra::big_int::{BigInt, FromFloat};
     use crate::algebra::polynomial::Polynomial;
     use crate::keys::key_generator::generate_keys;
     use bnum::types::I256;
 
+
+    #[test]
+    fn test_encrypt_pure_mul_decrypt() {
+        // Define parameters for key generation
+        let dimension_exponent = 1;
+        let q = I256::from(1 << 30);
+        let level_max = 2;
+
+        // Generate keys using the provided helper function
+        let (mut public_key, evaluation_key, secret_key) =
+            generate_keys(dimension_exponent, q.clone(), level_max);
+
+        // Create sample messages
+        let message1_coefficients = vec![I256::from(1 << 14); 2_usize.pow(dimension_exponent)];
+        let message2_coefficients = vec![I256::from(1 << 14); 2_usize.pow(dimension_exponent)];
+
+        let message1 = Polynomial::new(message1_coefficients)
+            .modulo(q.clone().fast_exp(level_max))
+            .to_cyclotomic(dimension_exponent);
+
+        let message2 = Polynomial::new(message2_coefficients)
+            .modulo(q.clone().fast_exp(level_max))
+            .to_cyclotomic(dimension_exponent);
+
+        // Encrypt the messages
+        let upper_bound_message = (1 << 14) as f64; // Example value, adjust as needed
+        let ciphertext1 = public_key.encrypt(&message1, upper_bound_message);
+        let ciphertext2 = public_key.encrypt(&message2, upper_bound_message);
+
+        // Add the ciphertexts
+        let pure_mul_ciphertext = evaluation_key.pure_mul(&ciphertext1, &ciphertext2);
+
+        // Decrypt the resulting ciphertext
+        let decrypted_message = secret_key.decrypt(&pure_mul_ciphertext);
+
+        // Create the expected message sum
+        let expected_message_coefficients =
+            vec![I256::from(1 << 28); 2_usize.pow(dimension_exponent)];
+        let expected_message = Polynomial::new(expected_message_coefficients)
+            .modulo(q.clone().fast_exp(level_max))
+            .to_cyclotomic(dimension_exponent);
+
+        println!("expected error: {:?}", pure_mul_ciphertext.upper_bound_error);
+        // Verify that the decrypted message is close to the sum of the original messages
+        for (expected, decrypted) in expected_message
+            .polynomial
+            .coefficients()
+            .iter()
+            .zip(decrypted_message.polynomial.coefficients().iter())
+        {
+            let diff = *expected - *decrypted;
+            println!(
+                "Expected: {:?}, Decrypted: {:?}, Difference: {:?}",
+                expected, decrypted, diff
+            );
+            assert!(diff.value < I256::from_float(pure_mul_ciphertext.upper_bound_error), "Difference too large!");
+        }
+    }
+
+    
+    // #[test]
+    // fn test_encrypt_pure_mul_decrypt() {
+    //     // Define parameters for key generation
+    //     let dimension_exponent = 2;
+    //     let q = I256::from(16);
+    //     let level_max = 2;
+
+    //     // Generate keys using the provided helper function
+    //     let (mut public_key, evaluation_key, secret_key) =
+    //         generate_keys(dimension_exponent, q.clone(), level_max);
+
+    //     // Create sample messages
+    //     let message1_coefficients = vec![I256::from(8); 2_usize.pow(dimension_exponent)];
+    //     let message2_coefficients = vec![I256::from(8); 2_usize.pow(dimension_exponent)];
+
+    //     let message1 = Polynomial::new(message1_coefficients)
+    //         .modulo(q.clone().fast_exp(level_max))
+    //         .to_cyclotomic(dimension_exponent);
+
+    //     let message2 = Polynomial::new(message2_coefficients)
+    //         .modulo(q.clone().fast_exp(level_max))
+    //         .to_cyclotomic(dimension_exponent);
+
+    //     // Encrypt the messages
+    //     let upper_bound_message = (8) as f64; // Example value, adjust as needed
+    //     let ciphertext1 = public_key.encrypt(&message1, upper_bound_message);
+    //     let ciphertext2 = public_key.encrypt(&message2, upper_bound_message);
+
+    //     // Add the ciphertexts
+    //     let pure_mul_ciphertext = evaluation_key.pure_mul(&ciphertext1, &ciphertext2);
+
+    //     // Decrypt the resulting ciphertext
+    //     let decrypted_message = secret_key.decrypt(&pure_mul_ciphertext);
+
+    //     // Create the expected message sum
+    //     let expected_message_coefficients =
+    //         vec![I256::from(64); 2_usize.pow(dimension_exponent)];
+    //     let expected_message = Polynomial::new(expected_message_coefficients)
+    //         .modulo(q.clone().fast_exp(level_max))
+    //         .to_cyclotomic(dimension_exponent);
+
+    //     println!("expected error: {:?}", pure_mul_ciphertext.upper_bound_error);
+    //     // Verify that the decrypted message is close to the sum of the original messages
+    //     for (expected, decrypted) in expected_message
+    //         .polynomial
+    //         .coefficients()
+    //         .iter()
+    //         .zip(decrypted_message.polynomial.coefficients().iter())
+    //     {
+    //         let diff = *expected - *decrypted;
+    //         println!(
+    //             "Expected: {:?}, Decrypted: {:?}, Difference: {:?}",
+    //             expected, decrypted, diff
+    //         );
+    //         assert!(diff.value < I256::from_float(pure_mul_ciphertext.upper_bound_error), "Difference too large!");
+    //     }
+    // }
+
+    
     #[test]
     fn test_encrypt_add_decrypt() {
         // Define parameters for key generation
