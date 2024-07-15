@@ -165,17 +165,24 @@ mod tests {
     #[test]
     fn test_encrypt_pure_mul_decrypt() {
 	let dimension_exponent = 2;
-        let q = I256::from(19);
-        let level_max = 5;
+        let q = I256::from(10000);
+        let level_max = 3;
 	
         // Generate keys using the provided helper function
         let (mut public_key, evaluation_key, secret_key) =
             generate_keys(dimension_exponent, q.clone(), level_max);
 
         // Create sample messages
-        let message1_coefficients = vec![I256::from(19*19*25); 2_usize.pow(dimension_exponent)];
-        let message2_coefficients = vec![I256::from(19*19*100); 2_usize.pow(dimension_exponent)];
+        let mut message1_coefficients = vec![I256::from(19*100*10000)];
+	message1_coefficients.append(&mut vec![I256::from(0); 2_usize.pow(dimension_exponent)-1]);
 
+	let mut message2_coefficients = vec![I256::from(19*100*10000)];
+	message2_coefficients.append(&mut vec![I256::from(0); 2_usize.pow(dimension_exponent)-1]);
+
+
+
+	
+	
         let message1 = Polynomial::new(message1_coefficients)
             .modulo(q.clone().fast_exp(level_max))
             .to_cyclotomic(dimension_exponent);
@@ -185,22 +192,25 @@ mod tests {
             .to_cyclotomic(dimension_exponent);
 
         // Encrypt the messages
-        let upper_bound_message = (19*19*100) as f64; // Example value, adjust as needed
+        let upper_bound_message = (19*100*10000) as f64; // Example value, adjust as needed
         let mut ciphertext1 = public_key.encrypt(&message1, upper_bound_message);
-	evaluation_key.rescale(&mut ciphertext1, 2).unwrap();
+	evaluation_key.rescale(&mut ciphertext1, 1).unwrap();
         let mut ciphertext2 = public_key.encrypt(&message2, upper_bound_message);	
-	evaluation_key.rescale(&mut ciphertext2, 2).unwrap();
+	evaluation_key.rescale(&mut ciphertext2, 1).unwrap();
 	
 
         // Add the ciphertexts
-        let pure_mul_ciphertext = evaluation_key.pure_mul(&ciphertext1, &ciphertext2);
-
+        let mut pure_mul_ciphertext = evaluation_key.pure_mul(&ciphertext1, &ciphertext2);
+	//	evaluation_key.rescale(&mut pure_mul_ciphertext,1).unwrap();
+	
         // Decrypt the resulting ciphertext
         let decrypted_message = secret_key.decrypt(&pure_mul_ciphertext);
 
         // Create the expected message sum
-        let expected_message_coefficients =
-            vec![I256::from(2500); 2_usize.pow(dimension_exponent)];
+	let mut expected_message_coefficients = vec![I256::from(19*19*100*100)];
+	expected_message_coefficients.append(&mut vec![I256::from(0); 2_usize.pow(dimension_exponent)-1]);
+        // let expected_message_coefficients =
+        //     vec![I256::from(2500); 2_usize.pow(dimension_exponent)];
         let expected_message = Polynomial::new(expected_message_coefficients)
             .modulo(q.clone().fast_exp(level_max))
             .to_cyclotomic(dimension_exponent);
@@ -218,7 +228,8 @@ mod tests {
                 "Expected: {:?}, Decrypted: {:?}, Difference: {:?}",
                 expected, decrypted, diff
             );
-            assert!(diff.value < I256::from_float(pure_mul_ciphertext.upper_bound_error), "Difference too large!");
+            assert!(diff.value < I256::from_float(pure_mul_ciphertext.upper_bound_error) &&
+		    diff.value > I256::from_float(-pure_mul_ciphertext.upper_bound_error), "Difference too large!");
         }
     }
 
