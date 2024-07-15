@@ -66,13 +66,17 @@ pub fn to_plaintext(real: &[f64]) -> Vec<C64> {
     real.iter().map(|&r| C64::new(r, 0.0)).collect()
 }
 
-pub fn multiply_plaintexts(plaintext1: &[C64], plaintext2: &[C64]) -> Vec<C64> {
+pub fn multiply_plaintexts(plaintext1: &[C64], plaintext2: &[C64]) -> Plaintext {
     assert_eq!(plaintext1.len(), plaintext2.len(), "Plaintexts must have the same length to be multiplied");
 
     plaintext1.iter().zip(plaintext2.iter()).map(|(&a, &b)| a * b).collect()
 }
 
-pub fn add_plaintexts(plaintext1: &[C64], plaintext2: &[C64]) -> Vec<C64> {
+pub fn scalar_mul_plaintext(scalar: C64, plaintext: &[C64]) -> Plaintext {
+    plaintext.iter().map(|&a| scalar * a).collect()
+}
+
+pub fn add_plaintexts(plaintext1: &[C64], plaintext2: &[C64]) -> Plaintext {
     assert_eq!(plaintext1.len(), plaintext2.len(), "Plaintexts must have the same length to be added");
 
     plaintext1.iter().zip(plaintext2.iter()).map(|(&a, &b)| a + b).collect()
@@ -144,6 +148,84 @@ mod tests {
         let clear_result = client_key.decrypt(&result);
 
 	let expected_result = add_plaintexts(&message_plaintext1, &message_plaintext2);
+	
+	let error_max = result.upper_bound_error;
+	println!("upperbound error: {:?}", error_max);
+        // Verify that the decrypted message is close to the original message
+        for (expected, decrypted) in expected_result.iter().zip(clear_result.iter()) {
+            let diff = (*expected - decrypted).magnitude();
+            println!("Original: {}, Decrypted: {}, Difference: {}", expected, decrypted, diff);
+            assert!(diff < error_max, "Difference in real part too large!");
+        }
+    }
+
+    #[test]
+    fn test_encrypt_pure_mul_decrypt_plaintext() {
+        // Define parameters for key generation
+        let dimension_exponent = 4;
+        let q = I256::from(1 << 13);
+        let level_max = 4;
+
+        // Generate pair of keys
+        let (mut client_key, mut server_key) = generate_pair_keys(dimension_exponent, q.clone(), level_max);
+
+        // Create a sample message as a vector of f64
+        let message_real1 = vec![12343.0, 23344.0, 32431.0, 43432.0, 3435.0, 3321.0, 432.0, 34532.0];
+        let message_plaintext1 = to_plaintext(&message_real1);
+
+        let message_real2 = vec![143.0, 234.0, 3231.0, 432.0, 34435.0, 33221.0, 43432.0, 34532.0];
+        let message_plaintext2 = to_plaintext(&message_real2);
+
+	
+        // Encrypt the message
+        let ct1 = client_key.encrypt(&message_plaintext1, 50000.0).unwrap();
+        let ct2 = client_key.encrypt(&message_plaintext2, 50000.0).unwrap();
+
+	let result = server_key.pure_mul(&ct1, &ct2);
+        // Decrypt the message
+        let clear_result = client_key.decrypt(&result);
+
+	let expected_result = multiply_plaintexts(&message_plaintext1, &message_plaintext2);
+	
+	let error_max = result.upper_bound_error;
+	println!("upperbound error: {:?}", error_max);
+        // Verify that the decrypted message is close to the original message
+        for (expected, decrypted) in expected_result.iter().zip(clear_result.iter()) {
+            let diff = (*expected - decrypted).magnitude();
+            println!("Original: {}, Decrypted: {}, Difference: {}", expected, decrypted, diff);
+            assert!(diff < error_max, "Difference in real part too large!");
+        }
+    }
+    
+    #[test]
+    fn test_encrypt_mul_decrypt_plaintext() {
+        // Define parameters for key generation
+        let dimension_exponent = 5;
+        let q = I256::from(1 << 14);
+	let q_sqrt = (1 << 7) as f64;
+	let q_inverse = 1.0 / (1 << 14) as f64;
+        let level_max = 4;
+
+        // Generate pair of keys
+        let (mut client_key, mut server_key) = generate_pair_keys(dimension_exponent, q.clone(), level_max);
+
+        // Create a sample message as a vector of f64
+        let message_real1 = vec![60.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0, 60.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0];
+        let message_plaintext1 = scalar_mul_plaintext(C64::new(q_sqrt, 0.0),&to_plaintext(&message_real1));
+
+	
+        let message_real2 = vec![60.0, 70.0, 50.0, 43.0, 45.0, 32.0, 42.0, 73.0, 60.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0];
+	let message_plaintext2 = scalar_mul_plaintext(C64::new(q_sqrt, 0.0),&to_plaintext(&message_real2));
+
+        // Encrypt the message
+        let ct1 = client_key.encrypt(&message_plaintext1, 50000.0).unwrap();
+        let ct2 = client_key.encrypt(&message_plaintext2, 50000.0).unwrap();
+
+	let result = server_key.mul(&ct1, &ct2).unwrap();
+        // Decrypt the message
+        let clear_result = client_key.decrypt(&result);
+
+	let expected_result = scalar_mul_plaintext(C64::new(q_inverse,0.0), &multiply_plaintexts(&message_plaintext1, &message_plaintext2));
 	
 	let error_max = result.upper_bound_error;
 	println!("upperbound error: {:?}", error_max);
