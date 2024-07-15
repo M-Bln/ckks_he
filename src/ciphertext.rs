@@ -67,3 +67,13 @@ impl<T: BigInt> RawCiphertext<T> {
         RawCiphertext(d_0, d_1) + &summand
     }
 }
+
+impl<T: BigInt> RawCiphertext<T> {
+    pub fn scalar_mul(&self, other: &Message<T>) -> RawCiphertext<T> {
+        self.scalar_mul_integer(&other.to_integer())
+    }
+    pub fn scalar_mul_integer(&self, other: &CyclotomicRing<T>) -> RawCiphertext<T> {
+        let other_mod = other.modulo(self.0.ref_coefficients()[0].modulus);
+        RawCiphertext(self.0.clone() * &other_mod, self.1.clone() * &other_mod)
+    }
+}

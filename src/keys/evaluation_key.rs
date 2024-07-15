@@ -75,6 +75,56 @@ impl<T: BigInt> EvaluationKey<T> {
         Ok(())
     }
 
+    pub fn pure_mul(&self, ct1: &Ciphertext<T>, ct2: &Ciphertext<T>) -> Ciphertext<T> {
+        let raw = self.raw_mul(&ct1.raw, &ct2.raw);
+        let level = std::cmp::min(ct1.level, ct2.level);
+        let upper_bound_message = ct1.upper_bound_message * ct2.upper_bound_message;
+
+        let modulus_f = raw.0.polynomial.ref_coefficients()[0].modulus.to_float();
+        let mul_scaling_f = self.parameters.mul_scaling.to_float();
+        let mul_error = ct1.upper_bound_message * ct2.upper_bound_error
+            + ct1.upper_bound_error * ct2.upper_bound_message
+            + ct1.upper_bound_error * ct2.upper_bound_error;
+        let key_switch_error = self.noise.key_switch_noise * modulus_f / mul_scaling_f;
+        let new_error = key_switch_error + mul_error + self.noise.rescaling_noise;
+        Ciphertext::<T>::new(raw, level, upper_bound_message, new_error)
+    }
+
+    pub fn raw_mul(&self, rct1: &RawCiphertext<T>, rct2: &RawCiphertext<T>) -> RawCiphertext<T> {
+        let (d0, d1, d2) = (
+            rct1.0.clone() * &rct2.0,
+            rct1.1.clone() * &rct2.0 + &(rct1.0.clone() * &rct2.1),
+            rct1.1.clone() * &rct2.1,
+        );
+        let mut summand = self.raw_key.scalar_mul(&d2);
+        summand.rescale(self.parameters.mul_scaling);
+        RawCiphertext(d0 + &summand.0, d1 + &summand.1)
+    }
+
+    pub fn key_switch(&self, ct: &Ciphertext<T>, swk: &RawCiphertext<T>) -> Ciphertext<T> {
+        let raw = self.key_switch_raw(&ct.raw, swk);
+        let q_f = self.parameters.q.to_float();
+        let mul_scaling_f = self.parameters.mul_scaling.to_float();
+        let new_error =
+            self.noise.key_switch_noise * q_f / mul_scaling_f + self.noise.rescaling_noise;
+        let upper_bound_error = ct.upper_bound_error + new_error;
+        Ciphertext::new(raw, ct.level, ct.upper_bound_message, upper_bound_error)
+    }
+
+    pub fn key_switch_raw(
+        &self,
+        rct: &RawCiphertext<T>,
+        swk: &RawCiphertext<T>,
+    ) -> RawCiphertext<T> {
+        let mut to_rescale = swk.scalar_mul(&rct.1);
+        // let mut to_rescale = RawCiphertext(
+        //     rct.1.clone()*&swk.0,
+        //     rct.1.clone()*&swk.1,
+        // );
+        to_rescale.rescale(self.parameters.mul_scaling);
+        RawCiphertext(rct.0.clone() + &to_rescale.0, rct.1.clone() + &to_rescale.1)
+    }
+
     // /// Devide coefficients of the ciphertext by q^level_decrement, modify level accordingly
     // pub fn rescale(&self, ct: &mut Ciphertext<T>, level_decrement: u32) {
     // 	assert!(ct.level > level_decrement);
