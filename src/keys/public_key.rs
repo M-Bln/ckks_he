@@ -1,6 +1,6 @@
 use crate::algebra::big_int::BigInt;
 use crate::algebra::polynomial::Polynomial;
-use crate::ciphertext::{Ciphertext, CiphertextRing, RawCiphertext};
+use crate::ciphertext::{Ciphertext, Message, RawCiphertext};
 use crate::keys::key_generator::KeyGenerationParameters;
 use crate::random_distributions::{DiscreteGaussian, ZODistribution};
 
@@ -98,7 +98,7 @@ impl<T: BigInt> PublicKey<T> {
 
     pub fn encrypt(
         &mut self,
-        message: &CiphertextRing<T>,
+        message: &Message<T>,
         upper_bound_message: f64,
     ) -> Ciphertext<T> {
         let raw = self.encrypt_raw(message);
@@ -107,7 +107,7 @@ impl<T: BigInt> PublicKey<T> {
         Ciphertext::new(raw, level, upper_bound_message, upper_bound_error)
     }
 
-    pub fn encrypt_raw(&mut self, message: &CiphertextRing<T>) -> RawCiphertext<T> {
+    pub fn encrypt_raw(&mut self, message: &Message<T>) -> RawCiphertext<T> {
         let modulus = self.parameters.q.fast_exp(self.parameters.level_max) * self.parameters.q_0;
         let dimension = 2_usize.pow(self.parameters.dimension_exponent);
 

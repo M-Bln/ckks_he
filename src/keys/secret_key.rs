@@ -1,6 +1,6 @@
 use crate::algebra::big_int::BigInt;
 use crate::algebra::polynomial::Polynomial;
-use crate::ciphertext::{Ciphertext, CiphertextRing, RawCiphertext};
+use crate::ciphertext::{Ciphertext, Message, RawCiphertext};
 use crate::keys::key_generator::KeyGenerationParameters;
 use crate::random_distributions::HWTDistribution;
 
@@ -14,7 +14,7 @@ pub struct SecretKey<T: BigInt> {
     // pub level_max: u32,
     // pub variance: f64, // standard deviation of the Gaussian distribution of error sampling
     pub parameters: KeyGenerationParameters<T>,
-    pub key_s: CiphertextRing<T>,
+    pub key_s: Message<T>,
 }
 
 impl<T: BigInt> SecretKey<T> {
@@ -52,12 +52,12 @@ impl<T: BigInt> SecretKey<T> {
         }
     }
 
-    pub fn decrypt(&self, cipher: &Ciphertext<T>) -> CiphertextRing<T> {
+    pub fn decrypt(&self, cipher: &Ciphertext<T>) -> Message<T> {
         self.decrypt_raw(&cipher.raw)
         //cipher.raw.clone().0 + &(cipher.raw.clone().1 * &self.key_s)
     }
 
-    pub fn decrypt_raw(&self, raw: &RawCiphertext<T>) -> CiphertextRing<T> {
+    pub fn decrypt_raw(&self, raw: &RawCiphertext<T>) -> Message<T> {
         raw.clone().0 + &(raw.clone().1 * &self.key_s)
     }
 }

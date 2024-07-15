@@ -4,11 +4,11 @@ use crate::algebra::cyclotomic_ring::CyclotomicRing;
 use bnum::types::I256;
 use std::ops::{Add, Mul};
 
-//type CiphertextRing = CyclotomicRing<RingMod<I256>>;
-pub type CiphertextRing<T: BigInt> = CyclotomicRing<RingMod<T>>;
+//type CiphertextRing = CyclotomicRing<RingMod<I256>>; pub type
+pub type Message<T: BigInt> = CyclotomicRing<RingMod<T>>;
 
 #[derive(Clone, Debug)]
-pub struct RawCiphertext<T: BigInt>(pub CiphertextRing<T>, pub CiphertextRing<T>);
+pub struct RawCiphertext<T: BigInt>(pub Message<T>, pub Message<T>);
 
 // Should I also keep a ref to public / eval key?
 pub struct Ciphertext<T: BigInt> {
@@ -41,7 +41,7 @@ impl<'a, T: BigInt> Add<&'a RawCiphertext<T>> for RawCiphertext<T> {
     }
 }
 
-impl<'a, T: BigInt> Mul<&'a RawCiphertext<T>> for CiphertextRing<T> {
+impl<'a, T: BigInt> Mul<&'a RawCiphertext<T>> for Message<T> {
     type Output = RawCiphertext<T>;
     fn mul(self, other: &'a RawCiphertext<T>) -> RawCiphertext<T> {
         RawCiphertext(self.clone() * &other.0, self * &other.1)

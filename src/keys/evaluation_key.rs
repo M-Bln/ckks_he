@@ -1,6 +1,6 @@
 use crate::algebra::big_int::BigInt;
 use crate::algebra::arithmetic::{Rescale, RingMod};
-use crate::ciphertext::{Ciphertext, CiphertextRing, RawCiphertext};
+use crate::ciphertext::{Ciphertext, Message, RawCiphertext};
 use crate::keys::key_generator::KeyGenerationParameters;
 use crate::keys::public_key::ComputationNoise;
 
