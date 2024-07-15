@@ -75,6 +75,8 @@ impl<T: BigInt> CyclotomicRing<T> {
     }
 }
 
+
+
 fn extend_by_zero<T: Zero + Clone>(coefficients: &mut Vec<T>, minimal_length: usize) {
     assert!(
         !coefficients.is_empty(),

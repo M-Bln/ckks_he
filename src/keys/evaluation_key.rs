@@ -173,23 +173,25 @@ mod tests {
             generate_keys(dimension_exponent, q.clone(), level_max);
 
         // Create sample messages
-        let mut message1_coefficients = vec![I256::from(19*100*10000)];
-	message1_coefficients.append(&mut vec![I256::from(0); 2_usize.pow(dimension_exponent)-1]);
+        let mut message1_coefficients = vec![I256::from(19*100*10000); 2_usize.pow(dimension_exponent)];
+	// let mut message1_coefficients = vec![I256::from(19*100*10000)];
+	// message1_coefficients.append(&mut vec![I256::from(0); 2_usize.pow(dimension_exponent)-1]);
 
-	let mut message2_coefficients = vec![I256::from(19*100*10000)];
-	message2_coefficients.append(&mut vec![I256::from(0); 2_usize.pow(dimension_exponent)-1]);
+	let mut message2_coefficients = vec![I256::from(19*100*10000); 2_usize.pow(dimension_exponent)];
+	// let mut message2_coefficients = vec![I256::from(19*100*10000)];
+	// message2_coefficients.append(&mut vec![I256::from(0); 2_usize.pow(dimension_exponent)-1]);
 
 
 
 	
 	
-        let message1 = Polynomial::new(message1_coefficients)
+        let mut message1 = Polynomial::new(message1_coefficients)
             .modulo(q.clone().fast_exp(level_max))
             .to_cyclotomic(dimension_exponent);
 
-        let message2 = Polynomial::new(message2_coefficients)
+        let mut message2 = Polynomial::new(message2_coefficients)
             .modulo(q.clone().fast_exp(level_max))
-            .to_cyclotomic(dimension_exponent);
+	    .to_cyclotomic(dimension_exponent);
 
         // Encrypt the messages
         let upper_bound_message = (19*100*10000) as f64; // Example value, adjust as needed
@@ -207,13 +209,21 @@ mod tests {
         let decrypted_message = secret_key.decrypt(&pure_mul_ciphertext);
 
         // Create the expected message sum
-	let mut expected_message_coefficients = vec![I256::from(19*19*100*100)];
-	expected_message_coefficients.append(&mut vec![I256::from(0); 2_usize.pow(dimension_exponent)-1]);
+	//let mut expected_message_coefficients = vec![I256::from(19*19*100*100)];
+	//expected_message_coefficients.append(&mut vec![I256::from(0); 2_usize.pow(dimension_exponent)-1]);
         // let expected_message_coefficients =
         //     vec![I256::from(2500); 2_usize.pow(dimension_exponent)];
-        let expected_message = Polynomial::new(expected_message_coefficients)
-            .modulo(q.clone().fast_exp(level_max))
-            .to_cyclotomic(dimension_exponent);
+	message1.rescale(q);
+	message2.rescale(q);
+	println!("message1: {:?}", message1);
+	println!("message2: {:?}", message2);
+	let mut expected_message = message1 * &message2;
+	println!("expected message: {:?}", expected_message);
+
+//	println!("rescaled expected message: {:?}", expected_message);
+        // let expected_message = Polynomial::new(expected_message_coefficients)
+        //     .modulo(q.clone().fast_exp(level_max))
+        //     .to_cyclotomic(dimension_exponent);
 
         println!("expected error: {:?}", pure_mul_ciphertext.upper_bound_error);
         // Verify that the decrypted message is close to the sum of the original messages
