@@ -132,6 +132,17 @@ impl<T: BigInt> CyclotomicRing<RingMod<T>> {
 // }
 
 impl Polynomial<C64> {
+    pub fn to_integer<T: BigInt>(&self) -> Polynomial<T> {
+        let coefficients = self
+            .ref_coefficients()
+            .iter()
+            .map(|coeff| T::from_float(coeff.real()))
+            .collect();
+        Polynomial::new(coefficients)
+    }
+}
+
+impl Polynomial<C64> {
     pub fn to_i256(&self) -> Polynomial<I256> {
         let coefficients = self
             .ref_coefficients()

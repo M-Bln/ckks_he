@@ -17,8 +17,8 @@ pub struct Encoder<T: BigInt> {
     sigma_matrix: Vec<Vec<C64>>, // Matrix of sigma, the inverse of the canonical embedding
 }
 
-impl Encoder<I256> {
-    pub fn encode_to_integer(&self, plaintext: &[C64]) -> CyclotomicRing<I256> {
+impl<T: BigInt> Encoder<T> {
+    pub fn encode_to_integer(&self, plaintext: &[C64]) -> CyclotomicRing<T> {
         let expected_length = 2_usize.pow(self.dimension_exponent - 1);
         assert_eq!(
             plaintext.len(),
@@ -32,9 +32,9 @@ impl Encoder<I256> {
         // Step 2: Apply sigma_inverse to the result of projection_inverse
         let sigma_inverse_result = self.sigma_inverse(&projection_inverse_result);
 
-        // Step 3: Convert the polynomial to I256
+        // Step 3: Convert the polynomial to T
 	//	sigma_inverse_result.to_i256()
-        let integer_polynomial = sigma_inverse_result.to_i256();
+        let integer_polynomial = sigma_inverse_result.to_integer();
 	integer_polynomial.to_cyclotomic(self.dimension_exponent)
         // // Step 4: Reduce the polynomial modulo modulus
         // let modular_polynomial = integer_polynomial.modulo(self.modulus.clone());
@@ -47,12 +47,12 @@ impl Encoder<I256> {
         // cyclotomic_polynomial
     }
 
-    pub fn encode(&self, plaintext: &[C64]) -> CyclotomicRing<RingMod<I256>> {
+    pub fn encode(&self, plaintext: &[C64]) -> CyclotomicRing<RingMod<T>> {
 	let integer_cyclotomic = self.encode_to_integer(plaintext);
 	integer_cyclotomic.modulo(self.modulus)
     }
 
-    pub fn decode_integer(&self, message: CyclotomicRing<I256>) -> Vec<C64> {
+    pub fn decode_integer(&self, message: CyclotomicRing<T>) -> Vec<C64> {
         let expected_dimension = 2_usize.pow(self.dimension_exponent);
         assert_eq!(
             message.dimension, expected_dimension,
@@ -74,12 +74,12 @@ impl Encoder<I256> {
         projection_result
     }
 
-    pub fn decode(&self, message: CyclotomicRing<RingMod<I256>>) -> Vec<C64> {
+    pub fn decode(&self, message: CyclotomicRing<RingMod<T>>) -> Vec<C64> {
 	let integer_polynomial = message.to_integer();
 	self.decode_integer(integer_polynomial)
     }
 
-    // pub fn decode(&self, message: CyclotomicRing<RingMod<I256>>) -> Vec<C64> {
+    // pub fn decode(&self, message: CyclotomicRing<RingMod<T>>) -> Vec<C64> {
     //     let expected_dimension = 2_usize.pow(self.dimension_exponent);
     //     assert_eq!(
     //         message.dimension, expected_dimension,
