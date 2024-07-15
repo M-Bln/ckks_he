@@ -2,7 +2,7 @@ use crate::algebra::big_int::BigInt;
 use crate::algebra::polynomial::{Polynomial, ScalarMul};
 use crate::ciphertext::RawCiphertext;
 use crate::keys::evaluation_key::EvaluationKey;
-use crate::keys::public_key::PublicKey;
+use crate::keys::public_key::{ComputationNoise, PublicKey};
 use crate::keys::secret_key::SecretKey;
 use crate::random_distributions::{sample_n, DiscreteGaussian};
 use rand::distributions::uniform::UniformSampler;
@@ -49,9 +49,10 @@ pub fn generate_keys<T: BigInt>(
 pub fn generate_keys_all_parameters<T: BigInt>(
     params: KeyGenerationParameters<T>,
 ) -> (PublicKey<T>, EvaluationKey<T>, SecretKey<T>) {
+    let noise = ComputationNoise::new(params);
     let secret_key = generate_secret_key(params);
 
-    let public_key = generate_public_key(params, &secret_key);
+    let public_key = generate_public_key(params, noise, &secret_key);
 
     let evaluation_key = generate_evaluation_key(params, &secret_key);
 
@@ -72,6 +73,7 @@ fn generate_secret_key<T: BigInt>(parameters: KeyGenerationParameters<T>) -> Sec
 
 fn generate_public_key<T: BigInt>(
     params: KeyGenerationParameters<T>,
+    noise: ComputationNoise,
     secret_key: &SecretKey<T>,
 ) -> PublicKey<T> {
     let dimension = 2_usize.pow(params.dimension_exponent);
@@ -102,6 +104,7 @@ fn generate_public_key<T: BigInt>(
         // params.level_max,
         // params.variance,
         params,
+        noise,
         raw_public_key,
     )
 }
@@ -290,7 +293,7 @@ mod tests {
             .to_cyclotomic(dimension_exponent);
 
         // Encrypt the message
-        let upper_bound_message = 100.0; // Example value, adjust as needed
+        let upper_bound_message = 1209.0; // Example value, adjust as needed
         let ciphertext = public_key.encrypt(&message, upper_bound_message);
 
         // Decrypt the ciphertext
@@ -310,15 +313,15 @@ mod tests {
             );
             println!(
                 "theoretical encryption error: {:?} \n {:?} ",
-                f64_to_i256(public_key.encryption_error),
-                public_key.encryption_error
+                f64_to_i256(public_key.noise.clean_noise),
+                public_key.noise.clean_noise
             );
             assert!(
-                diff < f64_to_i256(public_key.encryption_error),
+                diff < f64_to_i256(public_key.noise.clean_noise),
                 "Difference too large!"
             );
             assert!(
-                diff > f64_to_i256(-public_key.encryption_error),
+                diff > f64_to_i256(-public_key.noise.clean_noise),
                 "Difference too large!"
             );
         }

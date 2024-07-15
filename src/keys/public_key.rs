@@ -15,11 +15,44 @@ pub struct PublicKey<T: BigInt> {
     //    pub variance: f64, // standard deviation of the Gaussian distribution of error sampling
     //    pub standard_deviation: f64,
     pub raw_key: RawCiphertext<T>,
-    pub encryption_error: f64,
     pub parameters: KeyGenerationParameters<T>,
+    pub noise: ComputationNoise,
     rng: rand::rngs::ThreadRng,
     gaussian: DiscreteGaussian,
     zod: ZODistribution,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ComputationNoise {
+    pub clean_noise: f64,
+    pub rescaling_noise: f64,
+    pub key_switch_noise: f64,
+    pub inv_mul_scaling: f64,
+}
+
+impl ComputationNoise {
+    pub fn new<T: BigInt>(parameters: KeyGenerationParameters<T>) -> Self {
+        let dimension = (2 << parameters.dimension_exponent) as f64;
+        let h = parameters.hamming_weight as f64;
+        let clean_noise = parameters.standard_deviation
+            * (8.0 * dimension * (2.0 as f64).sqrt()
+                + 6.0 * dimension.sqrt()
+                + 16.0 * (h * dimension).sqrt());
+        let rescaling_noise = (dimension / 3.0).sqrt() * (3.0 + 8.0 * h.sqrt());
+        let key_switch_noise =
+            8.0 * parameters.standard_deviation * dimension / (3.0 as f64).sqrt();
+        let inv_mul_scaling = 1.0 / parameters.mul_scaling.to_float();
+
+        ComputationNoise {
+            clean_noise,
+            rescaling_noise,
+            key_switch_noise,
+            inv_mul_scaling,
+        }
+    }
+    pub fn mul_noise<T: BigInt>(&self, level: T) -> f64 {
+        self.inv_mul_scaling * self.key_switch_noise * level.to_float() + self.rescaling_noise
+    }
 }
 
 impl<T: BigInt> PublicKey<T> {
@@ -32,16 +65,13 @@ impl<T: BigInt> PublicKey<T> {
         // level_max: u32,
         // variance: f64,
         parameters: KeyGenerationParameters<T>,
+        noise: ComputationNoise,
         raw_key: RawCiphertext<T>,
     ) -> Self {
         // let standard_deviation = variance.sqrt();
         let dimension = 2_usize.pow(parameters.dimension_exponent);
         let dimension_f = dimension as f64;
         let hamming_f = parameters.hamming_weight as f64;
-        let encryption_error = parameters.standard_deviation
-            * (dimension_f * 8.0 * (2.0 as f64).sqrt()
-                + 6.0 * dimension_f.sqrt()
-                + 16.0 * (hamming_f * dimension_f).sqrt());
         let mut rng = rand::thread_rng();
         let gaussian = DiscreteGaussian::new(
             0.0,
@@ -59,7 +89,7 @@ impl<T: BigInt> PublicKey<T> {
             // standard_deviation,
             parameters,
             raw_key,
-            encryption_error,
+            noise,
             rng,
             gaussian,
             zod,
@@ -73,7 +103,7 @@ impl<T: BigInt> PublicKey<T> {
     ) -> Ciphertext<T> {
         let raw = self.encrypt_raw(message);
         let level = self.parameters.level_max;
-        let upper_bound_error = self.encryption_error;
+        let upper_bound_error = self.noise.clean_noise;
         Ciphertext::new(raw, level, upper_bound_message, upper_bound_error)
     }
 

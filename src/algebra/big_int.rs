@@ -3,10 +3,20 @@ use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 use crate::algebra::arithmetic::RingMod;
+use crate::algebra::conversion_rounding::{f64_to_i256, i256_to_f64};
 use crate::random_distributions::UniformSamplable;
 
 pub trait Zero: Sized {
     fn zero(&self) -> Self;
+}
+
+// Use local trait rather than From<f64> in order to implement BigInt for non local type i64
+pub trait FromFloat {
+    fn from_float(value: f64) -> Self;
+}
+
+pub trait ToFloat {
+    fn to_float(&self) -> f64;
 }
 
 pub trait BigInt:
@@ -27,6 +37,8 @@ pub trait BigInt:
     + fmt::Display
     + fmt::Debug
     + From<i64>
+    + FromFloat
+    + ToFloat
     + Eq
     + PartialOrd
     + Ord
@@ -76,7 +88,31 @@ impl<T: BigInt> Zero for T {
 
 impl BigInt for i64 {}
 
+impl FromFloat for i64 {
+    fn from_float(value: f64) -> i64 {
+        value as i64
+    }
+}
+
+impl ToFloat for i64 {
+    fn to_float(&self) -> f64 {
+        *self as f64
+    }
+}
+
 impl BigInt for I256 {}
+
+impl FromFloat for I256 {
+    fn from_float(value: f64) -> I256 {
+        f64_to_i256(value)
+    }
+}
+
+impl ToFloat for I256 {
+    fn to_float(&self) -> f64 {
+        i256_to_f64(*self)
+    }
+}
 
 // pub fn i256_to_f64(n: I256) -> f64 {
 //     n.to_string().parse::<f64>().unwrap()
