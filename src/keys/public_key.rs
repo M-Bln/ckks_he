@@ -32,7 +32,7 @@ pub struct ComputationNoise {
 
 impl ComputationNoise {
     pub fn new<T: BigInt>(parameters: KeyGenerationParameters<T>) -> Self {
-        let dimension = (2 << parameters.dimension_exponent) as f64;
+        let dimension = (1 << parameters.dimension_exponent) as f64;
         let h = parameters.hamming_weight as f64;
         let clean_noise = parameters.standard_deviation
             * (8.0 * dimension * (2.0 as f64).sqrt()

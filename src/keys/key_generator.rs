@@ -25,7 +25,7 @@ pub fn generate_most_parameters<T: BigInt>(
 ) -> KeyGenerationParameters<T> {
     let hamming_weight = 2_usize.pow(dimension_exponent / 2);
     let mul_scaling = q.fast_exp(level_max);
-    let q_0 = q;
+    let q_0 = T::from(1);
     let standard_deviation = 3.2;
     KeyGenerationParameters {
         dimension_exponent,
@@ -54,7 +54,7 @@ pub fn generate_keys_all_parameters<T: BigInt>(
 
     let public_key = generate_public_key(params, noise, &secret_key);
 
-    let evaluation_key = generate_evaluation_key(params, &secret_key);
+    let evaluation_key = generate_evaluation_key(params, noise, &secret_key);
 
     (public_key, evaluation_key, secret_key)
 }
@@ -111,6 +111,7 @@ fn generate_public_key<T: BigInt>(
 
 fn generate_evaluation_key<T: BigInt>(
     params: KeyGenerationParameters<T>,
+    noise: ComputationNoise,
     secret_key: &SecretKey<T>,
 ) -> EvaluationKey<T> {
     let dimension = 2_usize.pow(params.dimension_exponent);
@@ -142,6 +143,7 @@ fn generate_evaluation_key<T: BigInt>(
         // params.level_max,
         // params.variance,
         params,
+	noise,
         raw_eval_key,
     )
 }
