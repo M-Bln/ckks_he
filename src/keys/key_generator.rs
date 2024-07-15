@@ -15,7 +15,7 @@ pub struct KeyGenerationParameters<T: BigInt> {
     pub q_0: T,
     pub q: T,
     pub level_max: u32,
-    pub variance: f64,
+    pub standard_deviation: f64,
 }
 
 pub fn generate_most_parameters<T: BigInt>(
@@ -26,7 +26,7 @@ pub fn generate_most_parameters<T: BigInt>(
     let hamming_weight = 2_usize.pow(dimension_exponent / 2);
     let mul_scaling = q.fast_exp(level_max);
     let q_0 = q;
-    let variance = 3.2 * 3.2;
+    let standard_deviation = 3.2;
     KeyGenerationParameters {
         dimension_exponent,
         hamming_weight,
@@ -34,7 +34,7 @@ pub fn generate_most_parameters<T: BigInt>(
         q_0,
         q,
         level_max,
-        variance,
+        standard_deviation,
     }
 }
 
@@ -49,64 +49,65 @@ pub fn generate_keys<T: BigInt>(
 pub fn generate_keys_all_parameters<T: BigInt>(
     params: KeyGenerationParameters<T>,
 ) -> (PublicKey<T>, EvaluationKey<T>, SecretKey<T>) {
-    let secret_key = generate_secret_key(&params);
+    let secret_key = generate_secret_key(params);
 
-    let public_key = generate_public_key(&params, &secret_key);
+    let public_key = generate_public_key(params, &secret_key);
 
-    let evaluation_key = generate_evaluation_key(&params, &secret_key);
+    let evaluation_key = generate_evaluation_key(params, &secret_key);
 
     (public_key, evaluation_key, secret_key)
 }
 
-fn generate_secret_key<T: BigInt>(params: &KeyGenerationParameters<T>) -> SecretKey<T> {
+fn generate_secret_key<T: BigInt>(parameters: KeyGenerationParameters<T>) -> SecretKey<T> {
     SecretKey::<T>::new(
-        params.dimension_exponent,
-        params.hamming_weight,
-        params.mul_scaling.clone(),
-        params.q_0.clone(),
-        params.q.clone(),
-        params.level_max,
-        params.variance,
+        parameters, // params.dimension_exponent,
+                   // params.hamming_weight,
+                   // params.mul_scaling.clone(),
+                   // params.q_0.clone(),
+                   // params.q.clone(),
+                   // params.level_max,
+                   // params.standard_deviation,
     )
 }
 
 fn generate_public_key<T: BigInt>(
-    params: &KeyGenerationParameters<T>,
+    params: KeyGenerationParameters<T>,
     secret_key: &SecretKey<T>,
 ) -> PublicKey<T> {
     let dimension = 2_usize.pow(params.dimension_exponent);
     let mut rng = rand::thread_rng();
     let modulus = params.q_0.clone() * params.q.fast_exp(params.level_max);
-    let sampler = T::sampler(-modulus.clone()/T::from(2), modulus.clone()/T::from(2));
+    let sampler = T::sampler(-modulus.clone() / T::from(2), modulus.clone() / T::from(2));
     let public_key_coefficients = sample_n(sampler, dimension, &mut rng);
     let public_key_a = Polynomial::<T>::new(public_key_coefficients)
         .modulo(modulus.clone())
         .to_cyclotomic(params.dimension_exponent);
 
-    let mut gaussian_sampler = DiscreteGaussian::new(0.0, params.variance);
+    let mut gaussian_sampler = DiscreteGaussian::new(0.0, params.standard_deviation);
     let error_coefficients = gaussian_sampler.sample_n(dimension);
     let error = Polynomial::<T>::new(error_coefficients)
         .modulo(modulus.clone())
         .to_cyclotomic(params.dimension_exponent);
     let raw_public_key = RawCiphertext::<T>(
         error - &(public_key_a.clone() * &secret_key.key_s),
-	public_key_a,
+        public_key_a,
     );
 
     PublicKey::<T>::new(
-        params.dimension_exponent,
-        params.hamming_weight,
-        params.mul_scaling.clone(),
-        params.q_0.clone(),
-        params.q.clone(),
-        params.level_max,
-        params.variance,
+        // params.dimension_exponent,
+        // params.hamming_weight,
+        // params.mul_scaling.clone(),
+        // params.q_0.clone(),
+        // params.q.clone(),
+        // params.level_max,
+        // params.variance,
+        params,
         raw_public_key,
     )
 }
 
 fn generate_evaluation_key<T: BigInt>(
-    params: &KeyGenerationParameters<T>,
+    params: KeyGenerationParameters<T>,
     secret_key: &SecretKey<T>,
 ) -> EvaluationKey<T> {
     let dimension = 2_usize.pow(params.dimension_exponent);
@@ -119,7 +120,7 @@ fn generate_evaluation_key<T: BigInt>(
         .modulo(modulus_eval.clone())
         .to_cyclotomic(params.dimension_exponent);
 
-    let mut gaussian_sampler = DiscreteGaussian::new(0.0, params.variance);
+    let mut gaussian_sampler = DiscreteGaussian::new(0.0, params.standard_deviation);
     let eval_error_coefficients = gaussian_sampler.sample_n(dimension);
     let eval_error = Polynomial::<T>::new(eval_error_coefficients)
         .modulo(modulus_eval.clone())
@@ -131,12 +132,13 @@ fn generate_evaluation_key<T: BigInt>(
     );
 
     EvaluationKey::<T>::new(
-        params.dimension_exponent,
-        params.mul_scaling.clone(),
-        params.q_0.clone(),
-        params.q.clone(),
-        params.level_max,
-        params.variance,
+        // params.dimension_exponent,
+        // params.mul_scaling.clone(),
+        // params.q_0.clone(),
+        // params.q.clone(),
+        // params.level_max,
+        // params.variance,
+        params,
         raw_eval_key,
     )
 }
@@ -221,9 +223,9 @@ fn generate_evaluation_key<T: BigInt>(
 mod tests {
     use super::*;
     use crate::algebra::big_int::BigInt;
-    use bnum::types::I256;
     use crate::algebra::conversion_rounding::f64_to_i256;
-    
+    use bnum::types::I256;
+
     #[test]
     fn test_generate_keys_all_parameters() {
         let params = KeyGenerationParameters {
@@ -233,7 +235,7 @@ mod tests {
             q_0: I256::from(7),
             q: I256::from(8),
             level_max: 2,
-            variance: 9.0,
+            standard_deviation: 3.2,
         };
 
         let (public_key, evaluation_key, secret_key) = generate_keys_all_parameters(params);
@@ -243,27 +245,30 @@ mod tests {
         println!("SecretKey: {:?}", secret_key);
 
         // Verify that the keys are generated correctly
-        assert_eq!(secret_key.dimension_exponent, params.dimension_exponent);
-        assert_eq!(secret_key.hamming_weight, params.hamming_weight);
-        assert_eq!(secret_key.mul_scaling, params.mul_scaling);
-        assert_eq!(secret_key.q_0, params.q_0);
-        assert_eq!(secret_key.q, params.q);
-        assert_eq!(secret_key.level_max, params.level_max);
-        assert_eq!(secret_key.variance, params.variance);
+        // assert_eq!(secret_key.dimension_exponent, params.dimension_exponent);
+        // assert_eq!(secret_key.hamming_weight, params.hamming_weight);
+        // assert_eq!(secret_key.mul_scaling, params.mul_scaling);
+        // assert_eq!(secret_key.q_0, params.q_0);
+        // assert_eq!(secret_key.q, params.q);
+        // assert_eq!(secret_key.level_max, params.level_max);
+        // assert_eq!(secret_key.variance, params.variance);
+        assert_eq!(secret_key.parameters, params);
 
-        assert_eq!(public_key.dimension_exponent, params.dimension_exponent);
-        assert_eq!(public_key.mul_scaling, params.mul_scaling);
-        assert_eq!(public_key.q_0, params.q_0);
-        assert_eq!(public_key.q, params.q);
-        assert_eq!(public_key.level_max, params.level_max);
-        assert_eq!(public_key.variance, params.variance);
+        // assert_eq!(public_key.dimension_exponent, params.dimension_exponent);
+        // assert_eq!(public_key.mul_scaling, params.mul_scaling);
+        // assert_eq!(public_key.q_0, params.q_0);
+        // assert_eq!(public_key.q, params.q);
+        // assert_eq!(public_key.level_max, params.level_max);
+        // assert_eq!(public_key.variance, params.variance);
+        assert_eq!(public_key.parameters, params);
 
-        assert_eq!(evaluation_key.dimension_exponent, params.dimension_exponent);
-        assert_eq!(evaluation_key.mul_scaling, params.mul_scaling);
-        assert_eq!(evaluation_key.q_0, params.q_0);
-        assert_eq!(evaluation_key.q, params.q);
-        assert_eq!(evaluation_key.level_max, params.level_max);
-        assert_eq!(evaluation_key.variance, params.variance);
+        // assert_eq!(evaluation_key.dimension_exponent, params.dimension_exponent);
+        // assert_eq!(evaluation_key.mul_scaling, params.mul_scaling);
+        // assert_eq!(evaluation_key.q_0, params.q_0);
+        // assert_eq!(evaluation_key.q, params.q);
+        // assert_eq!(evaluation_key.level_max, params.level_max);
+        // assert_eq!(evaluation_key.variance, params.variance);
+        assert_eq!(evaluation_key.parameters, params);
     }
 
     #[test]
@@ -272,10 +277,11 @@ mod tests {
         let dimension_exponent = 10;
         let q = I256::from(16);
         let level_max = 5;
-	let modulus = q.clone() * q.clone().fast_exp(level_max);
+        let modulus = q.clone() * q.clone().fast_exp(level_max);
 
         // Generate keys using the provided helper function
-        let (mut public_key, _evaluation_key, secret_key) = generate_keys(dimension_exponent, q.clone(), level_max);
+        let (mut public_key, _evaluation_key, secret_key) =
+            generate_keys(dimension_exponent, q.clone(), level_max);
 
         // Create a sample message
         let message_coefficients = vec![I256::from(1209); 2_usize.pow(dimension_exponent)];
@@ -291,15 +297,33 @@ mod tests {
         let decrypted_message = secret_key.decrypt(&ciphertext);
 
         // Verify that the decrypted message is close to the original message
-        for (original, decrypted) in message.polynomial.coefficients().iter().zip(decrypted_message.polynomial.coefficients().iter()) {
+        for (original, decrypted) in message
+            .polynomial
+            .coefficients()
+            .iter()
+            .zip(decrypted_message.polynomial.coefficients().iter())
+        {
             let diff = (original.value - decrypted.value).remainder(&modulus);
-            println!("Original: {:?}, Decrypted: {:?}, Difference: {}", original, decrypted, diff);
-	    println!("theoretical encryption error: {:?} \n {:?} ", f64_to_i256(public_key.encryption_error), public_key.encryption_error);
-            assert!(diff < f64_to_i256(public_key.encryption_error), "Difference too large!");
-	    assert!(diff > f64_to_i256(-public_key.encryption_error), "Difference too large!");
+            println!(
+                "Original: {:?}, Decrypted: {:?}, Difference: {}",
+                original, decrypted, diff
+            );
+            println!(
+                "theoretical encryption error: {:?} \n {:?} ",
+                f64_to_i256(public_key.encryption_error),
+                public_key.encryption_error
+            );
+            assert!(
+                diff < f64_to_i256(public_key.encryption_error),
+                "Difference too large!"
+            );
+            assert!(
+                diff > f64_to_i256(-public_key.encryption_error),
+                "Difference too large!"
+            );
         }
     }
-    
+
     // #[test]
     // fn test_generate_keys_all_parameters() {
     //     let dimension_exponent = 2;

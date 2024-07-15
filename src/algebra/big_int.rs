@@ -1,6 +1,6 @@
 use bnum::types::I256;
 use std::fmt;
-use std::ops::{Neg, Add, Div, Mul, Rem, Sub};
+use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 use crate::algebra::arithmetic::RingMod;
 use crate::random_distributions::UniformSamplable;

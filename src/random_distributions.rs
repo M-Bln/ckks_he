@@ -55,20 +55,19 @@ pub fn sample_n<T: UniformSampler, R: Rng>(sampler: T, n: usize, rng: &mut R) ->
 #[derive(Clone, Debug)]
 pub struct DiscreteGaussian {
     mean: f64,
-    std_dev: f64,
+    standard_deviation: f64,
     normal: Normal<f64>,
     rng: ThreadRng,
 }
 
 impl DiscreteGaussian {
     /// Creates a new DiscreteGaussian with the given mean and variance.
-    pub fn new(mean: f64, variance: f64) -> Self {
-        let std_dev = variance.sqrt();
-        let normal = Normal::new(mean, std_dev).unwrap();
+    pub fn new(mean: f64, standard_deviation: f64) -> Self {
+        let normal = Normal::new(mean, standard_deviation).unwrap();
         let rng = rand::thread_rng();
         DiscreteGaussian {
             mean,
-            std_dev,
+            standard_deviation,
             normal,
             rng,
         }
