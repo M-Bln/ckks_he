@@ -165,19 +165,19 @@ mod tests {
     #[test]
     fn test_encrypt_pure_mul_decrypt() {
 	let dimension_exponent = 2;
-        let q = I256::from(10000);
-        let level_max = 3;
+        let q = I256::from(1 << 20);
+        let level_max = 4;
 	
         // Generate keys using the provided helper function
         let (mut public_key, evaluation_key, secret_key) =
             generate_keys(dimension_exponent, q.clone(), level_max);
 
         // Create sample messages
-        let mut message1_coefficients = vec![I256::from(19*100*10000); 2_usize.pow(dimension_exponent)];
+        let mut message1_coefficients = vec![I256::from(1 << 30); 2_usize.pow(dimension_exponent)];
 	// let mut message1_coefficients = vec![I256::from(19*100*10000)];
 	// message1_coefficients.append(&mut vec![I256::from(0); 2_usize.pow(dimension_exponent)-1]);
 
-	let mut message2_coefficients = vec![I256::from(19*100*10000); 2_usize.pow(dimension_exponent)];
+	let mut message2_coefficients = vec![I256::from(1 << 30); 2_usize.pow(dimension_exponent)];
 	// let mut message2_coefficients = vec![I256::from(19*100*10000)];
 	// message2_coefficients.append(&mut vec![I256::from(0); 2_usize.pow(dimension_exponent)-1]);
 
@@ -194,7 +194,7 @@ mod tests {
 	    .to_cyclotomic(dimension_exponent);
 
         // Encrypt the messages
-        let upper_bound_message = (19*100*10000) as f64; // Example value, adjust as needed
+        let upper_bound_message = (1 << 30) as f64; // Example value, adjust as needed
         let mut ciphertext1 = public_key.encrypt(&message1, upper_bound_message);
 	evaluation_key.rescale(&mut ciphertext1, 1).unwrap();
         let mut ciphertext2 = public_key.encrypt(&message2, upper_bound_message);	
@@ -215,10 +215,10 @@ mod tests {
         //     vec![I256::from(2500); 2_usize.pow(dimension_exponent)];
 	message1.rescale(q);
 	message2.rescale(q);
-	println!("message1: {:?}", message1);
-	println!("message2: {:?}", message2);
+	// println!("message1: {:?}", message1);
+	// println!("message2: {:?}", message2);
 	let mut expected_message = message1 * &message2;
-	println!("expected message: {:?}", expected_message);
+	// println!("expected message: {:?}", expected_message);
 
 //	println!("rescaled expected message: {:?}", expected_message);
         // let expected_message = Polynomial::new(expected_message_coefficients)
