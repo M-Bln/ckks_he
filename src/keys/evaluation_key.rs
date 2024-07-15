@@ -254,7 +254,7 @@ mod tests {
             .modulo(q.clone().fast_exp(level_max))
             .to_cyclotomic(dimension_exponent);
 
-        println!("expected error: {:?}", added_ciphertext.upper_bound_error);
+        // println!("expected error: {:?}", added_ciphertext.upper_bound_error);
         // Verify that the decrypted message is close to the sum of the original messages
         for (expected, decrypted) in expected_message
             .polynomial
@@ -273,12 +273,10 @@ mod tests {
 
     #[test]
     fn test_encrypt_rescale_decrypt() {
-        // Define parameters for key generation
         let dimension_exponent = 4;
         let q = I256::from(1 << 16);
         let level_max = 3;
 
-        // Generate keys using the provided helper function
         let (mut public_key, evaluation_key, secret_key) =
             generate_keys(dimension_exponent, q.clone(), level_max);
 
@@ -306,7 +304,7 @@ mod tests {
             .modulo(q.clone().fast_exp(level_max - 1))
             .to_cyclotomic(dimension_exponent);
 
-        println!("expected error: {:?}", ciphertext.upper_bound_error);
+        // println!("expected error: {:?}", ciphertext.upper_bound_error);
         // Verify that the decrypted message is close to the sum of the original messages
         for (expected, decrypted) in expected_message
             .polynomial
