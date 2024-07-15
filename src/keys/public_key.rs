@@ -96,11 +96,7 @@ impl<T: BigInt> PublicKey<T> {
         }
     }
 
-    pub fn encrypt(
-        &mut self,
-        message: &Message<T>,
-        upper_bound_message: f64,
-    ) -> Ciphertext<T> {
+    pub fn encrypt(&mut self, message: &Message<T>, upper_bound_message: f64) -> Ciphertext<T> {
         let raw = self.encrypt_raw(message);
         let level = self.parameters.level_max;
         let upper_bound_error = self.noise.clean_noise;

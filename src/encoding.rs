@@ -33,9 +33,9 @@ impl<T: BigInt> Encoder<T> {
         let sigma_inverse_result = self.sigma_inverse(&projection_inverse_result);
 
         // Step 3: Convert the polynomial to T
-	//	sigma_inverse_result.to_i256()
+        //	sigma_inverse_result.to_i256()
         let integer_polynomial = sigma_inverse_result.to_integer();
-	integer_polynomial.to_cyclotomic(self.dimension_exponent)
+        integer_polynomial.to_cyclotomic(self.dimension_exponent)
         // // Step 4: Reduce the polynomial modulo modulus
         // let modular_polynomial = integer_polynomial.modulo(self.modulus.clone());
         // println!("Modular Polynomial: {:?}", modular_polynomial);
@@ -48,8 +48,8 @@ impl<T: BigInt> Encoder<T> {
     }
 
     pub fn encode(&self, plaintext: &[C64]) -> CyclotomicRing<RingMod<T>> {
-	let integer_cyclotomic = self.encode_to_integer(plaintext);
-	integer_cyclotomic.modulo(self.modulus)
+        let integer_cyclotomic = self.encode_to_integer(plaintext);
+        integer_cyclotomic.modulo(self.modulus)
     }
 
     pub fn decode_integer(&self, message: CyclotomicRing<T>) -> Vec<C64> {
@@ -75,8 +75,8 @@ impl<T: BigInt> Encoder<T> {
     }
 
     pub fn decode(&self, message: CyclotomicRing<RingMod<T>>) -> Vec<C64> {
-	let integer_polynomial = message.to_integer();
-	self.decode_integer(integer_polynomial)
+        let integer_polynomial = message.to_integer();
+        self.decode_integer(integer_polynomial)
     }
 
     // pub fn decode(&self, message: CyclotomicRing<RingMod<T>>) -> Vec<C64> {

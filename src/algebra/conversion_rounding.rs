@@ -1,20 +1,19 @@
 use crate::algebra::arithmetic::RingMod;
-use crate::algebra::big_int::{BigInt, Zero, ToFloat};
+use crate::algebra::big_int::{BigInt, ToFloat, Zero};
 use crate::algebra::complex::{Complex, C64};
 use crate::algebra::cyclotomic_ring::CyclotomicRing;
 use crate::algebra::polynomial::Polynomial;
 use bnum::types::I256;
 use std::ops::{Add, Sub};
 
-
 impl<T> Polynomial<T>
 where
     T: Add<Output = T>
-    + for<'a> Add<&'a T, Output = T>
-    + Sub<Output = T>
-    + for<'a> Sub<&'a T, Output = T>
-    + Clone
-    + Zero
+        + for<'a> Add<&'a T, Output = T>
+        + Sub<Output = T>
+        + for<'a> Sub<&'a T, Output = T>
+        + Clone
+        + Zero,
 {
     pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<T> {
         CyclotomicRing::new(self.coefficients(), 2_usize.pow(dimension_exponent))
@@ -81,18 +80,18 @@ impl CyclotomicRing<RingMod<I256>> {
 impl<T> CyclotomicRing<T>
 where
     T: Add<Output = T>
-    + for<'a> Add<&'a T, Output = T>
-    + Sub<Output = T>
-    + for<'a> Sub<&'a T, Output = T>
-    + Clone
-    + Zero
-    + ToFloat
+        + for<'a> Add<&'a T, Output = T>
+        + Sub<Output = T>
+        + for<'a> Sub<&'a T, Output = T>
+        + Clone
+        + Zero
+        + ToFloat,
 {
     pub fn to_c64(&self) -> Polynomial<C64> {
         let coefficients = self
             .ref_coefficients()
             .iter()
-            .map(|coeff| C64::new(coeff.to_float(),0.0))
+            .map(|coeff| C64::new(coeff.to_float(), 0.0))
             .collect();
         Polynomial::new(coefficients)
     }
