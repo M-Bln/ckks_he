@@ -164,18 +164,17 @@ mod tests {
 
     #[test]
     fn test_encrypt_pure_mul_decrypt() {
-        // Define parameters for key generation
-        let dimension_exponent = 1;
-        let q = I256::from(1 << 30);
-        let level_max = 2;
-
+	let dimension_exponent = 2;
+        let q = I256::from(19);
+        let level_max = 5;
+	
         // Generate keys using the provided helper function
         let (mut public_key, evaluation_key, secret_key) =
             generate_keys(dimension_exponent, q.clone(), level_max);
 
         // Create sample messages
-        let message1_coefficients = vec![I256::from(1 << 14); 2_usize.pow(dimension_exponent)];
-        let message2_coefficients = vec![I256::from(1 << 14); 2_usize.pow(dimension_exponent)];
+        let message1_coefficients = vec![I256::from(19*19*25); 2_usize.pow(dimension_exponent)];
+        let message2_coefficients = vec![I256::from(19*19*100); 2_usize.pow(dimension_exponent)];
 
         let message1 = Polynomial::new(message1_coefficients)
             .modulo(q.clone().fast_exp(level_max))
@@ -186,9 +185,12 @@ mod tests {
             .to_cyclotomic(dimension_exponent);
 
         // Encrypt the messages
-        let upper_bound_message = (1 << 14) as f64; // Example value, adjust as needed
-        let ciphertext1 = public_key.encrypt(&message1, upper_bound_message);
-        let ciphertext2 = public_key.encrypt(&message2, upper_bound_message);
+        let upper_bound_message = (19*19*100) as f64; // Example value, adjust as needed
+        let mut ciphertext1 = public_key.encrypt(&message1, upper_bound_message);
+	evaluation_key.rescale(&mut ciphertext1, 2).unwrap();
+        let mut ciphertext2 = public_key.encrypt(&message2, upper_bound_message);	
+	evaluation_key.rescale(&mut ciphertext2, 2).unwrap();
+	
 
         // Add the ciphertexts
         let pure_mul_ciphertext = evaluation_key.pure_mul(&ciphertext1, &ciphertext2);
@@ -198,7 +200,7 @@ mod tests {
 
         // Create the expected message sum
         let expected_message_coefficients =
-            vec![I256::from(1 << 28); 2_usize.pow(dimension_exponent)];
+            vec![I256::from(2500); 2_usize.pow(dimension_exponent)];
         let expected_message = Polynomial::new(expected_message_coefficients)
             .modulo(q.clone().fast_exp(level_max))
             .to_cyclotomic(dimension_exponent);

@@ -24,7 +24,7 @@ pub fn generate_most_parameters<T: BigInt>(
     level_max: u32,
 ) -> KeyGenerationParameters<T> {
     let hamming_weight = 2_usize.pow(dimension_exponent / 2);
-    let mul_scaling = q.fast_exp(level_max);
+    let mul_scaling = q.fast_exp(level_max) / T::from(3);
     let q_0 = T::from(1);
     let standard_deviation = 3.2;
     KeyGenerationParameters {
@@ -234,8 +234,9 @@ fn generate_evaluation_key<T: BigInt>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::algebra::big_int::BigInt;
+    use crate::algebra::big_int::{BigInt, FromFloat};
     use crate::algebra::conversion_rounding::f64_to_i256;
+    use crate::ciphertext::Ciphertext;
     use bnum::types::I256;
 
     #[test]
@@ -336,6 +337,36 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_decrypt_raw_eval_key() {
+        // Define parameters for key generation
+        let dimension_exponent = 10;
+        let q = I256::from(19);
+        let level_max = 5;
+
+        // Generate keys using the provided helper function
+        let (public_key, evaluation_key, secret_key) = generate_keys(dimension_exponent, q.clone(), level_max);
+
+        // Decrypt the raw evaluation key
+        let decrypted_eval_key = secret_key.decrypt(&Ciphertext::new(
+            evaluation_key.raw_key.clone(),
+            level_max,
+            (1 << dimension_exponent) as f64,  // Not used in this context
+            evaluation_key.noise.clean_noise,  // Not used in this context
+        ));
+
+        // Compute the expected value: mul_scaling * key_s * key_s
+        let key_s_squared = secret_key.key_s.clone() * &secret_key.key_s;
+        let expected_value = secret_key.parameters.mul_scaling.scalar_mul(key_s_squared);
+
+        // Verify that the decrypted evaluation key is close to the expected value
+        for (expected, decrypted) in expected_value.polynomial.coefficients().iter().zip(decrypted_eval_key.polynomial.coefficients().iter()) {
+            let diff = *expected - decrypted;
+            println!("Expected: {:?}, Decrypted: {:?}, Difference: {:?}", expected, decrypted, diff);
+            assert!(diff.value < I256::from_float(evaluation_key.noise.clean_noise), "Difference too large!");
+        }
+    }
+    
     // #[test]
     // fn test_generate_keys_all_parameters() {
     //     let dimension_exponent = 2;
