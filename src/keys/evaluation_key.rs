@@ -54,6 +54,13 @@ impl<T: BigInt> EvaluationKey<T> {
         Ok(())
     }
 
+    /// Homomorphically multiply two ciphertext, then rescale and decreases the level by one
+    pub fn mul(&self, ct1: &Ciphertext<T>, ct2: &Ciphertext<T>) -> Result<Ciphertext<T>, OperationError> {
+	let mut result = self.pure_mul(ct1, ct2);
+	self.rescale(&mut result, 1)?;
+	Ok(result)
+    }
+    
     /// Homomorphically multiply two ciphertexts without rescaling the result
     pub fn pure_mul(&self, ct1: &Ciphertext<T>, ct2: &Ciphertext<T>) -> Ciphertext<T> {
         let raw = self.raw_mul(&ct1.raw, &ct2.raw);

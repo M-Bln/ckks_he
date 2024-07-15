@@ -74,7 +74,7 @@ impl<T: BigInt> Encoder<T> {
         projection_result
     }
 
-    pub fn decode(&self, message: CyclotomicRing<RingMod<T>>) -> Vec<C64> {
+    pub fn decode(&self, message: &CyclotomicRing<RingMod<T>>) -> Vec<C64> {
         let integer_polynomial = message.to_integer();
         self.decode_integer(integer_polynomial)
     }
@@ -418,7 +418,7 @@ mod tests {
         println!("Encoded Message: {:?}", encoded);
 
         // Decode the encoded message
-        let decoded = encoder.decode(encoded);
+        let decoded = encoder.decode(&encoded);
         println!("Decoded Plaintext: {:?}", decoded);
 
         // Verify that the decoded message matches the original plaintext
