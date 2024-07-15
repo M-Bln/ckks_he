@@ -79,9 +79,7 @@ pub fn generate_keys_all_parameters<T: BigInt>(
 }
 
 fn generate_secret_key<T: BigInt>(parameters: KeyGenerationParameters<T>) -> SecretKey<T> {
-    SecretKey::<T>::new(
-        parameters,
-    )
+    SecretKey::<T>::new(parameters)
 }
 
 fn generate_public_key<T: BigInt>(
@@ -114,11 +112,7 @@ fn generate_public_key<T: BigInt>(
         public_key_a,
     );
 
-    PublicKey::<T>::new(
-        params,
-        noise,
-        raw_public_key,
-    )
+    PublicKey::<T>::new(params, noise, raw_public_key)
 }
 
 fn generate_evaluation_key<T: BigInt>(
@@ -158,11 +152,7 @@ fn generate_evaluation_key<T: BigInt>(
         eval_key_a.clone(),
     );
 
-    EvaluationKey::<T>::new(
-        params,
-        noise,
-        raw_eval_key,
-    )
+    EvaluationKey::<T>::new(params, noise, raw_eval_key)
 }
 
 #[cfg(test)]
@@ -264,8 +254,8 @@ mod tests {
         let decrypted_eval_key = secret_key.decrypt(&Ciphertext::new(
             evaluation_key.raw_key.clone(),
             level_max,
-            (1 << dimension_exponent) as f64, 
-            evaluation_key.noise.clean_noise, 
+            (1 << dimension_exponent) as f64,
+            evaluation_key.noise.clean_noise,
         ));
 
         // Compute the expected value: mul_scaling * key_s * key_s

@@ -76,7 +76,7 @@ impl<T: BigInt> EvaluationKey<T> {
             rct1.1.clone() * &rct2.0 + &(rct1.0.clone() * &rct2.1),
             rct1.1.clone() * &rct2.1,
         );
-        let mut summand = self.raw_key.scalar_mul(&d2);
+        let mut summand = self.raw_key.scalar_mul_keep_modulus(&d2);
         println!(
             "summand modulus: {:?}",
             summand.0.polynomial.ref_coefficients()[0].modulus
@@ -106,7 +106,7 @@ impl<T: BigInt> EvaluationKey<T> {
         rct: &RawCiphertext<T>,
         swk: &RawCiphertext<T>,
     ) -> RawCiphertext<T> {
-        let mut to_rescale = swk.scalar_mul(&rct.1);
+        let mut to_rescale = swk.scalar_mul_keep_modulus(&rct.1);
         // let mut to_rescale = RawCiphertext(
         //     rct.1.clone()*&swk.0,
         //     rct.1.clone()*&swk.1,

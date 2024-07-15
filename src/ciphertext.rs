@@ -69,7 +69,9 @@ impl<T: BigInt> RawCiphertext<T> {
 }
 
 impl<T: BigInt> RawCiphertext<T> {
-    pub fn scalar_mul(&self, other: &Message<T>) -> RawCiphertext<T> {
+    /// Multiply the raw ciphertext by the message other. However the modulus of the ciphertext
+    /// remains unchanged, even if message has a smaller modulus.
+    pub fn scalar_mul_keep_modulus(&self, other: &Message<T>) -> RawCiphertext<T> {
         self.scalar_mul_integer(&other.to_integer())
     }
     pub fn scalar_mul_integer(&self, other: &CyclotomicRing<T>) -> RawCiphertext<T> {
