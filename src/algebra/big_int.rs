@@ -1,10 +1,10 @@
-use bnum::types::I256;
+use bnum::types::{I256, I512};
 
 use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 use crate::algebra::arithmetic::RingMod;
-use crate::algebra::conversion_rounding::{f64_to_i256, i256_to_f64};
+use crate::algebra::conversion_rounding::{f64_to_i256, i256_to_f64, i512_to_f64, f64_to_i512};
 use crate::random_distributions::UniformSamplable;
 
 pub trait Zero: Sized {
@@ -116,6 +116,20 @@ impl FromFloat for I256 {
 impl ToFloat for I256 {
     fn to_float(&self) -> f64 {
         i256_to_f64(*self)
+    }
+}
+
+impl BigInt for I512 {}
+
+impl FromFloat for I512 {
+    fn from_float(value: f64) -> I512 {
+        f64_to_i512(value)
+    }
+}
+
+impl ToFloat for I512 {
+    fn to_float(&self) -> f64 {
+        i512_to_f64(*self)
     }
 }
 

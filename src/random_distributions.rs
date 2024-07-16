@@ -1,6 +1,6 @@
 use crate::algebra::big_int::BigInt;
 use bnum::random::UniformInt as UniformBInt;
-use bnum::types::I256;
+use bnum::types::{I256, I512};
 use rand::distributions::uniform::{UniformInt, UniformSampler};
 use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
@@ -19,6 +19,14 @@ impl UniformSamplable for I256 {
         Self::Sampler::new(low, high)
     }
 }
+
+impl UniformSamplable for I512 {
+    type Sampler = UniformBInt<I512>;
+    fn sampler(low: Self, high: Self) -> Self::Sampler {
+        Self::Sampler::new(low, high)
+    }
+}
+
 
 impl UniformSamplable for i64 {
     type Sampler = UniformInt<i64>;

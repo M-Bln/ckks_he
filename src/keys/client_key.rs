@@ -104,7 +104,7 @@ pub fn add_plaintexts(plaintext1: &[C64], plaintext2: &[C64]) -> Plaintext {
 
 #[cfg(test)]
 mod tests {
-    use bnum::types::I256;
+    use bnum::types::{I256, I512};
 
     use super::*;
     use crate::algebra::big_int::{BigInt, ToFloat};
@@ -345,11 +345,11 @@ mod tests {
     fn test_apply_polynomial() {
         // Define parameters for key generation
         let dimension_exponent = 4;
-        let q = I256::from(1 << 14);
-        let qf = (1 << 14) as f64;
-        let q_sqrt = (1 << 7) as f64;
-        let q_inverse = 1.0 / (1 << 14) as f64;
-        let level_max = 4;
+        let q = I512::from(1 << 30);
+        let qf = (1 << 30) as f64;
+        let q_sqrt = (1 << 15) as f64;
+        let q_inverse = 1.0 / (1 << 30) as f64;
+        let level_max = 3;
         let n = 3;
 
         // Generate pair of keys
@@ -357,7 +357,7 @@ mod tests {
             generate_pair_keys(dimension_exponent, q.clone(), level_max);
 
 	//	let polynomial = Polynomial::<I256>::new(vec![I256::from(1), I256::from(2), I256::from(3), I256::from(4)]);
-	let polynomial = Polynomial::<I256>::new(vec![I256::from(1), I256::from(2), I256::from(1), I256::from(1)]);
+	let polynomial = Polynomial::<I512>::new(vec![I512::from(1), I512::from(2), I512::from(1), I512::from(1)]);
 	let complex_polynomial = polynomial.to_c64();
 	
         // Create a sample message as a vector of f64
@@ -388,7 +388,7 @@ mod tests {
             println!("index: i:{} ", i);
             println!("expected: {}", expected);
             println!("optained: {}", obtained);
-            println!("error: {}", error);
+            println!("relative error: {}", error/expected.magnitude());
             println!("expected error: {}", expected_error);
             assert!(error <= expected_error, "error too big!");
         }
