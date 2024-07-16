@@ -372,14 +372,14 @@ mod tests {
         let (mut client_key, mut server_key) =
             generate_pair_keys_default::<I1024>(dimension_exponent, level_max);
 
-        let message_real = generate_random_vector(1 << (dimension_exponent - 1), 0.1, 0.2);
+        let message_real = generate_random_vector(1 << (dimension_exponent - 1), -5.0, 5.0);
 
         let message_plaintext = to_plaintext(&message_real);
         //	let polynomial = Polynomial::<I256>::new(vec![I256::from(1), I256::from(2), I256::from(3), I256::from(4)]);
         let polynomial = Polynomial::<I1024>::new(vec![
-            I1024::from(0),
-            I1024::from(0),
-            I1024::from(0),
+            I1024::from(2),
+            I1024::from(1),
+            I1024::from(2),
             I1024::from(1),
         ]);
         let complex_polynomial = polynomial.to_c64();
@@ -400,7 +400,7 @@ mod tests {
             })
             .collect();
 
-        let ciphertext = client_key.encrypt(&message_plaintext, 3.0).unwrap();
+        let ciphertext = client_key.encrypt(&message_plaintext, 5.0).unwrap();
         let result = server_key
 	    .evaluation_key
             .apply_polynomial(&polynomial, &ciphertext)
