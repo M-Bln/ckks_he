@@ -364,7 +364,7 @@ mod tests {
 
     #[test]
     fn test_apply_polynomial() {
-        let dimension_exponent = 4;
+        let dimension_exponent = 10;
         let level_max = 5;
         let n = 4;
 
@@ -372,7 +372,7 @@ mod tests {
         let (mut client_key, mut server_key) =
             generate_pair_keys_default::<I1024>(dimension_exponent, level_max);
 
-        let message_real = generate_random_vector(1 << (dimension_exponent - 1), -5.0, 5.0);
+        let message_real = generate_random_vector(1 << (dimension_exponent - 1), -500.0, 500.0);
 
         let message_plaintext = to_plaintext(&message_real);
         //	let polynomial = Polynomial::<I256>::new(vec![I256::from(1), I256::from(2), I256::from(3), I256::from(4)]);
@@ -400,7 +400,7 @@ mod tests {
             })
             .collect();
 
-        let ciphertext = client_key.encrypt(&message_plaintext, 5.0).unwrap();
+        let ciphertext = client_key.encrypt(&message_plaintext, 500.0).unwrap();
         let result = server_key
 	    .evaluation_key
             .apply_polynomial(&polynomial, &ciphertext)
@@ -411,7 +411,7 @@ mod tests {
             let expected = expected_result[i];
             let obtained = clear_result[i];
             let error = (expected - obtained).magnitude();
-            let expected_error = result.upper_bound_error;
+            let expected_error = client_key.rescaled_error(&result);
             println!("index: i:{} ", i);
             println!("expected: {}", expected);
             println!("optained: {}", obtained);
