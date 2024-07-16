@@ -131,6 +131,17 @@ impl<T: BigInt> EvaluationKey<T> {
         ct.upper_bound_error =
             ct.upper_bound_error / factor.to_float() + self.noise.rescaling_noise;
     }
+
+    pub fn raise_to_powers_of_two(&self, ct: &Ciphertext<T>, n: u32) -> Result<Vec<Ciphertext<T>>,OperationError> {
+	if n >= ct.level {
+	    return Err(OperationError::LevelTooLow)
+	}
+	let mut result: Vec<Ciphertext<T>> = vec![ct.clone()];
+	for _ in 0..n {
+	    
+	}
+	Ok(vec![])
+    }
 }
 
 #[derive(Debug)]

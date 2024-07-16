@@ -11,6 +11,7 @@ pub type Message<T: BigInt> = CyclotomicRing<RingMod<T>>;
 pub struct RawCiphertext<T: BigInt>(pub Message<T>, pub Message<T>);
 
 // Should I also keep a ref to public / eval key?
+#[derive(Clone, Debug)]
 pub struct Ciphertext<T: BigInt> {
     pub raw: RawCiphertext<T>,
     pub level: u32,
