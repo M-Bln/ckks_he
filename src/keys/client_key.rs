@@ -107,7 +107,8 @@ mod tests {
     use bnum::types::I256;
 
     use super::*;
-    use crate::algebra::big_int::BigInt;
+    use crate::algebra::big_int::{BigInt, ToFloat};
+    use crate::algebra::polynomial::{Polynomial};
     use crate::algebra::complex::{raise_to_powers_of_two_rescale, C64};
     use crate::keys::key_generator::generate_pair_keys;
 
@@ -292,7 +293,7 @@ mod tests {
     }
 
     #[test]
-    fn text_raise_to_powers_of_two() {
+    fn test_raise_to_powers_of_two() {
         // Define parameters for key generation
         let dimension_exponent = 5;
         let q = I256::from(1 << 14);
@@ -337,5 +338,86 @@ mod tests {
                 assert!(error < expected_error, "error too big!");
             }
         }
+    }
+
+
+    #[test]
+    fn test_apply_polynomial() {
+        // Define parameters for key generation
+        let dimension_exponent = 4;
+        let q = I256::from(1 << 14);
+        let qf = (1 << 14) as f64;
+        let q_sqrt = (1 << 7) as f64;
+        let q_inverse = 1.0 / (1 << 14) as f64;
+        let level_max = 4;
+        let n = 3;
+
+        // Generate pair of keys
+        let (mut client_key, mut server_key) =
+            generate_pair_keys(dimension_exponent, q.clone(), level_max);
+
+	//	let polynomial = Polynomial::<I256>::new(vec![I256::from(1), I256::from(2), I256::from(3), I256::from(4)]);
+	let polynomial = Polynomial::<I256>::new(vec![I256::from(1), I256::from(2), I256::from(1), I256::from(1)]);
+	let complex_polynomial = polynomial.to_c64();
+	
+        // Create a sample message as a vector of f64
+	let message_real = vec![
+            1.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0];
+        // let message_real = vec![
+        //     1.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0, 60.0, 70.0, 50.0, 42.0, 45.0, 32.0,
+        //     42.0, 72.0,
+        // ];
+        let message_plaintext =
+            scalar_mul_plaintext(C64::new(q_sqrt, 0.0), &to_plaintext(&message_real));
+        let expected_result: Vec<C64> = message_plaintext
+            .iter()
+            .map(|c| complex_polynomial.eval(*c/C64::new(qf,0.0))*C64::new(qf,0.0) + complex_polynomial.ref_coefficients()[0]*C64::new(1.0-qf, 0.0))
+            .collect();
+
+        let ciphertext = client_key
+            .encrypt(&message_plaintext, q_sqrt * 73.0)
+            .unwrap();
+        let result = server_key.apply_polynomial(&polynomial, &ciphertext).unwrap();
+	let clear_result = client_key.decrypt(&result);
+//        let clear_result: Vec<Plaintext> = result.iter().map(|c| client_key.decrypt(c)).collect();
+        for i in 0..n {
+            let expected = expected_result[i];
+            let obtained = clear_result[i];
+            let error = (expected - obtained).magnitude();
+            let expected_error = result.upper_bound_error;
+            println!("index: i:{} ", i);
+            println!("expected: {}", expected);
+            println!("optained: {}", obtained);
+            println!("error: {}", error);
+            println!("expected error: {}", expected_error);
+            assert!(error <= expected_error, "error too big!");
+        }
+    }
+
+    
+    #[test]
+    fn test_trivial_encryption_scalar() {
+        // Define parameters for key generation
+        let dimension_exponent = 5;
+        let q = I256::from(1 << 14);
+        let qf = (1 << 14) as f64;
+        let q_sqrt = (1 << 7) as f64;
+        let q_inverse = 1.0 / (1 << 14) as f64;
+        let level_max = 4;
+        let n = 3;
+
+        // Generate pair of keys
+        let (mut client_key, mut server_key) =
+            generate_pair_keys(dimension_exponent, q.clone(), level_max);
+	let scalar= I256::from(1234);
+	let scalar_f = scalar.to_float();
+	let trivial_encryption = server_key.trivial_encryption_scalar(I256::from(1234));
+	let result = client_key.decrypt(&trivial_encryption);
+	println!("expected_error: {}", trivial_encryption.upper_bound_error);
+	println!("expected_result: {}", scalar_f);
+	for r in result {
+	    println!("result: {}", r);
+	    assert!((r-C64::new(1234.0,0.0)).magnitude() < 1.0);
+	}
     }
 }

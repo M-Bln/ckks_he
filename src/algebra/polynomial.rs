@@ -28,7 +28,7 @@ impl<T> Polynomial<T> {
     }
 }
 
-fn degree_from_coefs<T>(coefs: &[T]) -> i64
+pub fn degree_from_coefs<T>(coefs: &[T]) -> i64
 where
     T: Add<Output = T> + Mul<T, Output = T> + Clone + Zero,
 {

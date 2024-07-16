@@ -1,5 +1,6 @@
 use crate::algebra::arithmetic::{Rescale, RingMod};
 use crate::algebra::big_int::BigInt;
+use crate::algebra::polynomial::ScalarMul;
 use crate::algebra::cyclotomic_ring::CyclotomicRing;
 use bnum::types::I256;
 use std::ops::{Add, Mul};
@@ -12,7 +13,7 @@ pub struct RawCiphertext<T: BigInt>(pub Message<T>, pub Message<T>);
 
 // Should I also keep a ref to public / eval key?
 #[derive(Clone, Debug)]
-pub struct Ciphertext<T: BigInt> {
+pub struct Ciphertext<T: BigInt> { 
     pub raw: RawCiphertext<T>,
     pub level: u32,
     pub upper_bound_message: f64,
@@ -32,6 +33,30 @@ impl<T: BigInt> Ciphertext<T> {
             upper_bound_message,
             upper_bound_error,
         }
+    }
+}
+
+// impl<T: BigInt>  Mul<&Ciphertext<T>> for T {
+//     type Output = Ciphertext<T>;
+//     fn mul(self, ct: &Ciphertext<T>) -> Ciphertext<T> {
+// 	let raw = self*ct.raw;
+//     }
+// }
+
+impl<T: BigInt> ScalarMul<&Ciphertext<T>> for T {
+    type Output = Ciphertext<T>;
+
+    fn scalar_mul(self, rhs: &Ciphertext<T>) -> Ciphertext<T> {
+	let raw = RawCiphertext(self.scalar_mul(&rhs.raw.0), self.scalar_mul(&rhs.raw.1));
+	let factor = self.to_float().abs();
+	let upper_bound_message = rhs.upper_bound_message * factor;
+	let upper_bound_error = rhs.upper_bound_error * factor;
+	Ciphertext::new(
+	    raw,
+	    rhs.level,
+	    upper_bound_message,
+	    upper_bound_error,
+	)
     }
 }
 

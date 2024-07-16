@@ -1,5 +1,6 @@
 use crate::algebra::big_int::BigInt;
 use crate::algebra::complex::{Complex, C64};
+use crate::algebra::polynomial::{Polynomial};
 use crate::ciphertext::Ciphertext;
 use crate::encoding::Encoder;
 use crate::keys::evaluation_key::{EvaluationKey, OperationError};
@@ -89,6 +90,8 @@ impl<T: BigInt> ServerKey<T> {
         rescale(ct: &mut Ciphertext<T>, level_decrement: u32) -> Result<(), OperationError>,
         mul(ct1: &Ciphertext<T>, ct2: &Ciphertext<T>) -> Result<Ciphertext<T>, OperationError>,
         pure_mul(ct1: &Ciphertext<T>, ct2: &Ciphertext<T>) -> Ciphertext<T>,
-    raise_to_powers_of_two(ct: &Ciphertext<T>, n: usize) -> Result<Vec<Ciphertext<T>>,OperationError>
+	raise_to_powers_of_two(ct: &Ciphertext<T>, n: usize) -> Result<Vec<Ciphertext<T>>,OperationError>,
+	trivial_encryption_scalar(scalar: T) -> Ciphertext<T>,
+	apply_polynomial(polynomial: &Polynomial<T>, ct: &Ciphertext<T>) -> Result<Ciphertext<T>,OperationError>
     );
 }
