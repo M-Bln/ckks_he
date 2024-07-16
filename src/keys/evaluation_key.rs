@@ -3,7 +3,7 @@ use std::ops::Mul;
 use crate::algebra::arithmetic::{Rescale, RingMod};
 use crate::algebra::big_int::{BigInt, Zero};
 use crate::algebra::complex::{Complex, C64};
-use crate::algebra::polynomial::{Polynomial, ScalarMul, degree_from_coefs};
+use crate::algebra::polynomial::{degree_from_coefs, Polynomial, ScalarMul};
 use crate::ciphertext::{Ciphertext, Message, RawCiphertext};
 use crate::keys::key_generator::KeyGenerationParameters;
 use crate::keys::public_key::ComputationNoise;
@@ -172,70 +172,98 @@ impl<T: BigInt> EvaluationKey<T> {
     // 	let largest_power = largest_power_of_two_less_than();
     // 	// Your implementation here
     // }
-    pub fn apply_polynomial_coefficients(&self, polynomial_coefs: &[T], ct: &Ciphertext<T>) -> Result<Ciphertext<T>,OperationError> {
-	let degree = degree_from_coefs(polynomial_coefs);
-    	if degree == -1 {
-    	    return Ok(self.trivial_encryption_scalar(T::from(0)));
-    	}
-	if degree == 0 {
-	    return Ok(self.trivial_encryption_scalar(polynomial_coefs[0]));
-	}
-	if degree == 1 {
-	    let constant_term = self.trivial_encryption_scalar(polynomial_coefs[0]);
-	    let degree_1_term = polynomial_coefs[1].scalar_mul(ct);
-	    return Ok(self.add(&constant_term, &degree_1_term));
-	}
-    	let largest_power = largest_power_of_two_less_than(degree as u32);
-	let powers = self.raise_to_powers_of_two(ct, largest_power as usize + 1)?;
-	self.recursive_apply_polynomial(polynomial_coefs, ct, &powers)
+    pub fn apply_polynomial_coefficients(
+        &self,
+        polynomial_coefs: &[T],
+        ct: &Ciphertext<T>,
+    ) -> Result<Ciphertext<T>, OperationError> {
+        let degree = degree_from_coefs(polynomial_coefs);
+        if degree == -1 {
+            return Ok(self.trivial_encryption_scalar(T::from(0)));
+        }
+        if degree == 0 {
+            return Ok(self.trivial_encryption_scalar(polynomial_coefs[0]));
+        }
+        if degree == 1 {
+            let constant_term = self.trivial_encryption_scalar(polynomial_coefs[0]);
+            let degree_1_term = polynomial_coefs[1].scalar_mul(ct);
+            return Ok(self.add(&constant_term, &degree_1_term));
+        }
+        let largest_power = largest_power_of_two_less_than(degree as u32);
+        let powers = self.raise_to_powers_of_two(ct, largest_power as usize + 1)?;
+        self.recursive_apply_polynomial(polynomial_coefs, ct, &powers)
     }
 
-    pub fn recursive_apply_polynomial(&self, polynomial_coefs: &[T], ct: &Ciphertext<T>, powers: &[Ciphertext<T>]) -> Result<Ciphertext<T>,OperationError> {
-	if polynomial_coefs.len() <= 2 {
-	    return self.apply_polynomial_coefficients(polynomial_coefs, ct);
-	}
-	let cut = 1 << powers.len();
-	let first_part = &polynomial_coefs[..cut];
-	let second_part = &polynomial_coefs[cut..];
-	let first_eval = self.recursive_apply_polynomial(first_part, ct, &powers[..powers.len() -1])?;
-	let second_eval = self.recursive_apply_polynomial(second_part, ct, &powers[..powers.len() -1])?;
-	let second_rescaled = self.mul(&second_eval, &powers[powers.len() -1])?;
-	Ok(self.add(&first_eval, &second_rescaled))
+    pub fn recursive_apply_polynomial(
+        &self,
+        polynomial_coefs: &[T],
+        ct: &Ciphertext<T>,
+        powers: &[Ciphertext<T>],
+    ) -> Result<Ciphertext<T>, OperationError> {
+        if polynomial_coefs.len() <= 2 {
+            return self.apply_polynomial_coefficients(polynomial_coefs, ct);
+        }
+        let cut = 1 << powers.len();
+        let first_part = &polynomial_coefs[..cut];
+        let second_part = &polynomial_coefs[cut..];
+        let first_eval =
+            self.recursive_apply_polynomial(first_part, ct, &powers[..powers.len() - 1])?;
+        let second_eval =
+            self.recursive_apply_polynomial(second_part, ct, &powers[..powers.len() - 1])?;
+        let second_rescaled = self.mul(&second_eval, &powers[powers.len() - 1])?;
+        Ok(self.add(&first_eval, &second_rescaled))
     }
-    
-    pub fn apply_polynomial(&self, polynomial: &Polynomial<T>, ct: &Ciphertext<T>) -> Result<Ciphertext<T>,OperationError> {
-	// let mut truncated = polynomial.clone();
-	// truncated.degree_truncate();
-	self.apply_polynomial_coefficients(polynomial.ref_coefficients(), ct)
-    	// Your implementation here
+
+    pub fn apply_polynomial(
+        &self,
+        polynomial: &Polynomial<T>,
+        ct: &Ciphertext<T>,
+    ) -> Result<Ciphertext<T>, OperationError> {
+        // let mut truncated = polynomial.clone();
+        // truncated.degree_truncate();
+        self.apply_polynomial_coefficients(polynomial.ref_coefficients(), ct)
+        // Your implementation here
     }
-    
+
     pub fn message_from_scalar(&self, scalar: T) -> Message<T> {
-	let dimension = 1 << self.parameters.dimension_exponent;
-	let mut coefficients = vec![scalar];
-	coefficients.append(&mut vec![scalar.zero(); dimension - 1]);
-	let polynomial = Polynomial::new(coefficients);
+        let dimension = 1 << self.parameters.dimension_exponent;
+        let mut coefficients = vec![scalar];
+        coefficients.append(&mut vec![scalar.zero(); dimension - 1]);
+        let polynomial = Polynomial::new(coefficients);
 
-	let modulus = self.parameters.q.fast_exp(self.parameters.level_max) * &self.parameters.q_0;
-	polynomial.modulo(modulus).to_cyclotomic(self.parameters.dimension_exponent)
+        let modulus = self.parameters.q.fast_exp(self.parameters.level_max) * &self.parameters.q_0;
+        polynomial
+            .modulo(modulus)
+            .to_cyclotomic(self.parameters.dimension_exponent)
     }
 
-    
     pub fn raw_trivial_encryption(&self, message: &Message<T>) -> RawCiphertext<T> {
-	RawCiphertext(
-	    message.clone(),
-	    self.message_from_scalar(T::from(0)).modulo(message.modulus()),
-	)
+        RawCiphertext(
+            message.clone(),
+            self.message_from_scalar(T::from(0))
+                .modulo(message.modulus()),
+        )
     }
 
     pub fn trivial_encryption_scalar(&self, scalar: T) -> Ciphertext<T> {
-	let raw = self.raw_trivial_encryption(&self.message_from_scalar(scalar));
-	Ciphertext::<T> {
-	    raw,
-	    level: self.parameters.level_max,
-	    upper_bound_message: scalar.to_float().abs(),
-	    upper_bound_error: 0.0,
-	}
+        let raw =
+            self.raw_trivial_encryption(&self.message_from_scalar(scalar * self.parameters.q));
+        Ciphertext::<T> {
+            raw,
+            level: self.parameters.level_max,
+            upper_bound_message: scalar.to_float().abs(),
+            upper_bound_error: 0.0,
+        }
+    }
+
+    pub fn trivial_encryption_scalar_no_rescale(&self, scalar: T) -> Ciphertext<T> {
+        let raw = self.raw_trivial_encryption(&self.message_from_scalar(scalar));
+        Ciphertext::<T> {
+            raw,
+            level: self.parameters.level_max,
+            upper_bound_message: scalar.to_float().abs(),
+            upper_bound_error: 0.0,
+        }
     }
 }
 

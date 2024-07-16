@@ -7,6 +7,8 @@ use crate::keys::public_key::{ComputationNoise, PublicKey};
 use crate::keys::secret_key::SecretKey;
 use crate::keys::server_key::ServerKey;
 use crate::random_distributions::{sample_n, DiscreteGaussian};
+
+use bnum::types::I512;
 use rand::distributions::uniform::UniformSampler;
 
 #[derive(PartialEq, Clone, Copy, Debug)]
@@ -35,6 +37,13 @@ pub struct KeyGenerationParameters<T: BigInt> {
     pub standard_deviation: f64,
 }
 
+pub fn generate_pair_keys_default<T: BigInt>(
+    dimension_exponent: u32,
+    level_max: u32,
+) -> (ClientKey<T>, ServerKey<T>) {
+    generate_pair_keys_all_parameters(generate_with_default_q(dimension_exponent, level_max))
+}
+
 pub fn generate_pair_keys<T: BigInt>(
     dimension_exponent: u32,
     q: T,
@@ -52,6 +61,13 @@ pub fn generate_pair_keys_all_parameters<T: BigInt>(
     (client_key, server_key)
 }
 
+pub fn generate_with_default_q<T: BigInt>(
+    dimension_exponent: u32,
+    level_max: u32,
+) -> KeyGenerationParameters<T> {
+    generate_most_parameters(dimension_exponent, T::from(1 << 30), level_max)
+}
+
 /// generate all parameters from a subset
 pub fn generate_most_parameters<T: BigInt>(
     dimension_exponent: u32,
@@ -59,7 +75,11 @@ pub fn generate_most_parameters<T: BigInt>(
     level_max: u32,
 ) -> KeyGenerationParameters<T> {
     // Should be smaller than the dimension
-    let hamming_weight = 2_usize.pow(dimension_exponent / 2);
+    let hamming_weight = if dimension_exponent <= 12 {
+        2_usize.pow(dimension_exponent / 2)
+    } else {
+        64 // For dimension large enough, we take the value 64 suggested in the original article
+    };
 
     // Should be of the same order as the maximum modulus of ciphertext
     let mul_scaling = q.fast_exp(level_max) / T::from(11);

@@ -1,6 +1,6 @@
 use crate::algebra::big_int::BigInt;
 use crate::algebra::complex::{Complex, C64};
-use crate::algebra::polynomial::{Polynomial};
+use crate::algebra::polynomial::Polynomial;
 use crate::ciphertext::Ciphertext;
 use crate::encoding::Encoder;
 use crate::keys::evaluation_key::{EvaluationKey, OperationError};
@@ -24,12 +24,24 @@ impl<T: BigInt> ServerKey<T> {
         assert!(parameters.dimension_exponent > 0);
         let plaintext_dimension = 1 << (parameters.dimension_exponent - 1); // 2^(dimension_exponent-1)
         let modulus = parameters.q.fast_exp(parameters.level_max) * &parameters.mul_scaling;
-        let encoder = Encoder::new(parameters.dimension_exponent, modulus);
+        let encoder = Encoder::new(
+            parameters.dimension_exponent,
+            modulus,
+            parameters.q.to_float(),
+        );
         ServerKey {
             public_key,
             evaluation_key,
             encoder,
         }
+    }
+
+    pub fn rescaled_error(&self, ct: Ciphertext<T>) -> f64 {
+        ct.upper_bound_error / self.encoder.scaling_factor
+    }
+
+    pub fn rescaled_upperbound_message(&self, ct: Ciphertext<T>) -> f64 {
+        ct.upper_bound_message / self.encoder.scaling_factor
     }
 }
 
@@ -90,8 +102,8 @@ impl<T: BigInt> ServerKey<T> {
         rescale(ct: &mut Ciphertext<T>, level_decrement: u32) -> Result<(), OperationError>,
         mul(ct1: &Ciphertext<T>, ct2: &Ciphertext<T>) -> Result<Ciphertext<T>, OperationError>,
         pure_mul(ct1: &Ciphertext<T>, ct2: &Ciphertext<T>) -> Ciphertext<T>,
-	raise_to_powers_of_two(ct: &Ciphertext<T>, n: usize) -> Result<Vec<Ciphertext<T>>,OperationError>,
-	trivial_encryption_scalar(scalar: T) -> Ciphertext<T>,
-	apply_polynomial(polynomial: &Polynomial<T>, ct: &Ciphertext<T>) -> Result<Ciphertext<T>,OperationError>
+    raise_to_powers_of_two(ct: &Ciphertext<T>, n: usize) -> Result<Vec<Ciphertext<T>>,OperationError>,
+    trivial_encryption_scalar(scalar: T) -> Ciphertext<T>,
+    apply_polynomial(polynomial: &Polynomial<T>, ct: &Ciphertext<T>) -> Result<Ciphertext<T>,OperationError>
     );
 }

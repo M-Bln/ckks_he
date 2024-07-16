@@ -214,6 +214,13 @@ impl fmt::Display for C64 {
     }
 }
 
+impl Mul<f64> for C64 {
+    type Output = C64;
+    fn mul(self, other: f64) -> C64 {
+        C64::new(self.real() * other, self.imaginary() * other)
+    }
+}
+
 impl fmt::Debug for C64 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "({} + {}i)", self.real, self.imaginary)

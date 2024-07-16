@@ -4,7 +4,7 @@ use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 use crate::algebra::arithmetic::RingMod;
-use crate::algebra::conversion_rounding::{f64_to_i256, i256_to_f64, i512_to_f64, f64_to_i512};
+use crate::algebra::conversion_rounding::{f64_to_i256, f64_to_i512, i256_to_f64, i512_to_f64};
 use crate::random_distributions::UniformSamplable;
 
 pub trait Zero: Sized {

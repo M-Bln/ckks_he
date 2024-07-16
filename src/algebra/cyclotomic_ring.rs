@@ -77,13 +77,13 @@ impl<T: BigInt> CyclotomicRing<T> {
 
 impl<T: BigInt> CyclotomicRing<RingMod<T>> {
     pub fn modulo(&self, modulus: T) -> CyclotomicRing<RingMod<T>> {
-	self.to_integer().modulo(modulus)
+        self.to_integer().modulo(modulus)
     }
     pub fn modulus(&self) -> T {
-	if self.ref_coefficients().is_empty() {
-	    return T::from(0);
-	}
-	self.ref_coefficients()[0].modulus
+        if self.ref_coefficients().is_empty() {
+            return T::from(0);
+        }
+        self.ref_coefficients()[0].modulus
     }
 }
 

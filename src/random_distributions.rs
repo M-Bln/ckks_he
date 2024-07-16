@@ -27,7 +27,6 @@ impl UniformSamplable for I512 {
     }
 }
 
-
 impl UniformSamplable for i64 {
     type Sampler = UniformInt<i64>;
     fn sampler(low: Self, high: Self) -> Self::Sampler {

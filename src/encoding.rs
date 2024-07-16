@@ -8,11 +8,13 @@ use crate::algebra::polynomial::Polynomial;
 
 use bnum::types::I256;
 use std::f64::consts::PI;
+use std::ops::Mul;
 
 #[derive(Debug)]
 pub struct Encoder<T: BigInt> {
     dimension_exponent: u32, // h such that  M = 2^h is the degree of the cyclotomic polynomial
     modulus: T, // The space of ciphertexts is Z/(modulus Z) [X] / (1 + X ^(2^(dimension_exponent)))
+    pub scaling_factor: f64, // The scaling factor used before encryption
     sigma_inverse_matrix: Vec<Vec<C64>>, // Matrix to compute canonical embedding
     sigma_matrix: Vec<Vec<C64>>, // Matrix of sigma, the inverse of the canonical embedding
 }
@@ -48,6 +50,12 @@ impl<T: BigInt> Encoder<T> {
     }
 
     pub fn encode(&self, plaintext: &[C64]) -> CyclotomicRing<RingMod<T>> {
+        let rescaled_plaintext: Vec<C64> =
+            plaintext.iter().map(|c| *c * self.scaling_factor).collect();
+        self.encode_no_rescale(&rescaled_plaintext)
+    }
+
+    pub fn encode_no_rescale(&self, plaintext: &[C64]) -> CyclotomicRing<RingMod<T>> {
         let integer_cyclotomic = self.encode_to_integer(plaintext);
         integer_cyclotomic.modulo(self.modulus)
     }
@@ -74,9 +82,16 @@ impl<T: BigInt> Encoder<T> {
         projection_result
     }
 
-    pub fn decode(&self, message: &CyclotomicRing<RingMod<T>>) -> Vec<C64> {
+    pub fn decode_no_rescale(&self, message: &CyclotomicRing<RingMod<T>>) -> Vec<C64> {
         let integer_polynomial = message.to_integer();
         self.decode_integer(integer_polynomial)
+    }
+
+    pub fn decode(&self, message: &CyclotomicRing<RingMod<T>>) -> Vec<C64> {
+        self.decode_no_rescale(message)
+            .iter()
+            .map(|c| *c * (1.0 / self.scaling_factor))
+            .collect()
     }
 
     // pub fn decode(&self, message: CyclotomicRing<RingMod<T>>) -> Vec<C64> {
@@ -111,7 +126,7 @@ impl<T: BigInt> Encoder<T> {
     /// is the composition $decode = \pi\inv \circ \sigma\inv$ with $\sigma$ the canonical embedding. In the encoder
     /// $\sigma$ and $\sigma\inv$ are stored as matrices of roots of unity.
     // TODO use FFT rather than matrices (no emergency, probably not the bottleneck)
-    pub fn new(dimension_exponent: u32, modulus: T) -> Self {
+    pub fn new(dimension_exponent: u32, modulus: T, scaling_factor: f64) -> Self {
         assert!(
             dimension_exponent >= 1,
             "Dimension exponent must be greater than 1"
@@ -150,6 +165,7 @@ impl<T: BigInt> Encoder<T> {
         Encoder {
             dimension_exponent,
             modulus,
+            scaling_factor,
             sigma_inverse_matrix,
             sigma_matrix,
         }
@@ -343,7 +359,7 @@ mod tests {
     fn test_real_coeff() {
         let dimension_exponent = 4;
         let modulus = I256::new(13);
-        let encoder = Encoder::new(dimension_exponent, modulus.clone());
+        let encoder = Encoder::new(dimension_exponent, modulus.clone(), 1.0);
 
         // Generate a large vector of complex numbers as input
         let plaintext: Vec<C64> = (0..2_usize.pow(dimension_exponent - 1))
@@ -375,7 +391,7 @@ mod tests {
     fn test_sigma_y() {
         let dimension_exponent = 4;
         let modulus = I256::new(1298736);
-        let encoder = Encoder::new(dimension_exponent, modulus.clone());
+        let encoder = Encoder::new(dimension_exponent, modulus.clone(), 1.0);
 
         // Create a polynomial with non-imaginary coefficients
         let coefficients: Vec<C64> = (0..2_usize.pow(dimension_exponent))
@@ -404,7 +420,7 @@ mod tests {
     fn test_encode_decode() {
         let dimension_exponent = 4;
         let modulus = I256::new(1000000000000000);
-        let encoder = Encoder::new(dimension_exponent, modulus.clone());
+        let encoder = Encoder::new(dimension_exponent, modulus.clone(), 1.0);
 
         // Generate a large vector of complex numbers as input
         let plaintext: Vec<C64> = (0..2_usize.pow(dimension_exponent - 1))
@@ -445,7 +461,7 @@ mod tests {
         // the evaluation of the polynomial at primitive roots of unity
         let dimension_exponent = 3;
         let modulus = I256::new(13);
-        let encoder = Encoder::new(dimension_exponent, modulus.clone());
+        let encoder = Encoder::new(dimension_exponent, modulus.clone(), 1.0);
 
         // Example polynomial in the cyclotomic ring
         let poly_ringmod = CyclotomicRing::new(
@@ -502,7 +518,7 @@ mod tests {
     fn test_print_matrix() {
         let dimension_exponent = 3;
         let modulus: i64 = 13;
-        let encoder = Encoder::new(dimension_exponent, modulus);
+        let encoder = Encoder::new(dimension_exponent, modulus, 1.0);
 
         for row in encoder.sigma_inverse_matrix.iter() {
             for element in row.iter() {
@@ -516,8 +532,7 @@ mod tests {
     fn test_sigma_matrices_are_inverses() {
         let dimension_exponent = 3;
         let modulus = I256::new(13);
-        let encoder = Encoder::new(dimension_exponent, modulus.clone());
-
+        let encoder = Encoder::new(dimension_exponent, modulus.clone(), 1.0);
         // Multiply sigma_matrix by sigma_inverse_matrix
         let product = multiply_matrices(&encoder.sigma_matrix, &encoder.sigma_inverse_matrix);
 
@@ -558,7 +573,7 @@ mod tests {
     fn test_sigma_and_sigma_inverse() {
         let dimension_exponent = 3;
         let modulus = I256::new(13);
-        let encoder = Encoder::new(dimension_exponent, modulus.clone());
+        let encoder = Encoder::new(dimension_exponent, modulus.clone(), 1.0);
 
         // Generate a random polynomial of type Polynomial<C64>
         let coefficients = vec![
@@ -605,7 +620,7 @@ mod tests {
     fn test_projection_inverse() {
         let dimension_exponent = 3;
         let modulus = I256::new(13);
-        let encoder = Encoder::new(dimension_exponent, modulus.clone());
+        let encoder = Encoder::new(dimension_exponent, modulus.clone(), 1.0);
 
         // Example input vector z
         let z = vec![
@@ -652,7 +667,7 @@ mod tests {
     fn test_projection_and_inverse() {
         let dimension_exponent = 3;
         let modulus = I256::new(13);
-        let encoder = Encoder::new(dimension_exponent, modulus.clone());
+        let encoder = Encoder::new(dimension_exponent, modulus.clone(), 1.0);
 
         // Example polynomial in the cyclotomic ring
         let poly_ringmod = CyclotomicRing::new(
