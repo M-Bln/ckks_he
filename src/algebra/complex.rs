@@ -222,6 +222,15 @@ impl Default for C64 {
     }
 }
 
+pub fn raise_to_powers_of_two_rescale(z: C64, n: usize, q: f64) -> Vec<C64> {
+    let mut result: Vec<C64> = vec![z];
+    let qc = C64::new(q, 0.0);
+    for i in 0..n {
+        result.push(result[i] * result[i] / qc);
+    }
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

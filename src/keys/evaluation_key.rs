@@ -1,5 +1,6 @@
 use crate::algebra::arithmetic::{Rescale, RingMod};
 use crate::algebra::big_int::BigInt;
+use crate::algebra::complex::{Complex, C64};
 use crate::ciphertext::{Ciphertext, Message, RawCiphertext};
 use crate::keys::key_generator::KeyGenerationParameters;
 use crate::keys::public_key::ComputationNoise;
@@ -55,12 +56,16 @@ impl<T: BigInt> EvaluationKey<T> {
     }
 
     /// Homomorphically multiply two ciphertext, then rescale and decreases the level by one
-    pub fn mul(&self, ct1: &Ciphertext<T>, ct2: &Ciphertext<T>) -> Result<Ciphertext<T>, OperationError> {
-	let mut result = self.pure_mul(ct1, ct2);
-	self.rescale(&mut result, 1)?;
-	Ok(result)
+    pub fn mul(
+        &self,
+        ct1: &Ciphertext<T>,
+        ct2: &Ciphertext<T>,
+    ) -> Result<Ciphertext<T>, OperationError> {
+        let mut result = self.pure_mul(ct1, ct2);
+        self.rescale(&mut result, 1)?;
+        Ok(result)
     }
-    
+
     /// Homomorphically multiply two ciphertexts without rescaling the result
     pub fn pure_mul(&self, ct1: &Ciphertext<T>, ct2: &Ciphertext<T>) -> Ciphertext<T> {
         let raw = self.raw_mul(&ct1.raw, &ct2.raw);
@@ -132,15 +137,19 @@ impl<T: BigInt> EvaluationKey<T> {
             ct.upper_bound_error / factor.to_float() + self.noise.rescaling_noise;
     }
 
-    pub fn raise_to_powers_of_two(&self, ct: &Ciphertext<T>, n: u32) -> Result<Vec<Ciphertext<T>>,OperationError> {
-	if n >= ct.level {
-	    return Err(OperationError::LevelTooLow)
-	}
-	let mut result: Vec<Ciphertext<T>> = vec![ct.clone()];
-	for _ in 0..n {
-	    
-	}
-	Ok(vec![])
+    pub fn raise_to_powers_of_two(
+        &self,
+        ct: &Ciphertext<T>,
+        n: usize,
+    ) -> Result<Vec<Ciphertext<T>>, OperationError> {
+        if n >= (ct.level as usize) {
+            return Err(OperationError::LevelTooLow);
+        }
+        let mut result: Vec<Ciphertext<T>> = vec![ct.clone()];
+        for i in 0..n {
+            result.push(self.mul(&result[i], &result[i])?);
+        }
+        Ok(result)
     }
 }
 
