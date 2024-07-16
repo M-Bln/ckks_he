@@ -37,6 +37,22 @@ impl<T: BigInt> RingMod<T> {
     pub fn modulus(&self) -> T {
         self.modulus
     }
+
+    pub fn pow(&self, n: u64) -> Self {
+        let mut base = *self;
+        let mut exp = n;
+        let mut result = RingMod::new(T::from(1), self.modulus);
+
+        while exp > 0 {
+            if exp % 2 == 1 {
+                result = result.mul(base);
+            }
+            base = base.mul(base);
+            exp /= 2;
+        }
+
+        result	
+    }
 }
 
 pub trait Rescale<T> {

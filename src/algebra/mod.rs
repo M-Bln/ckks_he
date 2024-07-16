@@ -5,4 +5,5 @@ pub mod complex;
 pub mod conversion_rounding;
 pub mod cyclotomic_ring;
 pub mod linear_algebra;
+pub mod ntt;
 pub mod polynomial;
