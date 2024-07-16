@@ -28,6 +28,21 @@ impl<T> Polynomial<T> {
     }
 }
 
+fn degree_from_coefs<T>(coefs: &[T]) -> i64
+where
+    T: Add<Output = T> + Mul<T, Output = T> + Clone + Zero,
+{
+    let mut degree = coefs.len() as i64 - 1;
+    while degree >= 0 {
+        if coefs[degree as usize].is_zero() {
+            degree -= 1
+        } else {
+            break;
+        }
+    }
+    degree
+}
+
 impl<T> Polynomial<T>
 where
     T: Add<Output = T> + Mul<T, Output = T> + Clone + Zero,
@@ -45,6 +60,16 @@ where
             result = coeff.clone() + result * x.clone();
         }
         result
+    }
+
+    pub fn degree(&self) -> i64 {
+        degree_from_coefs(self.ref_coefficients())
+    }
+
+    pub fn degree_truncate(&mut self) -> i64 {
+        let degree = degree_from_coefs(self.ref_coefficients());
+        self.mut_coefficients().truncate((degree + 1) as usize);
+        degree
     }
 }
 
@@ -549,5 +574,54 @@ mod tests {
                 i, expected_coefficients[i], coeff
             );
         }
+    }
+
+    #[test]
+    fn test_degree() {
+        let poly1 = Polynomial::new(vec![1, 2, 3]);
+        assert_eq!(poly1.degree(), 2, "Degree should be 2");
+
+        let poly2 = Polynomial::new(vec![0]);
+        assert_eq!(poly2.degree(), -1, "Degree should be -1");
+
+        let poly3 = Polynomial::new(vec![5, 0, 0, 0]);
+        assert_eq!(poly3.degree(), 0, "Degree should be 3");
+
+        let poly4: Polynomial<i64> = Polynomial::new(vec![]);
+        assert_eq!(
+            poly4.degree(),
+            -1,
+            "Degree should be -1 for an empty polynomial"
+        );
+    }
+
+    #[test]
+    fn test_degree_truncate() {
+        let mut poly1 = Polynomial::new(vec![1, 2, 3, 0, 0]);
+        poly1.degree_truncate();
+        assert_eq!(
+            poly1.ref_coefficients(),
+            &[1, 2, 3],
+            "Truncated polynomial should be [1, 2, 3]"
+        );
+        assert_eq!(poly1.degree(), 2, "Degree should be 2 after truncation");
+
+        let mut poly2 = Polynomial::new(vec![0, 0, 0, 0]);
+        poly2.degree_truncate();
+        assert_eq!(poly2.ref_coefficients(), &[]);
+        assert_eq!(poly2.degree(), -1, "Degree should be -1");
+
+        let mut poly4: Polynomial<i64> = Polynomial::new(vec![]);
+        poly4.degree_truncate();
+        assert_eq!(
+            poly4.ref_coefficients(),
+            &[],
+            "Empty polynomial should remain empty"
+        );
+        assert_eq!(
+            poly4.degree(),
+            -1,
+            "Degree should be 0 for an empty polynomial"
+        );
     }
 }

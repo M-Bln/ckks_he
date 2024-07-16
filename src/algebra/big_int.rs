@@ -9,6 +9,7 @@ use crate::random_distributions::UniformSamplable;
 
 pub trait Zero: Sized {
     fn zero(&self) -> Self;
+    fn is_zero(&self) -> bool;
 }
 
 // Use local trait rather than From<f64> in order to implement BigInt for non local type i64
@@ -84,6 +85,9 @@ pub trait BigInt:
 impl<T: BigInt> Zero for T {
     fn zero(&self) -> Self {
         T::from(0)
+    }
+    fn is_zero(&self) -> bool {
+        *self == T::from(0)
     }
 }
 

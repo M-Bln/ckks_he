@@ -1,6 +1,9 @@
+use std::ops::Mul;
+
 use crate::algebra::arithmetic::{Rescale, RingMod};
 use crate::algebra::big_int::BigInt;
 use crate::algebra::complex::{Complex, C64};
+use crate::algebra::polynomial::Polynomial;
 use crate::ciphertext::{Ciphertext, Message, RawCiphertext};
 use crate::keys::key_generator::KeyGenerationParameters;
 use crate::keys::public_key::ComputationNoise;
@@ -137,6 +140,8 @@ impl<T: BigInt> EvaluationKey<T> {
             ct.upper_bound_error / factor.to_float() + self.noise.rescaling_noise;
     }
 
+    /// For ct an encryption of a message m, computes an encryption
+    /// of m, m^2, m^{2^2}, ..., m^{2^{n-1}}
     pub fn raise_to_powers_of_two(
         &self,
         ct: &Ciphertext<T>,
@@ -151,6 +156,28 @@ impl<T: BigInt> EvaluationKey<T> {
         }
         Ok(result)
     }
+
+    // pub fn apply_polynomial<'a, U>(&self, polynomial: &Polynomial<U>, ct: &Ciphertext<T>) -> Ciphertext<T>
+    // where
+    // 	U: Mul<&'a Message<T>, Output = Message<T>> + Clone,
+    // 	T: 'a,
+    // {
+    // 	let degree = polynomial.ref_coefficients().len();
+
+    // 	let largest_power = largest_power_of_two_less_than();
+    // 	// Your implementation here
+    // }
+}
+
+pub fn largest_power_of_two_less_than(d: u32) -> u32 {
+    assert!(d > 1, "call largest_power_of_two_less_than with d < 2");
+    let mut power = 1;
+    let mut result = 0;
+    while power < d / 2 {
+        power *= 2;
+        result = result + 1;
+    }
+    result
 }
 
 #[derive(Debug)]

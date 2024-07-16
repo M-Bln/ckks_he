@@ -16,6 +16,9 @@ impl<T: BigInt> Zero for RingMod<T> {
     fn zero(&self) -> Self {
         Self::new(T::from(0), self.modulus)
     }
+    fn is_zero(&self) -> bool {
+        self.value.is_zero()
+    }
 }
 impl<T: BigInt> RingMod<T> {
     pub fn new(value: T, modulus: T) -> Self {

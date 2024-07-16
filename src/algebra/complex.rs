@@ -108,6 +108,10 @@ impl Zero for C64 {
     fn zero(&self) -> Self {
         Self::new(0.0, 0.0)
     }
+    fn is_zero(&self) -> bool {
+        let error: f64 = 1e-20;
+        self.magnitude() < error
+    }
 }
 
 impl Add for C64 {
