@@ -380,7 +380,7 @@ mod tests {
         let result = server_key.apply_polynomial(&polynomial, &ciphertext).unwrap();
 	let clear_result = client_key.decrypt(&result);
 //        let clear_result: Vec<Plaintext> = result.iter().map(|c| client_key.decrypt(c)).collect();
-        for i in 0..n {
+        for i in 0..clear_result.len() {
             let expected = expected_result[i];
             let obtained = clear_result[i];
             let error = (expected - obtained).magnitude();
