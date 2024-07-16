@@ -92,15 +92,15 @@ impl<T: BigInt> EvaluationKey<T> {
             rct1.1.clone() * &rct2.1,
         );
         let mut summand = self.raw_key.scalar_mul_keep_modulus(&d2);
-        println!(
-            "summand modulus: {:?}",
-            summand.0.polynomial.ref_coefficients()[0].modulus
-        );
+        // println!(
+        //     "summand modulus: {:?}",
+        //     summand.0.polynomial.ref_coefficients()[0].modulus
+        // );
         summand.rescale(self.parameters.mul_scaling);
-        println!(
-            "rescaled summand modulus: {:?}",
-            summand.0.polynomial.ref_coefficients()[0].modulus
-        );
+        // println!(
+        //     "rescaled summand modulus: {:?}",
+        //     summand.0.polynomial.ref_coefficients()[0].modulus
+        // );
         RawCiphertext(d0 + &summand.0, d1 + &summand.1)
     }
 

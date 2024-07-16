@@ -125,7 +125,8 @@ mod tests {
     use crate::algebra::complex::{raise_to_powers_of_two, raise_to_powers_of_two_rescale, C64};
     use crate::algebra::polynomial::Polynomial;
     use crate::keys::key_generator::{generate_pair_keys, generate_pair_keys_default};
-
+    use crate::random_distributions::{generate_random_vector};
+    
     #[test]
     fn test_encrypt_decrypt_plaintext() {
         // Define parameters for key generation
@@ -309,7 +310,7 @@ mod tests {
     #[test]
     fn test_raise_to_powers_of_two() {
         // Define parameters for key generation
-        let dimension_exponent = 5;
+        let dimension_exponent = 7;
         // let q = I256::from(1 << 14);
         // let qf = (1 << 14) as f64;
         // let q_sqrt = (1 << 7) as f64;
@@ -321,10 +322,11 @@ mod tests {
         let (mut client_key, mut server_key) =
             generate_pair_keys_default::<I1024>(dimension_exponent, level_max);
 
-        let message_real = vec![
-            1.27, 1.01, 0.79, 1.49, 0.73, 1.06, 0.64, 1.29, 0.80, 0.69, 1.48, 0.70, 1.27, 1.39,
-            1.18, 4.0,
-        ];
+	let message_real = generate_random_vector(1<<(dimension_exponent-1),-1.5, 1.5);
+        // let message_real = vec![
+        //     1.27, 1.01, 0.79, 1.49, 0.73, 1.06, 0.64, 1.29, 0.80, 0.69, 1.48, 0.70, 1.27, 1.39,
+        //     1.18, 4.0,
+        // ];
 
         // Create a sample message as a vector of f64
         // let message_real = vec![
@@ -350,11 +352,11 @@ mod tests {
                 let obtained = clear_result[j][i];
                 let error = (expected - obtained).magnitude();
                 let expected_error = client_key.rescaled_error(&result[j]);
-                println!("indices: i:{} j:{}", i, j);
-                println!("expected: {}", expected);
-                println!("optained: {}", obtained);
-                println!("relative error: {}", error / expected.magnitude());
-                println!("expected error: {}", expected_error);
+                // println!("indices: i:{} j:{}", i, j);
+                // println!("expected: {}", expected);
+                // println!("optained: {}", obtained);
+                // println!("relative error: {}", error / expected.magnitude());
+                // println!("expected error: {}", expected_error);
                 assert!(error < expected_error, "error too big!");
             }
         }
@@ -424,7 +426,7 @@ mod tests {
 
     #[test]
     fn test_trivial_encryption_scalar() {
-        let dimension_exponent = 5;
+        let dimension_exponent = 13;
         let level_max = 4;
         let (mut client_key, mut server_key) =
             generate_pair_keys_default::<I512>(dimension_exponent, level_max);

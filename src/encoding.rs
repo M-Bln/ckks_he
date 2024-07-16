@@ -69,15 +69,15 @@ impl<T: BigInt> Encoder<T> {
 
         // Step 1: Convert to complex coefficients
         let complex_polynomial = message.to_c64();
-        println!("Complex Polynomial: {:?}", complex_polynomial);
+        //println!("Complex Polynomial: {:?}", complex_polynomial);
 
         // Step 2: Apply sigma
         let canonical_embedding = self.sigma(&complex_polynomial);
-        println!("Canonical Embedding: {:?}", canonical_embedding);
+        //println!("Canonical Embedding: {:?}", canonical_embedding);
 
         // Step 3: Project to message space
         let projection_result = self.projection(&canonical_embedding);
-        println!("Projection Result: {:?}", projection_result);
+        //println!("Projection Result: {:?}", projection_result);
 
         projection_result
     }
