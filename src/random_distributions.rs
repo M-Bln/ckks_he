@@ -49,7 +49,6 @@ pub fn sample_n<T: UniformSampler, R: Rng>(sampler: T, n: usize, rng: &mut R) ->
     result
 }
 
-
 pub fn generate_random_vector(length: usize, min: f64, max: f64) -> Vec<f64> {
     let mut rng = rand::thread_rng();
     (0..length).map(|_| rng.gen_range(min..max)).collect()

@@ -125,8 +125,8 @@ mod tests {
     use crate::algebra::complex::{raise_to_powers_of_two, raise_to_powers_of_two_rescale, C64};
     use crate::algebra::polynomial::Polynomial;
     use crate::keys::key_generator::{generate_pair_keys, generate_pair_keys_default};
-    use crate::random_distributions::{generate_random_vector};
-    
+    use crate::random_distributions::generate_random_vector;
+
     #[test]
     fn test_encrypt_decrypt_plaintext() {
         // Define parameters for key generation
@@ -322,7 +322,7 @@ mod tests {
         let (mut client_key, mut server_key) =
             generate_pair_keys_default::<I1024>(dimension_exponent, level_max);
 
-	let message_real = generate_random_vector(1<<(dimension_exponent-1),-1.5, 1.5);
+        let message_real = generate_random_vector(1 << (dimension_exponent - 1), -1.5, 1.5);
         // let message_real = vec![
         //     1.27, 1.01, 0.79, 1.49, 0.73, 1.06, 0.64, 1.29, 0.80, 0.69, 1.48, 0.70, 1.27, 1.39,
         //     1.18, 4.0,
@@ -364,47 +364,43 @@ mod tests {
 
     #[test]
     fn test_apply_polynomial() {
-        // Define parameters for key generation
         let dimension_exponent = 4;
-        let q = I512::from(1 << 30);
-        let qf = (1 << 30) as f64;
-        let q_sqrt = (1 << 15) as f64;
-        let q_inverse = 1.0 / (1 << 30) as f64;
-        let level_max = 3;
-        let n = 3;
+        let level_max = 5;
+        let n = 4;
 
         // Generate pair of keys
         let (mut client_key, mut server_key) =
-            generate_pair_keys(dimension_exponent, q.clone(), level_max);
+            generate_pair_keys_default::<I1024>(dimension_exponent, level_max);
 
+        let message_real = generate_random_vector(1 << (dimension_exponent - 1), -1.5, 1.5);
+
+        let message_plaintext = to_plaintext(&message_real);
         //	let polynomial = Polynomial::<I256>::new(vec![I256::from(1), I256::from(2), I256::from(3), I256::from(4)]);
-        let polynomial = Polynomial::<I512>::new(vec![
-            I512::from(1),
-            I512::from(2),
-            I512::from(1),
-            I512::from(1),
+        let polynomial = Polynomial::<I1024>::new(vec![
+            I1024::from(1),
+            I1024::from(2),
+            I1024::from(1),
+            I1024::from(1),
         ]);
         let complex_polynomial = polynomial.to_c64();
 
         // Create a sample message as a vector of f64
-        let message_real = vec![1.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0];
+        //let message_real = vec![1.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0];
         // let message_real = vec![
         //     1.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0, 60.0, 70.0, 50.0, 42.0, 45.0, 32.0,
         //     42.0, 72.0,
         // ];
-        let message_plaintext =
-            scalar_mul_plaintext(C64::new(q_sqrt, 0.0), &to_plaintext(&message_real));
+        // let message_plaintext =
+        //     scalar_mul_plaintext(C64::new(q_sqrt, 0.0), &to_plaintext(&message_real));
         let expected_result: Vec<C64> = message_plaintext
             .iter()
             .map(|c| {
-                complex_polynomial.eval(*c / C64::new(qf, 0.0)) * C64::new(qf, 0.0)
-                    + complex_polynomial.ref_coefficients()[0] * C64::new(1.0 - qf, 0.0)
+                complex_polynomial.eval(*c)
+                // + complex_polynomial.ref_coefficients()[0] * C64::new(1.0 - qf, 0.0)
             })
             .collect();
 
-        let ciphertext = client_key
-            .encrypt(&message_plaintext, q_sqrt * 73.0)
-            .unwrap();
+        let ciphertext = client_key.encrypt(&message_plaintext, 1.5).unwrap();
         let result = server_key
             .apply_polynomial(&polynomial, &ciphertext)
             .unwrap();
