@@ -242,6 +242,14 @@ pub fn raise_to_powers_of_two_rescale(z: C64, n: usize, q: f64) -> Vec<C64> {
     result
 }
 
+pub fn raise_to_powers_of_two(z: C64, n: usize) -> Vec<C64> {
+    let mut result: Vec<C64> = vec![z];
+    for i in 0..n {
+        result.push(result[i] * result[i]);
+    }
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -3,7 +3,7 @@ use crate::algebra::big_int::{BigInt, ToFloat, Zero};
 use crate::algebra::complex::{Complex, C64};
 use crate::algebra::cyclotomic_ring::CyclotomicRing;
 use crate::algebra::polynomial::Polynomial;
-use bnum::types::{I256, I512};
+use bnum::types::{I1024, I256, I512};
 use std::ops::{Add, Sub};
 
 impl<T> Polynomial<T>
@@ -53,6 +53,10 @@ pub fn i512_to_f64(n: I512) -> f64 {
     n.to_string().parse::<f64>().unwrap()
 }
 
+pub fn i1024_to_f64(n: I1024) -> f64 {
+    n.to_string().parse::<f64>().unwrap()
+}
+
 /// Convert a float to a large integer, loses the decimals
 pub fn f64_to_i256(n: f64) -> I256 {
     I256::from_str_radix(&format!("{:.0}", n), 10).unwrap()
@@ -60,6 +64,10 @@ pub fn f64_to_i256(n: f64) -> I256 {
 
 pub fn f64_to_i512(n: f64) -> I512 {
     I512::from_str_radix(&format!("{:.0}", n), 10).unwrap()
+}
+
+pub fn f64_to_i1024(n: f64) -> I1024 {
+    I1024::from_str_radix(&format!("{:.0}", n), 10).unwrap()
 }
 
 impl RingMod<I256> {

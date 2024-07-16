@@ -36,11 +36,11 @@ impl<T: BigInt> ServerKey<T> {
         }
     }
 
-    pub fn rescaled_error(&self, ct: Ciphertext<T>) -> f64 {
+    pub fn rescaled_error(&self, ct: &Ciphertext<T>) -> f64 {
         ct.upper_bound_error / self.encoder.scaling_factor
     }
 
-    pub fn rescaled_upperbound_message(&self, ct: Ciphertext<T>) -> f64 {
+    pub fn rescaled_upperbound_message(&self, ct: &Ciphertext<T>) -> f64 {
         ct.upper_bound_message / self.encoder.scaling_factor
     }
 }

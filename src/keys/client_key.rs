@@ -67,11 +67,11 @@ impl<T: BigInt> ClientKey<T> {
         self.encoder.decode(&encoded)
     }
 
-    pub fn rescaled_error(&self, ct: Ciphertext<T>) -> f64 {
+    pub fn rescaled_error(&self, ct: &Ciphertext<T>) -> f64 {
         ct.upper_bound_error / self.encoder.scaling_factor
     }
 
-    pub fn rescaled_upperbound_message(&self, ct: Ciphertext<T>) -> f64 {
+    pub fn rescaled_upperbound_message(&self, ct: &Ciphertext<T>) -> f64 {
         ct.upper_bound_message / self.encoder.scaling_factor
     }
 }
@@ -118,11 +118,11 @@ pub fn add_plaintexts(plaintext1: &[C64], plaintext2: &[C64]) -> Plaintext {
 
 #[cfg(test)]
 mod tests {
-    use bnum::types::{I256, I512};
+    use bnum::types::{I1024, I256, I512};
 
     use super::*;
     use crate::algebra::big_int::{BigInt, ToFloat};
-    use crate::algebra::complex::{raise_to_powers_of_two_rescale, C64};
+    use crate::algebra::complex::{raise_to_powers_of_two, raise_to_powers_of_two_rescale, C64};
     use crate::algebra::polynomial::Polynomial;
     use crate::keys::key_generator::{generate_pair_keys, generate_pair_keys_default};
 
@@ -293,7 +293,7 @@ mod tests {
         //     &multiply_plaintexts(&message_plaintext1, &message_plaintext2),
         // );
 
-        let error_max = client_key.rescaled_error(result);
+        let error_max = client_key.rescaled_error(&result);
         println!("upperbound error: {:?}", error_max);
         // Verify that the decrypted message is close to the original message
         for (expected, decrypted) in expected_result.iter().zip(clear_result.iter()) {
@@ -310,44 +310,50 @@ mod tests {
     fn test_raise_to_powers_of_two() {
         // Define parameters for key generation
         let dimension_exponent = 5;
-        let q = I256::from(1 << 14);
-        let qf = (1 << 14) as f64;
-        let q_sqrt = (1 << 7) as f64;
-        let q_inverse = 1.0 / (1 << 14) as f64;
-        let level_max = 4;
-        let n = 3;
+        // let q = I256::from(1 << 14);
+        // let qf = (1 << 14) as f64;
+        // let q_sqrt = (1 << 7) as f64;
+        // let q_inverse = 1.0 / (1 << 14) as f64;
+        let level_max = 6;
+        let n = 4;
 
         // Generate pair of keys
         let (mut client_key, mut server_key) =
-            generate_pair_keys(dimension_exponent, q.clone(), level_max);
+            generate_pair_keys_default::<I1024>(dimension_exponent, level_max);
+
+        let message_real = vec![
+            1.27, 1.01, 0.79, 1.49, 0.73, 1.06, 0.64, 1.29, 0.80, 0.69, 1.48, 0.70, 1.27, 1.39,
+            1.18, 4.0,
+        ];
 
         // Create a sample message as a vector of f64
-        let message_real = vec![
-            1.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0, 60.0, 70.0, 50.0, 42.0, 45.0, 32.0,
-            42.0, 72.0,
-        ];
-        let message_plaintext =
-            scalar_mul_plaintext(C64::new(q_sqrt, 0.0), &to_plaintext(&message_real));
+        // let message_real = vec![
+        //     1.0, .0, 1.5, 0.1, 2.1, 1.0, 0.1, 0.06, 1.10, 1.0, 0.1, 2.0, 0.45, 0.32,
+        //     2.0, 0.1,
+        // ];
+        let message_plaintext = to_plaintext(&message_real);
+        //            scalar_mul_plaintext(C64::new(q_sqrt, 0.0), &to_plaintext(&message_real));
         let expected_result: Vec<Vec<C64>> = message_plaintext
             .iter()
-            .map(|c| raise_to_powers_of_two_rescale(*c, n, qf))
+            .map(|c| raise_to_powers_of_two(*c, n))
             .collect();
 
-        let ciphertext = client_key
-            .encrypt(&message_plaintext, q_sqrt * 73.0)
+        let ciphertext = client_key.encrypt(&message_plaintext, 4.0).unwrap();
+        let result = server_key
+            .evaluation_key
+            .raise_to_powers_of_two(&ciphertext, n)
             .unwrap();
-        let result = server_key.raise_to_powers_of_two(&ciphertext, n).unwrap();
         let clear_result: Vec<Plaintext> = result.iter().map(|c| client_key.decrypt(c)).collect();
-        for i in 0..n {
-            for j in 0..n {
+        for i in 0..expected_result.len() {
+            for j in 0..result.len() {
                 let expected = expected_result[i][j];
                 let obtained = clear_result[j][i];
                 let error = (expected - obtained).magnitude();
-                let expected_error = result[j].upper_bound_error;
+                let expected_error = client_key.rescaled_error(&result[j]);
                 println!("indices: i:{} j:{}", i, j);
                 println!("expected: {}", expected);
                 println!("optained: {}", obtained);
-                println!("error: {}", error);
+                println!("relative error: {}", error / expected.magnitude());
                 println!("expected error: {}", expected_error);
                 assert!(error < expected_error, "error too big!");
             }
