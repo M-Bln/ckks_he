@@ -1,6 +1,7 @@
 use bnum::types::I1024;
 use ckks::algebra::big_int::BigInt;
 use ckks::algebra::complex::{Complex, C64};
+use ckks::algebra::polynomial::Polynomial;
 use ckks::encoding::Encoder;
 use ckks::keys::client_key::to_plaintext;
 use ckks::keys::key_generator::{generate_pair_keys_default};
@@ -190,6 +191,60 @@ fn bench_encrypt_mul_decrypt(c: &mut Criterion) {
 }
 
 
+fn bench_apply_polynomial(c: &mut Criterion) {
+    let dimension_exponents = vec![8];
+    for &dimension_exponent in &dimension_exponents {
+        // Generate keys
+        let (mut client_key, server_key) = generate_pair_keys_default::<I1024>(dimension_exponent, LEVEL_MAX);
+
+        // Generate ciphertexts
+        let real_plaintext = generate_random_vector(
+            1 << (dimension_exponent - 1),
+            -PLAINTEXT_BOUND,
+            PLAINTEXT_BOUND,
+        );
+	let plaintext=to_plaintext(&real_plaintext);
+        let ciphertext = client_key.encrypt(&plaintext, 100.0*PLAINTEXT_BOUND).unwrap();
+	
+        let polynomial = Polynomial::<I1024>::new(vec![
+            I1024::from(2),
+            I1024::from(1),
+            I1024::from(2),
+            I1024::from(1),
+        ]);
+        let complex_polynomial = polynomial.to_c64();
+	let expected: Vec<C64> = plaintext
+            .iter()
+            .map(|c| {
+                complex_polynomial.eval(*c)
+            })
+            .collect();
+	let result = server_key.apply_polynomial(black_box(&polynomial), black_box(&ciphertext)).unwrap();
+	let decrypted = client_key.decrypt(&result);
+	let expected_error = client_key.rescaled_error(&result);
+        let relative_error = calculate_relative_error(&expected, &decrypted);
+        c.bench_function(&format!("Polynomial evaluation, dimension: 2^{}", dimension_exponent), |b| {
+            b.iter(|| {
+                server_key.apply_polynomial(black_box(&polynomial), black_box(&ciphertext)).unwrap();
+            })
+        });
+
+
+
+        // // Decrypt the ciphertext
+        // c.bench_function(&format!("decrypt_dim_{}", dimension_exponent), |b| {
+        //     b.iter(|| {
+        //         let decrypted = client_key.decrypt(black_box(&ciphertext));
+        //         // calculate_relative_error(&plaintext, &decrypted);
+        //     })
+        // });
+
+	println!("Expected error: {}", expected_error);
+        println!("Relative error after decryption (dim {}): {}", dimension_exponent, relative_error);
+    }
+}
+
+
 fn calculate_relative_error(original: &[C64], decrypted: &[C64]) -> f64 {
     original.iter()
         .zip(decrypted.iter())
@@ -205,5 +260,5 @@ fn calculate_relative_error(original: &[C64], decrypted: &[C64]) -> f64 {
         .fold(0.0, |max_error, current_error| max_error.max(current_error))
 }
 
-criterion_group!(benches, bench_encode, bench_decode, bench_encrypt_decrypt, bench_encrypt_add_decrypt, bench_encrypt_mul_decrypt);
+criterion_group!(benches, bench_encode, bench_decode, bench_encrypt_decrypt, bench_encrypt_add_decrypt, bench_encrypt_mul_decrypt, bench_apply_polynomial);
 criterion_main!(benches);
