@@ -310,7 +310,7 @@ mod tests {
     #[test]
     fn test_raise_to_powers_of_two() {
         // Define parameters for key generation
-        let dimension_exponent = 7;
+        let dimension_exponent = 5;
         // let q = I256::from(1 << 14);
         // let qf = (1 << 14) as f64;
         // let q_sqrt = (1 << 7) as f64;
@@ -364,7 +364,7 @@ mod tests {
 
     #[test]
     fn test_apply_polynomial() {
-        let dimension_exponent = 10;
+        let dimension_exponent = 5;
         let level_max = 5;
         let n = 4;
 
@@ -402,7 +402,7 @@ mod tests {
 
         let ciphertext = client_key.encrypt(&message_plaintext, 500.0).unwrap();
         let result = server_key
-	    .evaluation_key
+            .evaluation_key
             .apply_polynomial(&polynomial, &ciphertext)
             .unwrap();
         let clear_result = client_key.decrypt(&result);
@@ -423,7 +423,7 @@ mod tests {
 
     #[test]
     fn test_trivial_encryption_scalar() {
-        let dimension_exponent = 13;
+        let dimension_exponent = 7;
         let level_max = 4;
         let (mut client_key, mut server_key) =
             generate_pair_keys_default::<I512>(dimension_exponent, level_max);

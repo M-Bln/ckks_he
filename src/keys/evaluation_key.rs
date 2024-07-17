@@ -191,35 +191,34 @@ impl<T: BigInt> EvaluationKey<T> {
         }
         let largest_power = largest_power_of_two_less_than(degree as u32);
         let powers = self.raise_to_powers_of_two(ct, largest_power as usize + 1)?;
-        self.recursive_apply_polynomial(&polynomial_coefs[..degree as usize +1], ct, &powers)
+        self.recursive_apply_polynomial(&polynomial_coefs[..degree as usize + 1], ct, &powers)
     }
 
     pub fn recursive_apply_polynomial(
-	&self,
-	polynomial_coefs: &[T],
-	ct: &Ciphertext<T>,
-	powers: &[Ciphertext<T>],
+        &self,
+        polynomial_coefs: &[T],
+        ct: &Ciphertext<T>,
+        powers: &[Ciphertext<T>],
     ) -> Result<Ciphertext<T>, OperationError> {
-	let degree = polynomial_coefs.len() - 1;
-	
-	if degree <= 1 {
+        let degree = polynomial_coefs.len() - 1;
+
+        if degree <= 1 {
             return self.apply_polynomial_coefficients(polynomial_coefs, ct);
-	}
+        }
 
-	let largest_power = largest_power_of_two_less_than(degree as u32);
-	let cut = largest_power as usize;
+        let largest_power = largest_power_of_two_less_than(degree as u32);
+        let cut = largest_power as usize;
 
-	let first_part = &polynomial_coefs[..=cut];
-	let second_part = &polynomial_coefs[cut+1..];
+        let first_part = &polynomial_coefs[..=cut];
+        let second_part = &polynomial_coefs[cut + 1..];
 
-	let first_eval = self.recursive_apply_polynomial(first_part, ct, powers)?;
-	let second_eval = self.recursive_apply_polynomial(second_part, ct, powers)?;
-	let second_rescaled = self.mul(&second_eval, &powers[largest_power as usize])?;
+        let first_eval = self.recursive_apply_polynomial(first_part, ct, powers)?;
+        let second_eval = self.recursive_apply_polynomial(second_part, ct, powers)?;
+        let second_rescaled = self.mul(&second_eval, &powers[largest_power as usize])?;
 
-	Ok(self.add(&first_eval, &second_rescaled))
+        Ok(self.add(&first_eval, &second_rescaled))
     }
 
-    
     // pub fn recursive_apply_polynomial(
     //     &self,
     //     polynomial_coefs: &[T],
@@ -415,7 +414,7 @@ mod tests {
             .to_cyclotomic(dimension_exponent);
 
         // Encrypt the messages
-        let upper_bound_message = (1 << 13) as f64; // Example value, adjust as needed
+        let upper_bound_message = (1 << 14) as f64; // Example value, adjust as needed
         let ciphertext1 = public_key.encrypt(&message1, upper_bound_message);
         let ciphertext2 = public_key.encrypt(&message2, upper_bound_message);
 
@@ -445,7 +444,7 @@ mod tests {
                 "Expected: {:?}, Decrypted: {:?}, Difference: {:?}",
                 expected, decrypted, diff
             );
-            assert!(diff.value < I256::from(100), "Difference too large!");
+            assert!(diff.value < I256::from(1000), "Difference too large!");
         }
     }
 

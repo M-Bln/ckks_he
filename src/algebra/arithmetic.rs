@@ -51,7 +51,7 @@ impl<T: BigInt> RingMod<T> {
             exp /= 2;
         }
 
-        result	
+        result
     }
 }
 

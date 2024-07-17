@@ -9,3 +9,14 @@ edition = "2021"
 bnum = { version = "0.11.0", features = ["rand"] } 
 rand = "0.8"
 rand_distr = "0.4"
+
+[lib]
+name = "ckks"
+path = "src/lib.rs"
+
+[dev-dependencies]
+criterion = "0.3.4"
+
+[[bench]]
+name = "full_bench"
+harness = false
