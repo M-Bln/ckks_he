@@ -219,7 +219,7 @@ impl<T: BigInt> Encoder<T> {
 
         for i in 0..n {
             for j in 0..n {
-                matrix[i][j] = roots[(i * j) % n].clone();
+                matrix[i][j] = roots[(i * j) % n];
             }
         }
 
