@@ -55,7 +55,7 @@ fn bench_decode(c: &mut Criterion) {
 
 
 fn bench_encrypt_decrypt(c: &mut Criterion) {
-    let dimension_exponents = vec![8]; // Try smaller exponents first
+    let dimension_exponents = vec![13]; // Try smaller exponents first
     for &dimension_exponent in &dimension_exponents {
         // Generate keys
         let (mut client_key, _server_key) = generate_pair_keys_default::<I1024>(dimension_exponent, LEVEL_MAX);
@@ -92,7 +92,7 @@ fn bench_encrypt_decrypt(c: &mut Criterion) {
 }
 
 fn bench_encrypt_add_decrypt(c: &mut Criterion) {
-    let dimension_exponents = vec![8];
+    let dimension_exponents = vec![13];
     for &dimension_exponent in &dimension_exponents {
         // Generate keys
         let (mut client_key, server_key) = generate_pair_keys_default::<I1024>(dimension_exponent, LEVEL_MAX);
@@ -142,7 +142,7 @@ fn bench_encrypt_add_decrypt(c: &mut Criterion) {
 
 
 fn bench_encrypt_mul_decrypt(c: &mut Criterion) {
-    let dimension_exponents = vec![8];
+    let dimension_exponents = vec![13];
     for &dimension_exponent in &dimension_exponents {
         // Generate keys
         let (mut client_key, server_key) = generate_pair_keys_default::<I1024>(dimension_exponent, LEVEL_MAX);
@@ -192,7 +192,7 @@ fn bench_encrypt_mul_decrypt(c: &mut Criterion) {
 
 
 fn bench_apply_polynomial(c: &mut Criterion) {
-    let dimension_exponents = vec![8];
+    let dimension_exponents = vec![13];
     for &dimension_exponent in &dimension_exponents {
         // Generate keys
         let (mut client_key, server_key) = generate_pair_keys_default::<I1024>(dimension_exponent, LEVEL_MAX);
@@ -251,14 +251,27 @@ fn calculate_relative_error(original: &[C64], decrypted: &[C64]) -> f64 {
         .map(|(o, d)| {
             let error = (*o-*d).magnitude();
 	    let relative_error = error / (o.magnitude());
-	    println!("expected: {}", o);
-	    println!("decrypted: {}", d);
-	    println!("error: {}", error);
-	    println!("relative error: {}", relative_error);
+	    // println!("expected: {}", o);
+	    // println!("decrypted: {}", d);
+	    // println!("error: {}", error);
+	    // println!("relative error: {}", relative_error);
 	    relative_error
         })
         .fold(0.0, |max_error, current_error| max_error.max(current_error))
 }
 
-criterion_group!(benches, bench_encode, bench_decode, bench_encrypt_decrypt, bench_encrypt_add_decrypt, bench_encrypt_mul_decrypt, bench_apply_polynomial);
+// criterion_group!(benches, bench_encode, bench_decode, bench_encrypt_decrypt, bench_encrypt_add_decrypt, bench_encrypt_mul_decrypt, bench_apply_polynomial);
+
+// Create a Criterion configuration with a reduced sample size
+fn configure_criterion() -> Criterion {
+    Criterion::default().sample_size(10) // Adjust the sample size as needed
+}
+
+criterion_group! {
+    name = benches;
+    config = configure_criterion();
+    targets = bench_encode, bench_decode, bench_encrypt_decrypt, bench_encrypt_add_decrypt, bench_encrypt_mul_decrypt, bench_apply_polynomial
+}
+
+
 criterion_main!(benches);
