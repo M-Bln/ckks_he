@@ -43,7 +43,31 @@ impl<T: BigInt> ClientKey<T> {
             plaintext_dimension,
         }
     }
-
+    
+    /// Encrypt a plaintext
+    /// 
+    /// # Examples
+    ///
+    /// ```
+    /// use ckks::keys::key_generator::generate_pair_keys_toy;
+    /// use ckks::random_distributions::generate_random_vector;
+    /// use ckks::keys::client_key::{calculate_error, to_plaintext};
+    ///
+    ///
+    /// let (mut client_key, server_key) = generate_pair_keys_toy();
+    /// let plaintext_dimension = 1 << (client_key.dimension_exponent() -1);
+    /// let plaintext_bound = 5.0;
+    /// let real_plaintext = generate_random_vector(
+    ///         plaintext_dimension,
+    ///         -plaintext_bound, 
+    ///         plaintext_bound,
+    /// );
+    /// let plaintext = to_plaintext(&real_plaintext);
+    /// let ciphertext = client_key.encrypt(&plaintext, plaintext_bound).unwrap();
+    /// let decrypted = client_key.decrypt(&ciphertext);
+    /// let error = calculate_error(&plaintext, &decrypted);
+    /// assert!(error < client_key.rescaled_error(&ciphertext), "Error large than expected");
+    /// ```
     pub fn encrypt(
         &mut self,
         clear: &Plaintext,
@@ -74,6 +98,34 @@ impl<T: BigInt> ClientKey<T> {
     pub fn rescaled_upperbound_message(&self, ct: &Ciphertext<T>) -> f64 {
         ct.upper_bound_message / self.encoder.scaling_factor
     }
+
+    pub fn dimension_exponent(&self) -> u32 {
+	self.secret_key.parameters.dimension_exponent
+    }
+}
+
+pub fn calculate_relative_error(original: &[C64], decrypted: &[C64]) -> f64 {
+    original.iter()
+        .zip(decrypted.iter())
+        .map(|(o, d)| {
+            let error = (*o-*d).magnitude();
+	    let relative_error = error / (o.magnitude());
+	    // println!("expected: {}", o);
+	    // println!("decrypted: {}", d);
+	    // println!("error: {}", error);
+	    // println!("relative error: {}", relative_error);
+	    relative_error
+        })
+        .fold(0.0, |max_error, current_error| max_error.max(current_error))
+}
+
+pub fn calculate_error(original: &[C64], decrypted: &[C64]) -> f64 {
+    original.iter()
+        .zip(decrypted.iter())
+        .map(|(o, d)| {
+            (*o-*d).magnitude()
+        })
+        .fold(0.0, |max_error, current_error| max_error.max(current_error))
 }
 
 pub fn bounded_by(z: &[C64], bound: f64) -> bool {

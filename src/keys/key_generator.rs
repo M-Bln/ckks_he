@@ -7,6 +7,7 @@ use crate::keys::public_key::{ComputationNoise, PublicKey};
 use crate::keys::secret_key::SecretKey;
 use crate::keys::server_key::ServerKey;
 use crate::random_distributions::{sample_n, DiscreteGaussian};
+use bnum::types::I1024;
 
 use bnum::types::I512;
 use rand::distributions::uniform::UniformSampler;
@@ -35,6 +36,20 @@ pub struct KeyGenerationParameters<T: BigInt> {
 
     // Standard diviation of the Gaussian distribution used in learning with error
     pub standard_deviation: f64,
+}
+
+/// Generate a pair (client_key, server_key) with no security but fast computation
+/// 
+/// # Examples
+///
+/// ```
+/// use ckks::keys::key_generator::generate_pair_keys_toy;
+///
+/// let (client_key, server_key) = generate_pair_keys_toy();
+/// assert_eq!(client_key.secret_key.parameters.dimension_exponent, 4);
+/// ```
+pub fn generate_pair_keys_toy() -> (ClientKey<I1024>, ServerKey<I1024>) {
+    generate_pair_keys_default(4, 5)
 }
 
 pub fn generate_pair_keys_default<T: BigInt>(
