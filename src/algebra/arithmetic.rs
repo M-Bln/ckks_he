@@ -6,6 +6,8 @@ use std::ops::{Add, Mul, Sub};
 
 use bnum::types::I256;
 
+
+/// Represent an element in the ring Z/modulus Z
 #[derive(Copy, Clone, Debug)]
 pub struct RingMod<T: BigInt> {
     pub value: T,
@@ -13,6 +15,8 @@ pub struct RingMod<T: BigInt> {
 }
 
 impl<T: BigInt> Zero for RingMod<T> {
+    // This implementation of zero is the reason it needs &self as argument
+    // in order to know the modulus.
     fn zero(&self) -> Self {
         Self::new(T::from(0), self.modulus)
     }
@@ -20,6 +24,7 @@ impl<T: BigInt> Zero for RingMod<T> {
         self.value.is_zero()
     }
 }
+
 impl<T: BigInt> RingMod<T> {
     pub fn new(value: T, modulus: T) -> Self {
         RingMod {
@@ -38,6 +43,7 @@ impl<T: BigInt> RingMod<T> {
         self.modulus
     }
 
+    // Fast exponentiation
     pub fn pow(&self, n: u64) -> Self {
         let mut base = *self;
         let mut exp = n;
@@ -73,27 +79,6 @@ impl<T: BigInt> Rescale<RingMod<T>> for RingMod<T> {
     }
 }
 
-// /// Addition is performed modulo the smallest of each modulus
-// impl<T: BigInt> Add for RingMod<T> {
-//     type Output = Self;
-
-//     fn add(self, other: Self) -> Self {
-//         if self.modulus < other.modulus {
-//             let value = self.value + other.value
-//             RingMod {
-//                 modulus: self.modulus,
-//                 value,
-//             }
-//         } else {
-//             let value =
-//                 ((self.value % other.modulus.clone()) + other.value) % other.modulus.clone();
-//             RingMod {
-//                 modulus: other.modulus,
-//                 value,
-//             }
-//         }
-//     }
-// }
 
 /// Addition is performed modulo the smallest of each modulus
 impl<T: BigInt> Add for RingMod<T> {
@@ -161,183 +146,6 @@ impl<'a, T: BigInt> Mul<&'a RingMod<T>> for RingMod<T> {
     }
 }
 
-// /// Addition of RingMod with reference, it is performed modulo the smallest of each modulus
-// impl<'a, T: BigInt> Add<&'a RingMod<T>> for RingMod<T> {
-//     type Output = Self;
-
-//     fn add(self, other: &Self) -> Self {
-//         if self.modulus < other.modulus {
-//             let value = (self.value + (other.value % self.modulus.clone())) % self.modulus.clone();
-//             RingMod {
-//                 modulus: self.modulus,
-//                 value,
-//             }
-//         } else {
-//             let value =
-//                 ((self.value % other.modulus.clone()) + other.value) % other.modulus.clone();
-//             RingMod {
-//                 modulus: other.modulus,
-//                 value,
-//             }
-//         }
-//     }
-// }
-
-// /// Subtraction is performed modulo the smallest of each modulus
-// impl<T: BigInt> Sub for RingMod<T> {
-//     type Output = Self;
-
-//     fn sub(self, other: Self) -> Self {
-//         if self.modulus < other.modulus {
-//             let value = (self.value - (other.value % self.modulus.clone())) % self.modulus.clone();
-//             RingMod {
-//                 modulus: self.modulus,
-//                 value,
-//             }
-//         } else {
-//             let value =
-//                 ((self.value % other.modulus.clone()) - other.value) % other.modulus.clone();
-//             RingMod {
-//                 modulus: other.modulus,
-//                 value,
-//             }
-//         }
-//     }
-// }
-
-// /// Subtraction of RingMod with reference
-// impl<'a, T: BigInt> Sub<&'a RingMod<T>> for RingMod<T> {
-//     type Output = Self;
-
-//     fn sub(self, other: &'a RingMod<T>) -> Self {
-//         if self.modulus < other.modulus {
-//             let value = (self.value - (other.value % self.modulus.clone())) % self.modulus.clone();
-//             RingMod {
-//                 modulus: self.modulus,
-//                 value,
-//             }
-//         } else {
-//             let value =
-//                 ((self.value % other.modulus.clone()) - other.value) % other.modulus.clone();
-//             RingMod {
-//                 modulus: other.modulus,
-//                 value,
-//             }
-//         }
-//     }
-// }
-
-// /// Multiplication is performed modulo the smallest of each modulus
-// impl<T: BigInt> Mul for RingMod<T> {
-//     type Output = Self;
-
-//     fn mul(self, other: Self) -> Self {
-//         if self.modulus < other.modulus {
-//             let value = (self.value * (other.value % self.modulus.clone())) % self.modulus.clone();
-//             RingMod {
-//                 modulus: self.modulus,
-//                 value,
-//             }
-//         } else {
-//             let value =
-//                 ((self.value % other.modulus.clone()) * other.value) % other.modulus.clone();
-//             RingMod {
-//                 modulus: other.modulus,
-//                 value,
-//             }
-//         }
-//     }
-// }
-
-// /// Multiplication of RingMod with reference
-// impl<'a, T: BigInt> Mul<&'a RingMod<T>> for RingMod<T> {
-//     type Output = Self;
-
-//     fn mul(self, other: &'a RingMod<T>) -> Self {
-//         if self.modulus < other.modulus {
-//             let value = (self.value * (other.value % self.modulus.clone())) % self.modulus.clone();
-//             RingMod {
-//                 modulus: self.modulus,
-//                 value,
-//             }
-//         } else {
-//             let value =
-//                 ((self.value % other.modulus.clone()) * other.value) % other.modulus.clone();
-//             RingMod {
-//                 modulus: other.modulus,
-//                 value,
-//             }
-//         }
-//     }
-// }
-
-// impl<T: BigInt> Sub for RingMod<T> {
-//     type Output = Self;
-
-//     fn sub(self, other: Self) -> Self {
-//         assert!(
-//             self.modulus == other.modulus,
-//             "Moduli must be equal for addition"
-//         );
-//         let value = (self.value - other.value) % self.modulus;
-//         RingMod {
-//             modulus: self.modulus,
-//             value,
-//         }
-//     }
-// }
-
-// // Addition of RingMod with reference
-// impl<'a, T: BigInt> Sub<&'a RingMod<T>> for RingMod<T> {
-//     type Output = Self;
-
-//     fn sub(self, other: &'a RingMod<T>) -> Self {
-//         assert!(
-//             self.modulus == other.modulus,
-//             "Moduli must be equal for addition"
-//         );
-//         let value = (self.value - other.value) % self.modulus;
-//         RingMod {
-//             modulus: self.modulus,
-//             value,
-//         }
-//     }
-// }
-
-// // Multiplication of RingMod
-// impl<T: BigInt> Mul for RingMod<T> {
-//     type Output = Self;
-
-//     fn mul(self, other: Self) -> Self {
-//         assert!(
-//             self.modulus == other.modulus,
-//             "Moduli must be equal for multiplication"
-//         );
-//         let value = (self.value * other.value) % self.modulus;
-//         RingMod {
-//             modulus: self.modulus,
-//             value,
-//         }
-//     }
-// }
-
-// // Multiplication of RingMod with reference
-// impl<'a, T: BigInt> Mul<&'a RingMod<T>> for RingMod<T> {
-//     type Output = Self;
-
-//     fn mul(self, other: &'a RingMod<T>) -> Self {
-//         assert!(
-//             self.modulus == other.modulus,
-//             "Moduli must be equal for multiplication"
-//         );
-//         let value = (self.value * other.value) % self.modulus;
-//         RingMod {
-//             modulus: self.modulus,
-//             value,
-//         }
-//     }
-// }
-
 impl<T: BigInt> PartialEq for RingMod<T> {
     fn eq(&self, other: &Self) -> bool {
         self.modulus == other.modulus && (self.value - other.value) % self.modulus == T::new(0)
@@ -346,16 +154,6 @@ impl<T: BigInt> PartialEq for RingMod<T> {
 
 impl<T: BigInt> Eq for RingMod<T> {}
 
-// impl RingMod<I256> {
-//     pub fn to_c64(&self) -> C64 {
-//         let real = i256_to_f64(self.value.clone());
-//         C64::new(real, 0.0)
-//     }
-// }
-
-// pub fn c64_to_ring_mod_256(complex: &C64, modulus: I256) -> RingMod<I256> {
-//     RingMod::new(f64_to_i256(complex.real()), modulus)
-// }
 
 #[cfg(test)]
 mod tests {

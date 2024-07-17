@@ -20,19 +20,9 @@ where
     }
 }
 
-// impl<T: BigInt> Polynomial<RingMod<T>> {
-//     pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<RingMod<T>> {
-//         CyclotomicRing::new(self.coefficients(), 2_usize.pow(dimension_exponent))
-//     }
-// }
-
-// impl<T: BigInt> Polynomial<T> {
-//     pub fn to_cyclotomic(self, dimension_exponent: u32) -> CyclotomicRing<T> {
-//         CyclotomicRing::new(self.coefficients(), 2_usize.pow(dimension_exponent))
-//     }
-// }
 
 impl<T: BigInt> Polynomial<T> {
+    /// Reduces the coefficients of a polynomial modulo modulus
     pub fn modulo(&self, modulus: T) -> Polynomial<RingMod<T>> {
         let coefficients = self
             .ref_coefficients()
@@ -70,6 +60,7 @@ pub fn f64_to_i1024(n: f64) -> I1024 {
     I1024::from_str_radix(&format!("{:.0}", n), 10).unwrap()
 }
 
+/// Convert the integer coefficients into complex coefficients
 impl RingMod<I256> {
     pub fn to_c64(&self) -> C64 {
         let real = i256_to_f64(self.value.clone());
@@ -77,10 +68,12 @@ impl RingMod<I256> {
     }
 }
 
+/// Round the real part
 pub fn c64_to_ring_mod_256(complex: &C64, modulus: I256) -> RingMod<I256> {
     RingMod::new(f64_to_i256(complex.real()), modulus)
 }
 
+/// Round the real part of the complex coefficients
 impl CyclotomicRing<RingMod<I256>> {
     pub fn to_c64(&self) -> Polynomial<C64> {
         let coefficients = self
@@ -103,6 +96,7 @@ where
         + Zero
         + ToFloat,
 {
+    /// Converts the integer representatives of the coefficients into complex coefficients
     pub fn to_c64(&self) -> Polynomial<C64> {
         let coefficients = self
             .ref_coefficients()
@@ -113,7 +107,9 @@ where
     }
 }
 
+
 impl<T: BigInt> CyclotomicRing<RingMod<T>> {
+    /// Pick integer representatives of coefficients in the range ]-modulus/2, modulus/2]
     pub fn to_integer(&self) -> CyclotomicRing<T> {
         let coefficients = self
             .ref_coefficients()
@@ -124,27 +120,6 @@ impl<T: BigInt> CyclotomicRing<RingMod<T>> {
     }
 }
 
-// impl Polynomial<I256> {
-//     pub fn to_f64(&self) -> Polynomial<f64> {
-//         let coefficients = self
-//             .ref_coefficients()
-//             .iter()
-//             .map(|coeff| i256_to_f64(coeff.clone()))
-//             .collect();
-//         Polynomial::new(coefficients)
-//     }
-// }
-
-// impl Polynomial<f64> {
-//     pub fn to_i256(&self) -> Polynomial<I256> {
-//         let coefficients = self
-//             .ref_coefficients()
-//             .iter()
-//             .map(|coeff| f64_to_i256(*coeff))
-//             .collect();
-//         Polynomial::new(coefficients)
-//     }
-// }
 impl<T: BigInt> Polynomial<T> {
     pub fn to_c64(&self) -> Polynomial<C64> {
         Polynomial::new(

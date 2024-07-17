@@ -23,6 +23,9 @@ pub trait ToFloat {
     fn to_float(&self) -> f64;
 }
 
+/// A trait to abstract away the type of integers used in the CKKS scheme.
+/// It requires large integers and many distinct implementation exist.
+/// So far we use mostly bnum and in particular I1024.
 pub trait BigInt:
     Sized
     + Add<Output = Self>
@@ -53,6 +56,7 @@ pub trait BigInt:
         Self::from(value)
     }
 
+    /// Reduce an integer modulo a modulus
     fn modulo(&self, modulus: Self) -> RingMod<Self> {
         RingMod::new(self.clone() % modulus, modulus)
     }
@@ -148,14 +152,6 @@ impl ToFloat for I1024 {
         i1024_to_f64(*self)
     }
 }
-
-// pub fn i256_to_f64(n: I256) -> f64 {
-//     n.to_string().parse::<f64>().unwrap()
-// }
-
-// pub fn f64_to_i256(n: f64) -> I256 {
-//     I256::from_str_radix(&format!("{:.0}", n), 10).unwrap()
-// }
 
 #[cfg(test)]
 mod tests {
@@ -388,60 +384,4 @@ mod tests {
         println!("f = {}, modulus = {}, remainder = {}", f, modulus, rem);
         assert_eq!(rem, I256::from(5));
     }
-
-    // #[test]
-    // fn test_i256_to_f64() {
-    //     // Test with a positive number
-    //     let big_int = I256::from(123456789012345678901234567890i128);
-    //     let float_value = i256_to_f64(big_int);
-    //     assert!((float_value - 1.2345678901234568e29).abs() < 1e15);
-
-    //     // Test with a negative number
-    //     let big_int = I256::from(-123456789012345678901234567890i128);
-    //     let float_value = i256_to_f64(big_int);
-    //     assert!((float_value + 1.2345678901234568e29).abs() < 1e15);
-
-    //     // Test with zero
-    //     let big_int = I256::from(0);
-    //     let float_value = i256_to_f64(big_int);
-    //     assert_eq!(float_value, 0.0);
-    // }
-
-    // const EPSILON: f64 = 1e-10;
-
-    // #[test]
-    // fn test_f64_to_i256() {
-    //     // Test with a positive number
-    //     let float_value = 1.2345678901234568e29;
-    //     println!("Original f64: {}", float_value);
-    //     let big_int = f64_to_i256(float_value);
-    //     println!("Converted to I256: {}", big_int);
-    //     let converted_back = i256_to_f64(big_int);
-    //     println!("Converted back to f64: {}", converted_back);
-    //     let expected_value = I256::from(123456789012345678901234567890i128);
-    //     println!("Expected I256: {}", expected_value);
-    //     assert!((converted_back - float_value).abs() < EPSILON);
-
-    //     // Test with a negative number
-    //     let float_value = -1.2345678901234568e29;
-    //     println!("Original f64: {}", float_value);
-    //     let big_int = f64_to_i256(float_value);
-    //     println!("Converted to I256: {}", big_int);
-    //     let converted_back = i256_to_f64(big_int);
-    //     println!("Converted back to f64: {}", converted_back);
-    //     let expected_value = I256::from(-123456789012345678901234567890i128);
-    //     println!("Expected I256: {}", expected_value);
-    //     assert!((converted_back - float_value).abs() < EPSILON);
-
-    //     // Test with zero
-    //     let float_value = 0.0;
-    //     println!("Original f64: {}", float_value);
-    //     let big_int = f64_to_i256(float_value);
-    //     println!("Converted to I256: {}", big_int);
-    //     let converted_back = i256_to_f64(big_int);
-    //     println!("Converted back to f64: {}", converted_back);
-    //     let expected_value = I256::from(0);
-    //     println!("Expected I256: {}", expected_value);
-    //     assert!((converted_back - float_value).abs() < EPSILON);
-    // }
 }

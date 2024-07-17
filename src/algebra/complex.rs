@@ -233,6 +233,7 @@ impl Default for C64 {
     }
 }
 
+/// Computes a vector of q*(z/q)^{2^k} of length n
 pub fn raise_to_powers_of_two_rescale(z: C64, n: usize, q: f64) -> Vec<C64> {
     let mut result: Vec<C64> = vec![z];
     let qc = C64::new(q, 0.0);
@@ -369,10 +370,6 @@ mod tests {
             assert!((root.real() - expected_h3[i].0).abs() < 1e-10);
             assert!((root.imaginary() - expected_h3[i].1).abs() < 1e-10);
         }
-        // for (i, root) in roots_h3.iter().enumerate() {
-        //     assert!((root.real() - expected_h3[i].0).abs() < 1e-10);
-        //     assert!((root.imaginary() - expected_h3[i].1).abs() < 1e-10);
-        // }
     }
 
     #[test]

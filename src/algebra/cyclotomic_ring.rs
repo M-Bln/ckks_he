@@ -6,6 +6,7 @@ use std::ops::{Add, Mul, Sub};
 
 use bnum::types::I256;
 
+/// Represents element in the ring T[X]/(1+X^dimension)
 #[derive(Clone, Debug, PartialEq)]
 pub struct CyclotomicRing<T> {
     pub polynomial: Polynomial<T>,
@@ -36,6 +37,8 @@ where
         cyclo
     }
 
+    /// Reduce the representative polynomial mod 1+X^dimension to obtain
+    /// a representative of smaller degree.
     fn reduce(&mut self) {
         let n = self.dimension;
         let coefficients = self.polynomial.ref_coefficients().to_vec();
@@ -235,18 +238,6 @@ impl<T: BigInt> Rescale<T> for CyclotomicRing<RingMod<T>> {
         self.polynomial.rescale(scalar);
     }
 }
-
-// impl CyclotomicRing<RingMod<I256>> {
-//     pub fn to_c64(&self) -> Polynomial<C64> {
-//         let coefficients = self
-//             .polynomial
-//             .ref_coefficients()
-//             .iter()
-//             .map(|coeff| coeff.to_c64())
-//             .collect();
-//         Polynomial::new(coefficients)
-//     }
-// }
 
 #[cfg(test)]
 mod tests {
