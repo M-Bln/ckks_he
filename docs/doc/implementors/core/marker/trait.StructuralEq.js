@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"ckks_he":[["impl&lt;T&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/1.73.0/core/marker/trait.StructuralEq.html\" title=\"trait core::marker::StructuralEq\">StructuralEq</a> for <a class=\"struct\" href=\"ckks_he/algebra/polynomial/struct.Polynomial.html\" title=\"struct ckks_he::algebra::polynomial::Polynomial\">Polynomial</a>&lt;T&gt;"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

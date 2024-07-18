@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"ckks_he":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.73.0/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> for <a class=\"struct\" href=\"ckks_he/algebra/complex/struct.C64.html\" title=\"struct ckks_he::algebra::complex::C64\">C64</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
