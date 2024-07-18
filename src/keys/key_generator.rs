@@ -12,33 +12,54 @@ use bnum::types::I1024;
 
 use rand::distributions::uniform::UniformSampler;
 
+
+
+/// Parameters used for key generation in the homomorphic encryption scheme.
+///
+/// The `KeyGenerationParameters` struct holds various parameters necessary for generating keys
+/// for the encryption scheme, including the dimensions of the cyclotomic space, modulus values,
+/// and parameters for noise distribution. 
+///
+/// # Fields
+///
+/// - `dimension_exponent`: The exponent for the dimension of the cyclotomic space of messages.
+///   The dimension is given by 2^dimension_exponent.
+/// - `hamming_weight`: The number of non-zero coefficients in the secret key.
+/// - `mul_scaling`: The rescale factor used in multiplication and key switching, denoted by P in the original article.
+///   The modulus of the key switching key is given by q^level_max * q_0 * mul_scaling.
+/// - `q_0`: The modulus when all the levels are consumed.
+/// - `q`: The base modulus.
+/// - `level_max`: The initial modulus of the ciphertext is given by q^level_max * q_0.
+/// - `standard_deviation`: The standard deviation of the Gaussian distribution used in the learning with errors problem.
 #[derive(PartialEq, Clone, Copy, Debug)]
 pub struct KeyGenerationParameters<T: BigInt> {
-    // The dimension of the cyclotomic space of messages is 2^dimension_exponent
+    /// The exponent for the dimension of the cyclotomic space of messages.
+    /// The dimension is given by 2^dimension_exponent.
     pub dimension_exponent: u32,
 
-    // The number of non zero coefficients of the secret key
+    /// The number of non-zero coefficients in the secret key.
     pub hamming_weight: usize,
 
-    // The rescale factor used in multiplication (and key switch),
-    // it is denoted by P in the original article.
-    // The modulus of key switching key is q^level_max * q_0 * mul_scaling
+    /// The rescale factor used in multiplication and key switching, denoted by P in the original article.
+    /// The modulus of the key switching key is given by q^level_max * q_0 * mul_scaling.
     pub mul_scaling: T,
 
-    // The modulus when all the level are consumed
+    /// The modulus when all the levels are consumed.
     pub q_0: T,
 
-    // The base modulus
+    /// The base modulus.
     pub q: T,
 
-    // The initial modulus of ciphertext is q^level_max * q_0
+    /// The initial modulus of the ciphertext is given by q^level_max * q_0.
     pub level_max: u32,
 
-    // Standard diviation of the Gaussian distribution used in learning with error
+    /// The standard deviation of the Gaussian distribution used in the learning with errors problem.
     pub standard_deviation: f64,
 }
 
-/// Generate a pair (client_key, server_key) with no security but fast computation
+
+
+/// Generate a pair (client_key, server_key) with no security but fast computation.
 ///
 /// # Examples
 ///
@@ -52,6 +73,8 @@ pub fn generate_pair_keys_toy() -> (ClientKey<I1024>, ServerKey<I1024>) {
     generate_pair_keys_default(4, 5)
 }
 
+/// Generate a pair (client_key, server_key) picking default values except for
+/// dimension exponent and level_max.
 pub fn generate_pair_keys_default<T: BigInt>(
     dimension_exponent: u32,
     level_max: u32,
@@ -59,6 +82,8 @@ pub fn generate_pair_keys_default<T: BigInt>(
     generate_pair_keys_all_parameters(generate_with_default_q(dimension_exponent, level_max))
 }
 
+/// Generate a pair (client_key, server_key) picking default values except for
+/// dimension exponent, base modulus q, and level_max.
 pub fn generate_pair_keys<T: BigInt>(
     dimension_exponent: u32,
     q: T,
@@ -67,6 +92,7 @@ pub fn generate_pair_keys<T: BigInt>(
     generate_pair_keys_all_parameters(generate_most_parameters(dimension_exponent, q, level_max))
 }
 
+/// Generate a pair (client_key, server_key) from parameters.
 pub fn generate_pair_keys_all_parameters<T: BigInt>(
     params: KeyGenerationParameters<T>,
 ) -> (ClientKey<T>, ServerKey<T>) {
@@ -76,6 +102,7 @@ pub fn generate_pair_keys_all_parameters<T: BigInt>(
     (client_key, server_key)
 }
 
+/// Generate parameters from dimension exponent, level_max and the other are default.
 pub fn generate_with_default_q<T: BigInt>(
     dimension_exponent: u32,
     level_max: u32,
@@ -230,10 +257,6 @@ mod tests {
         };
 
         let (public_key, evaluation_key, secret_key) = generate_keys_all_parameters(params);
-
-        // println!("PublicKey: {:?}", public_key);
-        // println!("EvaluationKey: {:?}", evaluation_key);
-        // println!("SecretKey: {:?}", secret_key);
 
         assert_eq!(secret_key.parameters, params);
         assert_eq!(public_key.parameters, params);
