@@ -43,7 +43,7 @@ pub struct KeyGenerationParameters<T: BigInt> {
 /// # Examples
 ///
 /// ```
-/// use ckks::keys::key_generator::generate_pair_keys_toy;
+/// use ckks_he::keys::key_generator::generate_pair_keys_toy;
 ///
 /// let (client_key, server_key) = generate_pair_keys_toy();
 /// assert_eq!(client_key.secret_key.parameters.dimension_exponent, 4);

@@ -1,5 +1,5 @@
 [package]
-name = "ckks"
+name = "ckks_he"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,7 +11,7 @@ rand = "0.8"
 rand_distr = "0.4"
 
 [lib]
-name = "ckks"
+name = "ckks_he"
 path = "src/lib.rs"
 
 [dev-dependencies]

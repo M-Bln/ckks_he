@@ -49,9 +49,9 @@ impl<T: BigInt> ClientKey<T> {
     /// # Examples
     ///
     /// ```
-    /// use ckks::keys::key_generator::generate_pair_keys_toy;
-    /// use ckks::random_distributions::generate_random_vector;
-    /// use ckks::keys::client_key::{calculate_error, to_plaintext};
+    /// use ckks_he::keys::key_generator::generate_pair_keys_toy;
+    /// use ckks_he::random_distributions::generate_random_vector;
+    /// use ckks_he::keys::client_key::{calculate_error, to_plaintext};
     ///
     ///
     /// let (mut client_key, server_key) = generate_pair_keys_toy();

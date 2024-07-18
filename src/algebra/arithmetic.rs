@@ -7,7 +7,35 @@ use std::ops::{Add, Mul, Sub};
 use bnum::types::I256;
 
 
-/// Represent an element in the ring Z/modulus Z
+/// A structure representing an element in the ring Z/modulus Z
+///
+/// The `RingMod` struct holds a value and a modulus, and supports basic arithmetic operations
+/// like addition, subtraction, and multiplication modulo the given modulus. Representatives
+/// are chosen in the range ]-modulus/2, modulus/2]. If modulus of operands are distincts,
+/// the computation is performed modulo the smallest modulus.
+///
+/// # Examples
+///
+/// ```
+/// use ckks_he::algebra::arithmetic::RingMod;
+/// use ckks_he::algebra::big_int::BigInt;
+///
+/// let ring_mod1 = RingMod::new(3, 7);
+///
+/// assert_eq!(ring_mod1.value(), 3);
+/// assert_eq!(ring_mod1.modulus(), 7);
+///
+/// let ring_mod2 = RingMod::new(2, 7);
+///
+/// let sum1 = ring_mod1 + ring_mod2;
+/// assert_eq!(sum1.value(), -2);
+/// assert_eq!(sum1.modulus(), 7);
+///
+/// let ring_mod3 = RingMod::new(1, 6);
+/// let sum2 = ring_mod2 + ring_mod3;
+/// assert_eq!(sum2.value(), 3);
+/// assert_eq!(sum2.modulus(), 6);
+/// ```
 #[derive(Copy, Clone, Debug)]
 pub struct RingMod<T: BigInt> {
     pub value: T,
