@@ -258,7 +258,6 @@ fn bench_apply_polynomial(c: &mut Criterion) {
     }
 }
 
-
 // criterion_group!(benches, bench_encode, bench_decode, bench_encrypt_decrypt, bench_encrypt_add_decrypt, bench_encrypt_mul_decrypt, bench_apply_polynomial);
 
 // Create a Criterion configuration with a reduced sample size

@@ -8,7 +8,6 @@ use crate::keys::secret_key::SecretKey;
 
 pub type Plaintext = Vec<C64>;
 
-
 /// Encapsulates the data necessary for the client side, including the secret key, public key, and an encoder.
 ///
 /// The `ClientKey` struct is responsible for managing the encryption and decryption processes
@@ -52,7 +51,6 @@ pub enum EncryptionError {
     UnexpectedPlaintextDimension,
     ClearLargerThanUpperBound,
 }
-
 
 impl<T: BigInt> ClientKey<T> {
     pub fn new(
