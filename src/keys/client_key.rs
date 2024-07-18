@@ -6,20 +6,8 @@ use crate::keys::key_generator::KeyGenerationParameters;
 use crate::keys::public_key::PublicKey;
 use crate::keys::secret_key::SecretKey;
 
-type Plaintext = Vec<C64>;
+pub type Plaintext = Vec<C64>;
 
-pub struct ClientKey<T: BigInt> {
-    pub encoder: Encoder<T>,
-    pub secret_key: SecretKey<T>,
-    pub public_key: PublicKey<T>,
-    pub plaintext_dimension: usize,
-}
-
-#[derive(Debug)]
-pub enum EncryptionError {
-    UnexpectedPlaintextDimension,
-    ClearLargerThanUpperBound,
-}
 
 /// Encapsulates the data necessary for the client side, including the secret key, public key, and an encoder.
 ///
@@ -52,6 +40,20 @@ pub enum EncryptionError {
 /// let error = calculate_error(&plaintext, &decrypted);
 /// assert!(error < client_key.rescaled_error(&ciphertext), "Error larger than expected");
 /// ```
+pub struct ClientKey<T: BigInt> {
+    pub encoder: Encoder<T>,
+    pub secret_key: SecretKey<T>,
+    pub public_key: PublicKey<T>,
+    pub plaintext_dimension: usize,
+}
+
+#[derive(Debug)]
+pub enum EncryptionError {
+    UnexpectedPlaintextDimension,
+    ClearLargerThanUpperBound,
+}
+
+
 impl<T: BigInt> ClientKey<T> {
     pub fn new(
         parameters: KeyGenerationParameters<T>,
@@ -345,7 +347,7 @@ mod tests {
         let ct1 = client_key.encrypt(&message_plaintext1, 50000.0).unwrap();
         let ct2 = client_key.encrypt(&message_plaintext2, 50000.0).unwrap();
 
-        let result = server_key.pure_mul(&ct1, &ct2);
+        let result = server_key.evaluation_key.pure_mul(&ct1, &ct2);
         // Decrypt the message
         let clear_result = client_key.decrypt(&result);
 
@@ -501,16 +503,6 @@ mod tests {
             generate_pair_keys_default::<I1024>(dimension_exponent, level_max);
 
         let message_real = generate_random_vector(1 << (dimension_exponent - 1), -1.5, 1.5);
-        // let message_real = vec![
-        //     1.27, 1.01, 0.79, 1.49, 0.73, 1.06, 0.64, 1.29, 0.80, 0.69, 1.48, 0.70, 1.27, 1.39,
-        //     1.18, 4.0,
-        // ];
-
-        // Create a sample message as a vector of f64
-        // let message_real = vec![
-        //     1.0, .0, 1.5, 0.1, 2.1, 1.0, 0.1, 0.06, 1.10, 1.0, 0.1, 2.0, 0.45, 0.32,
-        //     2.0, 0.1,
-        // ];
         let message_plaintext = to_plaintext(&message_real);
         //            scalar_mul_plaintext(C64::new(q_sqrt, 0.0), &to_plaintext(&message_real));
         let expected_result: Vec<Vec<C64>> = message_plaintext
@@ -530,11 +522,6 @@ mod tests {
                 let obtained = clear_result[j][i];
                 let error = (expected - obtained).magnitude();
                 let expected_error = client_key.rescaled_error(&result[j]);
-                // println!("indices: i:{} j:{}", i, j);
-                // println!("expected: {}", expected);
-                // println!("optained: {}", obtained);
-                // println!("relative error: {}", error / expected.magnitude());
-                // println!("expected error: {}", expected_error);
                 assert!(error < expected_error, "error too big!");
             }
         }

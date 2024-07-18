@@ -1,11 +1,11 @@
 use bnum::types::I1024;
-use ckks::algebra::big_int::BigInt;
-use ckks::algebra::complex::{Complex, C64};
-use ckks::algebra::polynomial::Polynomial;
-use ckks::encoding::Encoder;
-use ckks::keys::client_key::{calculate_relative_error, to_plaintext};
-use ckks::keys::key_generator::generate_pair_keys_default;
-use ckks::random_distributions::generate_random_vector;
+use ckks_he::algebra::big_int::BigInt;
+use ckks_he::algebra::complex::{Complex, C64};
+use ckks_he::algebra::polynomial::Polynomial;
+use ckks_he::encoding::Encoder;
+use ckks_he::keys::client_key::{calculate_relative_error, to_plaintext};
+use ckks_he::keys::key_generator::generate_pair_keys_default;
+use ckks_he::random_distributions::generate_random_vector;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::Rng;
 
@@ -83,7 +83,6 @@ fn bench_encrypt_decrypt(c: &mut Criterion) {
         c.bench_function(&format!("decrypt_dim_{}", dimension_exponent), |b| {
             b.iter(|| {
                 let decrypted = client_key.decrypt(black_box(&ciphertext));
-                // calculate_relative_error(&plaintext, &decrypted);
             })
         });
 
@@ -129,13 +128,6 @@ fn bench_encrypt_add_decrypt(c: &mut Criterion) {
             },
         );
 
-        // // Decrypt the ciphertext
-        // c.bench_function(&format!("decrypt_dim_{}", dimension_exponent), |b| {
-        //     b.iter(|| {
-        //         let decrypted = client_key.decrypt(black_box(&ciphertext));
-        //         // calculate_relative_error(&plaintext, &decrypted);
-        //     })
-        // });
         let expected: Vec<C64> = plaintext1
             .iter()
             .zip(plaintext2.iter())
@@ -195,13 +187,6 @@ fn bench_encrypt_mul_decrypt(c: &mut Criterion) {
             },
         );
 
-        // // Decrypt the ciphertext
-        // c.bench_function(&format!("decrypt_dim_{}", dimension_exponent), |b| {
-        //     b.iter(|| {
-        //         let decrypted = client_key.decrypt(black_box(&ciphertext));
-        //         // calculate_relative_error(&plaintext, &decrypted);
-        //     })
-        // });
         let expected: Vec<C64> = plaintext1
             .iter()
             .zip(plaintext2.iter())
@@ -265,14 +250,6 @@ fn bench_apply_polynomial(c: &mut Criterion) {
             },
         );
 
-        // // Decrypt the ciphertext
-        // c.bench_function(&format!("decrypt_dim_{}", dimension_exponent), |b| {
-        //     b.iter(|| {
-        //         let decrypted = client_key.decrypt(black_box(&ciphertext));
-        //         // calculate_relative_error(&plaintext, &decrypted);
-        //     })
-        // });
-
         println!("Expected error: {}", expected_error);
         println!(
             "Relative error after decryption (dim {}): {}",
@@ -281,20 +258,6 @@ fn bench_apply_polynomial(c: &mut Criterion) {
     }
 }
 
-// fn calculate_relative_error(original: &[C64], decrypted: &[C64]) -> f64 {
-//     original.iter()
-//         .zip(decrypted.iter())
-//         .map(|(o, d)| {
-//             let error = (*o-*d).magnitude();
-// 	    let relative_error = error / (o.magnitude());
-// 	    // println!("expected: {}", o);
-// 	    // println!("decrypted: {}", d);
-// 	    // println!("error: {}", error);
-// 	    // println!("relative error: {}", relative_error);
-// 	    relative_error
-//         })
-//         .fold(0.0, |max_error, current_error| max_error.max(current_error))
-// }
 
 // criterion_group!(benches, bench_encode, bench_decode, bench_encrypt_decrypt, bench_encrypt_add_decrypt, bench_encrypt_mul_decrypt, bench_apply_polynomial);
 
