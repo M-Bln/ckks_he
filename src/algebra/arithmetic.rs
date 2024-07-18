@@ -1,10 +1,10 @@
 use crate::algebra::big_int::{BigInt, Zero};
-use crate::algebra::complex::{Complex, C64};
-use crate::algebra::conversion_rounding::{f64_to_i256, i256_to_f64};
+use crate::algebra::complex::{Complex};
+
 use std::cmp::{Eq, PartialEq};
 use std::ops::{Add, Mul, Sub};
 
-use bnum::types::I256;
+
 
 /// A structure representing an element in the ring Z/modulus Z
 ///

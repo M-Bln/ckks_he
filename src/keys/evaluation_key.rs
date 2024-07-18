@@ -1,8 +1,8 @@
 use std::ops::Mul;
 
-use crate::algebra::arithmetic::{Rescale, RingMod};
+use crate::algebra::arithmetic::{Rescale};
 use crate::algebra::big_int::{BigInt, Zero};
-use crate::algebra::complex::{Complex, C64};
+use crate::algebra::complex::{Complex};
 use crate::algebra::polynomial::{degree_from_coefs, Polynomial, ScalarMul};
 use crate::ciphertext::{Ciphertext, Message, RawCiphertext};
 use crate::keys::key_generator::KeyGenerationParameters;
@@ -327,7 +327,7 @@ mod tests {
         // Create the expected result
         message1.rescale(q);
         message2.rescale(q);
-        let mut expected_message = message1 * &message2;
+        let expected_message = message1 * &message2;
 
         for (expected, decrypted) in expected_message
             .polynomial

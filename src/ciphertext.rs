@@ -2,11 +2,11 @@ use crate::algebra::arithmetic::{Rescale, RingMod};
 use crate::algebra::big_int::BigInt;
 use crate::algebra::cyclotomic_ring::CyclotomicRing;
 use crate::algebra::polynomial::ScalarMul;
-use bnum::types::I256;
+
 use std::ops::{Add, Mul};
 
 //type CiphertextRing = CyclotomicRing<RingMod<I256>>; pub type
-pub type Message<T: BigInt> = CyclotomicRing<RingMod<T>>;
+pub type Message<T> = CyclotomicRing<RingMod<T>>;
 
 #[derive(Clone, Debug)]
 pub struct RawCiphertext<T: BigInt>(pub Message<T>, pub Message<T>);

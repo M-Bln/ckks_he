@@ -1,14 +1,14 @@
 use crate::algebra::arithmetic::RingMod;
 use crate::algebra::big_int::BigInt;
 use crate::algebra::complex::{Complex, C64};
-use crate::algebra::conversion_rounding::c64_to_ring_mod_256;
+
 use crate::algebra::cyclotomic_ring::CyclotomicRing;
-use crate::algebra::linear_algebra::{apply_matrix, identity_matrix, multiply_matrices};
+use crate::algebra::linear_algebra::{apply_matrix};
 use crate::algebra::polynomial::Polynomial;
 
-use bnum::types::I256;
-use std::f64::consts::PI;
-use std::ops::Mul;
+
+
+
 
 #[derive(Debug)]
 pub struct Encoder<T: BigInt> {
@@ -315,6 +315,7 @@ mod tests {
     use crate::algebra::arithmetic::RingMod;
     use crate::algebra::big_int::BigInt;
     use crate::algebra::complex::C64;
+    use crate::algebra::linear_algebra::{multiply_matrices, identity_matrix};
     use bnum::types::I256;
 
     // #[test]

@@ -70,9 +70,9 @@ impl<T: BigInt> PublicKey<T> {
     ) -> Self {
         // let standard_deviation = variance.sqrt();
         let dimension = 2_usize.pow(parameters.dimension_exponent);
-        let dimension_f = dimension as f64;
-        let hamming_f = parameters.hamming_weight as f64;
-        let mut rng = rand::thread_rng();
+        let _dimension_f = dimension as f64;
+        let _hamming_f = parameters.hamming_weight as f64;
+        let rng = rand::thread_rng();
         let gaussian = DiscreteGaussian::new(
             0.0,
             parameters.standard_deviation * parameters.standard_deviation,

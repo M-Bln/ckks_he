@@ -9,7 +9,7 @@ use crate::keys::server_key::ServerKey;
 use crate::random_distributions::{sample_n, DiscreteGaussian};
 use bnum::types::I1024;
 
-use bnum::types::I512;
+
 use rand::distributions::uniform::UniformSampler;
 
 #[derive(PartialEq, Clone, Copy, Debug)]
@@ -70,9 +70,9 @@ pub fn generate_pair_keys<T: BigInt>(
 pub fn generate_pair_keys_all_parameters<T: BigInt>(
     params: KeyGenerationParameters<T>,
 ) -> (ClientKey<T>, ServerKey<T>) {
-    let (mut public_key, mut evaluation_key, mut secret_key) = generate_keys_all_parameters(params);
-    let mut client_key = ClientKey::new(params, secret_key, public_key.clone());
-    let mut server_key = ServerKey::new(params, public_key, evaluation_key);
+    let (public_key, evaluation_key, secret_key) = generate_keys_all_parameters(params);
+    let client_key = ClientKey::new(params, secret_key, public_key.clone());
+    let server_key = ServerKey::new(params, public_key, evaluation_key);
     (client_key, server_key)
 }
 

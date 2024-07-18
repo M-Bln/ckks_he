@@ -1,12 +1,12 @@
 use crate::algebra::big_int::BigInt;
-use crate::algebra::complex::{Complex, C64};
+use crate::algebra::complex::{Complex};
 use crate::algebra::polynomial::Polynomial;
 use crate::ciphertext::Ciphertext;
 use crate::encoding::Encoder;
 use crate::keys::evaluation_key::{EvaluationKey, OperationError};
 use crate::keys::key_generator::KeyGenerationParameters;
 use crate::keys::public_key::PublicKey;
-use crate::keys::secret_key::SecretKey;
+
 
 /// Encapsulates the data necessary for the server side, including the public key, evaluation key, and an encoder.
 ///
@@ -76,7 +76,7 @@ impl<T: BigInt> ServerKey<T> {
         evaluation_key: EvaluationKey<T>,
     ) -> Self {
         assert!(parameters.dimension_exponent > 0);
-        let plaintext_dimension = 1 << (parameters.dimension_exponent - 1); // 2^(dimension_exponent-1)
+        let _plaintext_dimension = 1 << (parameters.dimension_exponent - 1); // 2^(dimension_exponent-1)
         let modulus = parameters.q.fast_exp(parameters.level_max) * &parameters.mul_scaling;
         let encoder = Encoder::new(
             parameters.dimension_exponent,

@@ -7,7 +7,7 @@ use ckks_he::keys::client_key::{calculate_relative_error, to_plaintext};
 use ckks_he::keys::key_generator::generate_pair_keys_default;
 use ckks_he::random_distributions::generate_random_vector;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use rand::Rng;
+
 
 const PLAINTEXT_BOUND: f64 = 4.0;
 const Q_EXPONENT: u32 = 30;
@@ -82,7 +82,7 @@ fn bench_encrypt_decrypt(c: &mut Criterion) {
         // Decrypt the ciphertext
         c.bench_function(&format!("decrypt_dim_{}", dimension_exponent), |b| {
             b.iter(|| {
-                let decrypted = client_key.decrypt(black_box(&ciphertext));
+                let _decrypted = client_key.decrypt(black_box(&ciphertext));
             })
         });
 
