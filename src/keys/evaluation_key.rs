@@ -8,8 +8,9 @@ use crate::ciphertext::{Ciphertext, Message, RawCiphertext};
 use crate::keys::key_generator::KeyGenerationParameters;
 use crate::keys::public_key::ComputationNoise;
 
+/// Key necessary to perform homomorphic multiplication of ciphertexts. Usually should
+/// not be used directly but rather through a `ServerKey`.
 #[derive(Clone, Debug)]
-/// Key necessary to perform homomorphic multiplication of ciphertexts
 pub struct EvaluationKey<T: BigInt> {
     pub parameters: KeyGenerationParameters<T>,
     pub noise: ComputationNoise,
@@ -29,6 +30,7 @@ impl<T: BigInt> EvaluationKey<T> {
         }
     }
 
+    /// Add two ciphertexts
     pub fn add(&self, ct1: &Ciphertext<T>, ct2: &Ciphertext<T>) -> Ciphertext<T> {
         let raw = ct1.raw.clone() + &ct2.raw;
         let level = std::cmp::min(ct1.level, ct2.level);
@@ -40,7 +42,7 @@ impl<T: BigInt> EvaluationKey<T> {
         Ciphertext::<T>::new(raw, level, upper_bound_message, upper_bound_error)
     }
 
-    /// Devide coefficients of the ciphertext by q^level_decrement, modify level accordingly
+    /// Devide coefficients of the ciphertext by q^level_decrement, modify level accordingly.
     pub fn rescale(
         &self,
         ct: &mut Ciphertext<T>,
@@ -58,7 +60,7 @@ impl<T: BigInt> EvaluationKey<T> {
         Ok(())
     }
 
-    /// Homomorphically multiply two ciphertext, then rescale and decreases the level by one
+    /// Homomorphically multiply two ciphertext, then rescale and decreases the level by one.
     pub fn mul(
         &self,
         ct1: &Ciphertext<T>,
@@ -69,7 +71,7 @@ impl<T: BigInt> EvaluationKey<T> {
         Ok(result)
     }
 
-    /// Homomorphically multiply two ciphertexts without rescaling the result
+    /// Homomorphically multiply two ciphertexts without rescaling the result.
     pub fn pure_mul(&self, ct1: &Ciphertext<T>, ct2: &Ciphertext<T>) -> Ciphertext<T> {
         let raw = self.raw_mul(&ct1.raw, &ct2.raw);
         let level = std::cmp::min(ct1.level, ct2.level);
@@ -85,6 +87,7 @@ impl<T: BigInt> EvaluationKey<T> {
         Ciphertext::<T>::new(raw, level, upper_bound_message, new_error)
     }
 
+    /// Homomorphically multiply two raw ciphertexts.
     pub fn raw_mul(&self, rct1: &RawCiphertext<T>, rct2: &RawCiphertext<T>) -> RawCiphertext<T> {
         let (d0, d1, d2) = (
             rct1.0.clone() * &rct2.0,
@@ -92,19 +95,11 @@ impl<T: BigInt> EvaluationKey<T> {
             rct1.1.clone() * &rct2.1,
         );
         let mut summand = self.raw_key.scalar_mul_keep_modulus(&d2);
-        // println!(
-        //     "summand modulus: {:?}",
-        //     summand.0.polynomial.ref_coefficients()[0].modulus
-        // );
         summand.rescale(self.parameters.mul_scaling);
-        // println!(
-        //     "rescaled summand modulus: {:?}",
-        //     summand.0.polynomial.ref_coefficients()[0].modulus
-        // );
         RawCiphertext(d0 + &summand.0, d1 + &summand.1)
     }
 
-    /// For swk an encryption of a private key s' under the private key s, key_switch transforms
+    /// For swk an encryption of a private key s' under the private key s, `key_switch` transforms
     /// a message m encrypted with s into the same message encrypted with s'.
     pub fn key_switch(&self, ct: &Ciphertext<T>, swk: &RawCiphertext<T>) -> Ciphertext<T> {
         let raw = self.key_switch_raw(&ct.raw, swk);
@@ -116,6 +111,7 @@ impl<T: BigInt> EvaluationKey<T> {
         Ciphertext::new(raw, ct.level, ct.upper_bound_message, upper_bound_error)
     }
 
+    /// Key switch for RawCiphertexts
     pub fn key_switch_raw(
         &self,
         rct: &RawCiphertext<T>,
@@ -130,7 +126,7 @@ impl<T: BigInt> EvaluationKey<T> {
         RawCiphertext(rct.0.clone() + &to_rescale.0, rct.1.clone() + &to_rescale.1)
     }
 
-    /// Devide coefficients of the ciphertext by factor. Beware, it does manage the level, it had to be modify beside
+    /// Devide coefficients of the ciphertext by factor. Beware, it does not manage the level, it had to be modify beside
     pub fn rescale_factor(&self, ct: &mut Ciphertext<T>, factor: T) {
         let modulus = ct.raw.0.polynomial.ref_coefficients()[0].modulus;
         assert!(factor % modulus == T::from(0));
@@ -157,21 +153,7 @@ impl<T: BigInt> EvaluationKey<T> {
         Ok(result)
     }
 
-    // pub fn apply_polynomial<'a, U>(&self, polynomial: &Polynomial<U>, ct: &Ciphertext<T>) -> Ciphertext<T>
-    // where
-    // 	U: Mul<&'a Message<T>, Output = Message<T>> + Clone,
-    // 	T: 'a,
-    // {
-    // 	let degree = polynomial.degree();
-    // 	if degree = -1 {
-    // 	    return self.trivial_encryption_scalar(T::from(0));
-    // 	}
-    // 	if degree = 0 {
-    // 	    return self.trivial_encryption_scalar()
-    // 	}
-    // 	let largest_power = largest_power_of_two_less_than();
-    // 	// Your implementation here
-    // }
+    /// Apply a polynomial (represented by the vector of its coefficients) homomorphically to a ciphertext
     pub fn apply_polynomial_coefficients(
         &self,
         polynomial_coefs: &[T],
@@ -193,7 +175,9 @@ impl<T: BigInt> EvaluationKey<T> {
         let powers = self.raise_to_powers_of_two(ct, largest_power as usize + 1)?;
         self.recursive_apply_polynomial(&polynomial_coefs[..degree as usize + 1], ct, &powers)
     }
-
+    
+    /// Apply a polynomial (represented by the vector of its coefficients) homomorphically to a ciphertext,
+    /// use a recursive divide an conquer algorithm to obtain a multiplicative depth of log(degree).
     pub fn recursive_apply_polynomial(
         &self,
         polynomial_coefs: &[T],
@@ -219,26 +203,7 @@ impl<T: BigInt> EvaluationKey<T> {
         Ok(self.add(&first_eval, &second_rescaled))
     }
 
-    // pub fn recursive_apply_polynomial(
-    //     &self,
-    //     polynomial_coefs: &[T],
-    //     ct: &Ciphertext<T>,
-    //     powers: &[Ciphertext<T>],
-    // ) -> Result<Ciphertext<T>, OperationError> {
-    //     if polynomial_coefs.len() <= 2 {
-    //         return self.apply_polynomial_coefficients(polynomial_coefs, ct);
-    //     }
-    //     let cut = 1 << powers.len();
-    //     let first_part = &polynomial_coefs[..cut];
-    //     let second_part = &polynomial_coefs[cut..];
-    //     let first_eval =
-    //         self.recursive_apply_polynomial(first_part, ct, &powers[..powers.len() - 1])?;
-    //     let second_eval =
-    //         self.recursive_apply_polynomial(second_part, ct, &powers[..powers.len() - 1])?;
-    //     let second_rescaled = self.mul(&second_eval, &powers[powers.len() - 1])?;
-    //     Ok(self.add(&first_eval, &second_rescaled))
-    // }
-
+    /// Apply a polynomial homomorphically to a ciphertext.
     pub fn apply_polynomial(
         &self,
         polynomial: &Polynomial<T>,
@@ -250,6 +215,7 @@ impl<T: BigInt> EvaluationKey<T> {
         // Your implementation here
     }
 
+    /// Encode a scalar as a message
     pub fn message_from_scalar(&self, scalar: T) -> Message<T> {
         let dimension = 1 << self.parameters.dimension_exponent;
         let mut coefficients = vec![scalar];
@@ -262,6 +228,7 @@ impl<T: BigInt> EvaluationKey<T> {
             .to_cyclotomic(self.parameters.dimension_exponent)
     }
 
+    /// Produce a trivial encryption of a message, in a trivial encryption the message is not hidden in any way.
     pub fn raw_trivial_encryption(&self, message: &Message<T>) -> RawCiphertext<T> {
         RawCiphertext(
             message.clone(),
@@ -270,6 +237,7 @@ impl<T: BigInt> EvaluationKey<T> {
         )
     }
 
+    /// Produce a trivial encryption of a message, in a trivial encryption the message is not hidden in any way.
     pub fn trivial_encryption_scalar(&self, scalar: T) -> Ciphertext<T> {
         let raw =
             self.raw_trivial_encryption(&self.message_from_scalar(scalar * self.parameters.q));
@@ -281,6 +249,8 @@ impl<T: BigInt> EvaluationKey<T> {
         }
     }
 
+    /// Produce a trivial encryption of a message, in a trivial encryption the message is not hidden in any way.
+    /// With this variant the usual rescal by a factor q is not performed.
     pub fn trivial_encryption_scalar_no_rescale(&self, scalar: T) -> Ciphertext<T> {
         let raw = self.raw_trivial_encryption(&self.message_from_scalar(scalar));
         Ciphertext::<T> {
@@ -292,6 +262,7 @@ impl<T: BigInt> EvaluationKey<T> {
     }
 }
 
+/// Returns h such that 2^h is the largest power of two strictly smaller than d
 pub fn largest_power_of_two_less_than(d: u32) -> u32 {
     assert!(d > 1, "call largest_power_of_two_less_than with d < 2");
     let mut power = 1;
@@ -327,13 +298,10 @@ mod tests {
             generate_keys(dimension_exponent, q.clone(), level_max);
 
         // Create sample messages
-        let mut message1_coefficients = vec![I256::from(1 << 30); 2_usize.pow(dimension_exponent)];
-        // let mut message1_coefficients = vec![I256::from(19*100*10000)];
-        // message1_coefficients.append(&mut vec![I256::from(0); 2_usize.pow(dimension_exponent)-1]);
+        let message1_coefficients = vec![I256::from(1 << 30); 2_usize.pow(dimension_exponent)];
 
-        let mut message2_coefficients = vec![I256::from(1 << 30); 2_usize.pow(dimension_exponent)];
-        // let mut message2_coefficients = vec![I256::from(19*100*10000)];
-        // message2_coefficients.append(&mut vec![I256::from(0); 2_usize.pow(dimension_exponent)-1]);
+
+        let message2_coefficients = vec![I256::from(1 << 30); 2_usize.pow(dimension_exponent)];
 
         let mut message1 = Polynomial::new(message1_coefficients)
             .modulo(q.clone().fast_exp(level_max))
@@ -351,8 +319,7 @@ mod tests {
         evaluation_key.rescale(&mut ciphertext2, 1).unwrap();
 
         // Multiply the ciphertexts
-        let mut pure_mul_ciphertext = evaluation_key.pure_mul(&ciphertext1, &ciphertext2);
-        //	evaluation_key.rescale(&mut pure_mul_ciphertext,1).unwrap();
+        let pure_mul_ciphertext = evaluation_key.pure_mul(&ciphertext1, &ciphertext2);
 
         // Decrypt the resulting ciphertext
         let decrypted_message = secret_key.decrypt(&pure_mul_ciphertext);
@@ -360,17 +327,8 @@ mod tests {
         // Create the expected result
         message1.rescale(q);
         message2.rescale(q);
-        // println!("message1: {:?}", message1);
-        // println!("message2: {:?}", message2);
         let mut expected_message = message1 * &message2;
-        // println!("expected message: {:?}", expected_message);
 
-        // println!(
-        //     "expected error: {:?}",
-        //     pure_mul_ciphertext.upper_bound_error
-        // );
-
-        // Verify that the decrypted message is close to the sum of the original messages
         for (expected, decrypted) in expected_message
             .polynomial
             .coefficients()
@@ -378,10 +336,6 @@ mod tests {
             .zip(decrypted_message.polynomial.coefficients().iter())
         {
             let diff = *expected - *decrypted;
-            println!(
-                "Expected: {:?}, Decrypted: {:?}, Difference: {:?}",
-                expected, decrypted, diff
-            );
             assert!(
                 diff.value < I256::from_float(pure_mul_ciphertext.upper_bound_error)
                     && diff.value > I256::from_float(-pure_mul_ciphertext.upper_bound_error),
@@ -431,7 +385,6 @@ mod tests {
             .modulo(q.clone().fast_exp(level_max))
             .to_cyclotomic(dimension_exponent);
 
-        // println!("expected error: {:?}", added_ciphertext.upper_bound_error);
         // Verify that the decrypted message is close to the sum of the original messages
         for (expected, decrypted) in expected_message
             .polynomial
@@ -465,7 +418,7 @@ mod tests {
             .to_cyclotomic(dimension_exponent);
 
         // Encrypt the messages
-        let upper_bound_message = (1 << 29) as f64; // Example value, adjust as needed
+        let upper_bound_message = (1 << 29) as f64; 
         let mut ciphertext = public_key.encrypt(&message, upper_bound_message);
 
         // Add the ciphertexts
@@ -481,7 +434,6 @@ mod tests {
             .modulo(q.clone().fast_exp(level_max - 1))
             .to_cyclotomic(dimension_exponent);
 
-        // println!("expected error: {:?}", ciphertext.upper_bound_error);
         // Verify that the decrypted message is close to the sum of the original messages
         for (expected, decrypted) in expected_message
             .polynomial

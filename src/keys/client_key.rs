@@ -213,10 +213,12 @@ pub fn multiply_plaintexts(plaintext1: &[C64], plaintext2: &[C64]) -> Plaintext 
         .collect()
 }
 
+/// Scalar multiplication of plaintexts.
 pub fn scalar_mul_plaintext(scalar: C64, plaintext: &[C64]) -> Plaintext {
     plaintext.iter().map(|&a| scalar * a).collect()
 }
 
+/// Coordinate wise addition of plaintexts.
 pub fn add_plaintexts(plaintext1: &[C64], plaintext2: &[C64]) -> Plaintext {
     assert_eq!(
         plaintext1.len(),
@@ -236,8 +238,8 @@ mod tests {
     use bnum::types::{I1024, I256, I512};
 
     use super::*;
-    use crate::algebra::big_int::{BigInt, ToFloat};
-    use crate::algebra::complex::{raise_to_powers_of_two, raise_to_powers_of_two_rescale, C64};
+    use crate::algebra::big_int::{ToFloat};
+    use crate::algebra::complex::{raise_to_powers_of_two, C64};
     use crate::algebra::polynomial::Polynomial;
     use crate::keys::key_generator::{generate_pair_keys, generate_pair_keys_default};
     use crate::random_distributions::generate_random_vector;
@@ -246,7 +248,6 @@ mod tests {
     fn test_encrypt_decrypt_plaintext() {
         // Define parameters for key generation
         let dimension_exponent = 4;
-        let q = I256::from(1 << 13);
         let level_max = 4;
 
         // Generate pair of keys
@@ -264,7 +265,6 @@ mod tests {
         let decrypted_plaintext = client_key.decrypt(&ciphertext);
 
         let error_max = ciphertext.upper_bound_error;
-        println!("upperbound error: {:?}", error_max);
         // Verify that the decrypted message is close to the original message
         for (original, decrypted) in message_plaintext.iter().zip(decrypted_plaintext.iter()) {
             let diff = (*original - decrypted).magnitude();
@@ -284,7 +284,7 @@ mod tests {
         let level_max = 4;
 
         // Generate pair of keys
-        let (mut client_key, mut server_key) =
+        let (mut client_key, server_key) =
             generate_pair_keys(dimension_exponent, q.clone(), level_max);
 
         // Create a sample message as a vector of f64
@@ -301,15 +301,13 @@ mod tests {
         // Encrypt the message
         let ct1 = client_key.encrypt(&message_plaintext1, 50000.0).unwrap();
         let ct2 = client_key.encrypt(&message_plaintext2, 50000.0).unwrap();
+	let result = server_key.add(&ct1, &ct2);
 
-        let result = server_key.add(&ct1, &ct2);
-        // Decrypt the message
+	// Decrypt the message
         let clear_result = client_key.decrypt(&result);
-
         let expected_result = add_plaintexts(&message_plaintext1, &message_plaintext2);
-
         let error_max = result.upper_bound_error;
-        println!("upperbound error: {:?}", error_max);
+	
         // Verify that the decrypted message is close to the original message
         for (expected, decrypted) in expected_result.iter().zip(clear_result.iter()) {
             let diff = (*expected - decrypted).magnitude();
@@ -325,11 +323,10 @@ mod tests {
     fn test_encrypt_pure_mul_decrypt_plaintext() {
         // Define parameters for key generation
         let dimension_exponent = 4;
-        //let q = I256::from(1 << 13);
         let level_max = 5;
 
         // Generate pair of keys
-        let (mut client_key, mut server_key) =
+        let (mut client_key, server_key) =
             generate_pair_keys_default::<I512>(dimension_exponent, level_max);
 
         // Create a sample message as a vector of f64
@@ -352,7 +349,6 @@ mod tests {
         let expected_result = multiply_plaintexts(&message_plaintext1, &message_plaintext2);
 
         let error_max = result.upper_bound_error;
-        println!("upperbound error: {:?}", error_max);
         // Verify that the decrypted message is close to the original message
         for (expected, decrypted) in expected_result.iter().zip(clear_result.iter()) {
             let diff = (*expected - decrypted).magnitude();
@@ -367,33 +363,21 @@ mod tests {
     #[test]
     fn test_encrypt_mul_decrypt_plaintext() {
         // Define parameters for key generation
-        let dimension_exponent = 5;
-        // let q = I256::from(1 << 14);
-        // let q_sqrt = (1 << 7) as f64;
-        // let q_inverse = 1.0 / (1 << 14) as f6
-        4;
+        let dimension_exponent = 4;
         let level_max = 4;
 
         // Generate pair of keys
-        let (mut client_key, mut server_key) =
+        let (mut client_key, server_key) =
             generate_pair_keys_default::<I512>(dimension_exponent, level_max);
 
         // Create a sample message as a vector of f64
         let message_real1 = vec![
-            60.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0, 60.0, 70.0, 50.0, 42.0, 45.0, 32.0,
-            42.0, 72.0,
-        ];
+            60.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0];
         let message_plaintext1 = to_plaintext(&message_real1);
-        // let message_plaintext1 =
-        //     scalar_mul_plaintext(C64::new(q_sqrt, 0.0), &to_plaintext(&message_real1));
 
         let message_real2 = vec![
-            60.0, 70.0, 50.0, 43.0, 45.0, 32.0, 42.0, 73.0, 60.0, 70.0, 50.0, 42.0, 45.0, 32.0,
-            42.0, 72.0,
-        ];
+            60.0, 70.0, 50.0, 43.0, 45.0, 32.0, 42.0, 73.0];
         let message_plaintext2 = to_plaintext(&message_real2);
-        // let message_plaintext2 =
-        //     scalar_mul_plaintext(C64::new(q_sqrt, 0.0), &to_plaintext(&message_real2));
 
         // Encrypt the message
         let ct1 = client_key.encrypt(&message_plaintext1, 73.0).unwrap();
@@ -404,13 +388,8 @@ mod tests {
         let clear_result = client_key.decrypt(&result);
 
         let expected_result = multiply_plaintexts(&message_plaintext1, &message_plaintext2);
-        // let expected_result = scalar_mul_plaintext(
-        //     C64::new(q_inverse, 0.0),
-        //     &multiply_plaintexts(&message_plaintext1, &message_plaintext2),
-        // );
-
         let error_max = client_key.rescaled_error(&result);
-        println!("upperbound error: {:?}", error_max);
+
         // Verify that the decrypted message is close to the original message
         for (expected, decrypted) in expected_result.iter().zip(clear_result.iter()) {
             let diff = (*expected - decrypted).magnitude();
@@ -425,40 +404,26 @@ mod tests {
     #[test]
     fn test_encrypt_add_decrypts() {
         // Define parameters for key generation
-        let dimension_exponent = 5;
-        // let q = I256::from(1 << 14);
-        // let q_sqrt = (1 << 7) as f64;
-        // let q_inverse = 1.0 / (1 << 14) as f6
-        4;
+        let dimension_exponent = 4;
         let level_max = 4;
 
         // Generate pair of keys
-        let (mut client_key, mut server_key) =
+        let (mut client_key, server_key) =
             generate_pair_keys_default::<I512>(dimension_exponent, level_max);
 
         // Create a sample message as a vector of f64
         let message_real1 = vec![
-            60.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0, 60.0, 70.0, 50.0, 42.0, 45.0, 32.0,
-            42.0, 72.0,
-        ];
+            60.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0];
         let message_plaintext1 = to_plaintext(&message_real1);
-        // let message_plaintext1 =
-        //     scalar_mul_plaintext(C64::new(q_sqrt, 0.0), &to_plaintext(&message_real1));
 
         let message_real2 = vec![
-            60.0, 70.0, 50.0, 43.0, 45.0, 32.0, 42.0, 73.0, 60.0, 70.0, 50.0, 42.0, 45.0, 32.0,
-            42.0, 72.0,
-        ];
+            60.0, 70.0, 50.0, 43.0, 45.0, 32.0, 42.0, 73.0];
         let message_plaintext2 = to_plaintext(&message_real2);
-        // let message_plaintext2 =
-        //     scalar_mul_plaintext(C64::new(q_sqrt, 0.0), &to_plaintext(&message_real2));
 
-        // Encrypt the message
         let ct1 = client_key.encrypt(&message_plaintext1, 73.0).unwrap();
         let ct2 = client_key.encrypt(&message_plaintext2, 73.0).unwrap();
 
         let result = server_key.add(&ct1, &ct2);
-        // Decrypt the message
         let clear_result = client_key.decrypt(&result);
 
         let expected_result: Vec<C64> = message_plaintext1
@@ -466,10 +431,6 @@ mod tests {
             .zip(message_plaintext2.iter())
             .map(|(c1, c2)| *c1 + *c2)
             .collect();
-        // let expected_result = scalar_mul_plaintext(
-        //     C64::new(q_inverse, 0.0),
-        //     &multiply_plaintexts(&message_plaintext1, &message_plaintext2),
-        // );
 
         let error_max = client_key.rescaled_error(&result);
         println!("upperbound error: {:?}", error_max);
@@ -489,20 +450,15 @@ mod tests {
     fn test_raise_to_powers_of_two() {
         // Define parameters for key generation
         let dimension_exponent = 5;
-        // let q = I256::from(1 << 14);
-        // let qf = (1 << 14) as f64;
-        // let q_sqrt = (1 << 7) as f64;
-        // let q_inverse = 1.0 / (1 << 14) as f64;
         let level_max = 6;
         let n = 4;
 
         // Generate pair of keys
-        let (mut client_key, mut server_key) =
+        let (mut client_key, server_key) =
             generate_pair_keys_default::<I1024>(dimension_exponent, level_max);
 
         let message_real = generate_random_vector(1 << (dimension_exponent - 1), -1.5, 1.5);
         let message_plaintext = to_plaintext(&message_real);
-        //            scalar_mul_plaintext(C64::new(q_sqrt, 0.0), &to_plaintext(&message_real));
         let expected_result: Vec<Vec<C64>> = message_plaintext
             .iter()
             .map(|c| raise_to_powers_of_two(*c, n))
@@ -527,18 +483,16 @@ mod tests {
 
     #[test]
     fn test_apply_polynomial() {
-        let dimension_exponent = 5;
+        let dimension_exponent = 4;
         let level_max = 5;
-        let n = 4;
 
         // Generate pair of keys
-        let (mut client_key, mut server_key) =
+        let (mut client_key, server_key) =
             generate_pair_keys_default::<I1024>(dimension_exponent, level_max);
 
         let message_real = generate_random_vector(1 << (dimension_exponent - 1), -500.0, 500.0);
 
         let message_plaintext = to_plaintext(&message_real);
-        //	let polynomial = Polynomial::<I256>::new(vec![I256::from(1), I256::from(2), I256::from(3), I256::from(4)]);
         let polynomial = Polynomial::<I1024>::new(vec![
             I1024::from(2),
             I1024::from(1),
@@ -546,20 +500,10 @@ mod tests {
             I1024::from(1),
         ]);
         let complex_polynomial = polynomial.to_c64();
-
-        // Create a sample message as a vector of f64
-        //let message_real = vec![1.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0];
-        // let message_real = vec![
-        //     1.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0, 60.0, 70.0, 50.0, 42.0, 45.0, 32.0,
-        //     42.0, 72.0,
-        // ];
-        // let message_plaintext =
-        //     scalar_mul_plaintext(C64::new(q_sqrt, 0.0), &to_plaintext(&message_real));
         let expected_result: Vec<C64> = message_plaintext
             .iter()
             .map(|c| {
                 complex_polynomial.eval(*c)
-                // + complex_polynomial.ref_coefficients()[0] * C64::new(1.0 - qf, 0.0)
             })
             .collect();
 
@@ -569,7 +513,6 @@ mod tests {
             .apply_polynomial(&polynomial, &ciphertext)
             .unwrap();
         let clear_result = client_key.decrypt(&result);
-        //        let clear_result: Vec<Plaintext> = result.iter().map(|c| client_key.decrypt(c)).collect();
         for i in 0..clear_result.len() {
             let expected = expected_result[i];
             let obtained = clear_result[i];
@@ -588,7 +531,7 @@ mod tests {
     fn test_trivial_encryption_scalar() {
         let dimension_exponent = 7;
         let level_max = 4;
-        let (mut client_key, mut server_key) =
+        let (mut client_key, server_key) =
             generate_pair_keys_default::<I512>(dimension_exponent, level_max);
 
         let scalar = I256::from(1234);
@@ -602,28 +545,6 @@ mod tests {
         for r in result {
             println!("result: {}", r);
             assert!((r - C64::new(1234.0, 0.0)).magnitude() < 1.0);
-
-            // // Define parameters for key generation
-
-            // let q = I256::from(1 << 14);
-            // let qf = (1 << 14) as f64;
-            // let q_sqrt = (1 << 7) as f64;
-            // let q_inverse = 1.0 / (1 << 14) as f64;
-            // let level_max = 4;
-            // let n = 3;
-
-            // // Generate pair of keys
-            // let (mut client_key, mut server_key) =
-            //     generate_pair_keys(dimension_exponent, q.clone(), level_max);
-            // let scalar = I256::from(1234);
-            // let scalar_f = scalar.to_float();
-            // let trivial_encryption = server_key.trivial_encryption_scalar(I256::from(1234));
-            // let result = client_key.decrypt(&trivial_encryption);
-            // println!("expected_error: {}", trivial_encryption.upper_bound_error);
-            // println!("expected_result: {}", scalar_f);
-            // for r in result {
-            //     println!("result: {}", r);
-            //     assert!((r - C64::new(1234.0, 0.0)).magnitude() < 1.0);
         }
     }
 }
