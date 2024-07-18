@@ -12,9 +12,10 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 const PLAINTEXT_BOUND: f64 = 4.0;
 const Q_EXPONENT: u32 = 30;
 const LEVEL_MAX: u32 = 5;
+const EXPONENT: u32 = 2;
 
 fn bench_encode(c: &mut Criterion) {
-    let dimension_exponents = vec![2];
+    let dimension_exponents = vec![EXPONENT];
     for &dimension_exponent in &dimension_exponents {
         let q = 1 << Q_EXPONENT;
         let modulus = I1024::from(q).fast_exp(LEVEL_MAX);
@@ -33,7 +34,7 @@ fn bench_encode(c: &mut Criterion) {
 }
 
 fn bench_decode(c: &mut Criterion) {
-    let dimension_exponents = vec![2];
+    let dimension_exponents = vec![EXPONENT];
     for &dimension_exponent in &dimension_exponents {
         let q = 1 << Q_EXPONENT;
         let modulus = I1024::from(q).fast_exp(LEVEL_MAX);
@@ -54,7 +55,7 @@ fn bench_decode(c: &mut Criterion) {
 }
 
 fn bench_encrypt_decrypt(c: &mut Criterion) {
-    let dimension_exponents = vec![2]; // Try smaller exponents first
+    let dimension_exponents = vec![EXPONENT]; // Try smaller exponents first
     for &dimension_exponent in &dimension_exponents {
         // Generate keys
         let (mut client_key, _server_key) =
@@ -96,7 +97,7 @@ fn bench_encrypt_decrypt(c: &mut Criterion) {
 }
 
 fn bench_encrypt_add_decrypt(c: &mut Criterion) {
-    let dimension_exponents = vec![2];
+    let dimension_exponents = vec![EXPONENT];
     for &dimension_exponent in &dimension_exponents {
         // Generate keys
         let (mut client_key, server_key) =
@@ -146,7 +147,7 @@ fn bench_encrypt_add_decrypt(c: &mut Criterion) {
 }
 
 fn bench_encrypt_mul_decrypt(c: &mut Criterion) {
-    let dimension_exponents = vec![2];
+    let dimension_exponents = vec![EXPONENT];
     for &dimension_exponent in &dimension_exponents {
         // Generate keys
         let (mut client_key, server_key) =
@@ -205,7 +206,7 @@ fn bench_encrypt_mul_decrypt(c: &mut Criterion) {
 }
 
 fn bench_apply_polynomial(c: &mut Criterion) {
-    let dimension_exponents = vec![2];
+    let dimension_exponents = vec![EXPONENT];
     for &dimension_exponent in &dimension_exponents {
         // Generate keys
         let (mut client_key, server_key) =
