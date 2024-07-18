@@ -1,10 +1,8 @@
 use crate::algebra::big_int::{BigInt, Zero};
-use crate::algebra::complex::{Complex};
+use crate::algebra::complex::Complex;
 
 use std::cmp::{Eq, PartialEq};
 use std::ops::{Add, Mul, Sub};
-
-
 
 /// A structure representing an element in the ring Z/modulus Z
 ///

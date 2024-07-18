@@ -70,3 +70,6 @@ To bench various exponent at once modify the vector
 let dimension_exponents = vec![EXPONENT];	
 ```
 in each bench. Notice than with `dimension_exponent = 13` the bench taked roughly half an hour.
+
+## Build and browse documentation
+Build the documentation with `cargo doc --no-deps`. Browse it by opening the resulting `/target/doc/ckks_he/index.html` in a web browser.

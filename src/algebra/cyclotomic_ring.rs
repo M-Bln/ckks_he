@@ -1,12 +1,10 @@
 use crate::algebra::arithmetic::{Rescale, RingMod};
 use crate::algebra::big_int::{BigInt, Zero};
-use crate::algebra::complex::{Complex};
+use crate::algebra::complex::Complex;
 use crate::algebra::polynomial::{Polynomial, ScalarMul};
 use std::ops::{Add, Mul, Sub};
 
-
-
-/// Represents element in the ring T[X]/(1+X^dimension)
+/// Represents element in the ring T\[X\]/(1+X^dimension)
 #[derive(Clone, Debug, PartialEq)]
 pub struct CyclotomicRing<T> {
     pub polynomial: Polynomial<T>,

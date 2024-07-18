@@ -8,7 +8,6 @@ use ckks_he::keys::key_generator::generate_pair_keys_default;
 use ckks_he::random_distributions::generate_random_vector;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
-
 const PLAINTEXT_BOUND: f64 = 4.0;
 const Q_EXPONENT: u32 = 30;
 const LEVEL_MAX: u32 = 5;

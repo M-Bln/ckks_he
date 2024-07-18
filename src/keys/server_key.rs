@@ -1,12 +1,11 @@
 use crate::algebra::big_int::BigInt;
-use crate::algebra::complex::{Complex};
+use crate::algebra::complex::Complex;
 use crate::algebra::polynomial::Polynomial;
 use crate::ciphertext::Ciphertext;
 use crate::encoding::Encoder;
 use crate::keys::evaluation_key::{EvaluationKey, OperationError};
 use crate::keys::key_generator::KeyGenerationParameters;
 use crate::keys::public_key::PublicKey;
-
 
 /// Encapsulates the data necessary for the server side, including the public key, evaluation key, and an encoder.
 ///

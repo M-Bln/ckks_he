@@ -1,8 +1,8 @@
 use std::ops::Mul;
 
-use crate::algebra::arithmetic::{Rescale};
+use crate::algebra::arithmetic::Rescale;
 use crate::algebra::big_int::{BigInt, Zero};
-use crate::algebra::complex::{Complex};
+use crate::algebra::complex::Complex;
 use crate::algebra::polynomial::{degree_from_coefs, Polynomial, ScalarMul};
 use crate::ciphertext::{Ciphertext, Message, RawCiphertext};
 use crate::keys::key_generator::KeyGenerationParameters;
@@ -175,7 +175,7 @@ impl<T: BigInt> EvaluationKey<T> {
         let powers = self.raise_to_powers_of_two(ct, largest_power as usize + 1)?;
         self.recursive_apply_polynomial(&polynomial_coefs[..degree as usize + 1], ct, &powers)
     }
-    
+
     /// Apply a polynomial (represented by the vector of its coefficients) homomorphically to a ciphertext,
     /// use a recursive divide an conquer algorithm to obtain a multiplicative depth of log(degree).
     pub fn recursive_apply_polynomial(
@@ -300,7 +300,6 @@ mod tests {
         // Create sample messages
         let message1_coefficients = vec![I256::from(1 << 30); 2_usize.pow(dimension_exponent)];
 
-
         let message2_coefficients = vec![I256::from(1 << 30); 2_usize.pow(dimension_exponent)];
 
         let mut message1 = Polynomial::new(message1_coefficients)
@@ -418,7 +417,7 @@ mod tests {
             .to_cyclotomic(dimension_exponent);
 
         // Encrypt the messages
-        let upper_bound_message = (1 << 29) as f64; 
+        let upper_bound_message = (1 << 29) as f64;
         let mut ciphertext = public_key.encrypt(&message, upper_bound_message);
 
         // Add the ciphertexts

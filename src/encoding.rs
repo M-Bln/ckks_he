@@ -3,17 +3,13 @@ use crate::algebra::big_int::BigInt;
 use crate::algebra::complex::{Complex, C64};
 
 use crate::algebra::cyclotomic_ring::CyclotomicRing;
-use crate::algebra::linear_algebra::{apply_matrix};
+use crate::algebra::linear_algebra::apply_matrix;
 use crate::algebra::polynomial::Polynomial;
-
-
-
-
 
 #[derive(Debug)]
 pub struct Encoder<T: BigInt> {
     dimension_exponent: u32, // h such that  M = 2^h is the degree of the cyclotomic polynomial
-    modulus: T, // The space of ciphertexts is Z/(modulus Z) [X] / (1 + X ^(2^(dimension_exponent)))
+    modulus: T, // The space of ciphertexts is Z/(modulus Z) \[X\] / (1 + X ^(2^(dimension_exponent)))
     pub scaling_factor: f64, // The scaling factor used before encryption
     sigma_inverse_matrix: Vec<Vec<C64>>, // Matrix to compute canonical embedding
     sigma_matrix: Vec<Vec<C64>>, // Matrix of sigma, the inverse of the canonical embedding
@@ -119,10 +115,10 @@ impl<T: BigInt> Encoder<T> {
 
 /// Encoder with functions encode to go from plaintext to ciphertext ring and decode from ciphertext ring to plaintext.
 /// The dimension of the ciphertext ring is 2^h with h = dimension_exponent. The ciphertext ring is a cyclotomic ring
-/// $Z/qZ [X] / (1 + X^{2^h})$. Here q = modulus. The space of plaintext is a complex vector space of dimension 2^{h-1}.
+/// $Z/qZ \[X\] / (1 + X^{2^h})$. Here q = modulus. The space of plaintext is a complex vector space of dimension 2^{h-1}.
 impl<T: BigInt> Encoder<T> {
-    /// Generate an encoder for the space of ciphertexts $\ZZ/(modulus \ZZ) [X] / (1 + X ^{2^{dimension_exponent}})$
-    /// Decoding $decode: \ZZ/(modulus \ZZ) [X] / (1 + X ^{2^{dimension_exponent}}) \to \CC^{2^{dimension_exponent-1}}$
+    /// Generate an encoder for the space of ciphertexts $\ZZ/(modulus \ZZ) \[X\] / (1 + X ^{2^{dimension_exponent}})$
+    /// Decoding $decode: \ZZ/(modulus \ZZ) \[X\] / (1 + X ^{2^{dimension_exponent}}) \to \CC^{2^{dimension_exponent-1}}$
     /// is the composition $decode = \pi\inv \circ \sigma\inv$ with $\sigma$ the canonical embedding. In the encoder
     /// $\sigma$ and $\sigma\inv$ are stored as matrices of roots of unity.
     // TODO use FFT rather than matrices (no emergency, probably not the bottleneck)
@@ -315,7 +311,7 @@ mod tests {
     use crate::algebra::arithmetic::RingMod;
     use crate::algebra::big_int::BigInt;
     use crate::algebra::complex::C64;
-    use crate::algebra::linear_algebra::{multiply_matrices, identity_matrix};
+    use crate::algebra::linear_algebra::{identity_matrix, multiply_matrices};
     use bnum::types::I256;
 
     // #[test]

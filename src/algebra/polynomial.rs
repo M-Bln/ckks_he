@@ -1,7 +1,6 @@
 use crate::algebra::arithmetic::{Rescale, RingMod};
 use crate::algebra::big_int::{BigInt, Zero};
-use crate::algebra::complex::{Complex};
-
+use crate::algebra::complex::Complex;
 
 use std::ops::{Add, Mul, Sub};
 

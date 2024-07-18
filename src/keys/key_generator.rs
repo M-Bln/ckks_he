@@ -9,16 +9,13 @@ use crate::keys::server_key::ServerKey;
 use crate::random_distributions::{sample_n, DiscreteGaussian};
 use bnum::types::I1024;
 
-
 use rand::distributions::uniform::UniformSampler;
-
-
 
 /// Parameters used for key generation in the homomorphic encryption scheme.
 ///
 /// The `KeyGenerationParameters` struct holds various parameters necessary for generating keys
 /// for the encryption scheme, including the dimensions of the cyclotomic space, modulus values,
-/// and parameters for noise distribution. 
+/// and parameters for noise distribution.
 ///
 /// # Fields
 ///
@@ -56,8 +53,6 @@ pub struct KeyGenerationParameters<T: BigInt> {
     /// The standard deviation of the Gaussian distribution used in the learning with errors problem.
     pub standard_deviation: f64,
 }
-
-
 
 /// Generate a pair (client_key, server_key) with no security but fast computation.
 ///

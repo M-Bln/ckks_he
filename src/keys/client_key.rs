@@ -238,7 +238,7 @@ mod tests {
     use bnum::types::{I1024, I256, I512};
 
     use super::*;
-    use crate::algebra::big_int::{ToFloat};
+    use crate::algebra::big_int::ToFloat;
     use crate::algebra::complex::{raise_to_powers_of_two, C64};
     use crate::algebra::polynomial::Polynomial;
     use crate::keys::key_generator::{generate_pair_keys, generate_pair_keys_default};
@@ -301,13 +301,13 @@ mod tests {
         // Encrypt the message
         let ct1 = client_key.encrypt(&message_plaintext1, 50000.0).unwrap();
         let ct2 = client_key.encrypt(&message_plaintext2, 50000.0).unwrap();
-	let result = server_key.add(&ct1, &ct2);
+        let result = server_key.add(&ct1, &ct2);
 
-	// Decrypt the message
+        // Decrypt the message
         let clear_result = client_key.decrypt(&result);
         let expected_result = add_plaintexts(&message_plaintext1, &message_plaintext2);
         let error_max = result.upper_bound_error;
-	
+
         // Verify that the decrypted message is close to the original message
         for (expected, decrypted) in expected_result.iter().zip(clear_result.iter()) {
             let diff = (*expected - decrypted).magnitude();
@@ -371,12 +371,10 @@ mod tests {
             generate_pair_keys_default::<I512>(dimension_exponent, level_max);
 
         // Create a sample message as a vector of f64
-        let message_real1 = vec![
-            60.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0];
+        let message_real1 = vec![60.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0];
         let message_plaintext1 = to_plaintext(&message_real1);
 
-        let message_real2 = vec![
-            60.0, 70.0, 50.0, 43.0, 45.0, 32.0, 42.0, 73.0];
+        let message_real2 = vec![60.0, 70.0, 50.0, 43.0, 45.0, 32.0, 42.0, 73.0];
         let message_plaintext2 = to_plaintext(&message_real2);
 
         // Encrypt the message
@@ -412,12 +410,10 @@ mod tests {
             generate_pair_keys_default::<I512>(dimension_exponent, level_max);
 
         // Create a sample message as a vector of f64
-        let message_real1 = vec![
-            60.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0];
+        let message_real1 = vec![60.0, 70.0, 50.0, 42.0, 45.0, 32.0, 42.0, 72.0];
         let message_plaintext1 = to_plaintext(&message_real1);
 
-        let message_real2 = vec![
-            60.0, 70.0, 50.0, 43.0, 45.0, 32.0, 42.0, 73.0];
+        let message_real2 = vec![60.0, 70.0, 50.0, 43.0, 45.0, 32.0, 42.0, 73.0];
         let message_plaintext2 = to_plaintext(&message_real2);
 
         let ct1 = client_key.encrypt(&message_plaintext1, 73.0).unwrap();
@@ -502,9 +498,7 @@ mod tests {
         let complex_polynomial = polynomial.to_c64();
         let expected_result: Vec<C64> = message_plaintext
             .iter()
-            .map(|c| {
-                complex_polynomial.eval(*c)
-            })
+            .map(|c| complex_polynomial.eval(*c))
             .collect();
 
         let ciphertext = client_key.encrypt(&message_plaintext, 500.0).unwrap();
