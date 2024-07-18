@@ -32,7 +32,7 @@ Run with `cargo run`.
 ## Advanced features
 ### Customed parameters
 For a dimension exponent $h$ the dimension of the space of ciphertext is $2^h$ and the dimension of the space of plaintext is $2^{h-1}$.
-For a level max $L$, the initial encryption of a plaintext is a polynomial with coefficients in  $\mathbb{Z}/q^level_max\mathbb{Z}$.
+For a level max $L$, the initial encryption of a plaintext is a polynomial with coefficients in  $\mathbb{Z}/q^{L}\mathbb{Z}$.
 The higher the dimension the higher the security but the slowest the computation. Specify the dimension of the space of ciphertext and the maximum level of ciphertext with
 ```
 let level_max = 5;
@@ -44,10 +44,10 @@ The CKKS scheme allows for the homomorphic evaluation of polynomials on encrypte
 ```rust
 // Polynomial for evaluation (2 + X + X^2 + X^3)
 let polynomial = Polynomial::<I1024>::new(vec![
-I1024::from(2),
-I1024::from(1),
-I1024::from(2),
-I1024::from(1),
+    I1024::from(2),
+    I1024::from(1),
+    I1024::from(2),
+    I1024::from(1),
 ]);
 
 // Apply the polynomial to the ciphertext
