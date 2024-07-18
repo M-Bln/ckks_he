@@ -1,6 +1,5 @@
 use crate::algebra::arithmetic::Rescale;
-use crate::algebra::big_int::{BigInt, Zero};
-use crate::algebra::complex::Complex;
+use crate::algebra::big_int::BigInt;
 use crate::algebra::polynomial::{degree_from_coefs, Polynomial, ScalarMul};
 use crate::ciphertext::{Ciphertext, Message, RawCiphertext};
 use crate::keys::key_generator::KeyGenerationParameters;
@@ -99,6 +98,7 @@ impl<T: BigInt> EvaluationKey<T> {
 
     /// For swk an encryption of a private key s' under the private key s, `key_switch` transforms
     /// a message m encrypted with s into the same message encrypted with s'.
+    #[allow(dead_code)]
     pub fn key_switch(&self, ct: &Ciphertext<T>, swk: &RawCiphertext<T>) -> Ciphertext<T> {
         let raw = self.key_switch_raw(&ct.raw, swk);
         let q_f = self.parameters.q.to_float();

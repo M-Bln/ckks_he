@@ -1,6 +1,6 @@
 use bnum::types::I1024;
 use ckks_he::algebra::big_int::BigInt;
-use ckks_he::algebra::complex::{Complex, C64};
+use ckks_he::algebra::complex::C64;
 use ckks_he::algebra::polynomial::Polynomial;
 use ckks_he::encoding::Encoder;
 use ckks_he::keys::client_key::{calculate_relative_error, to_plaintext};

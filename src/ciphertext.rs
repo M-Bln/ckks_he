@@ -77,14 +77,15 @@ impl<T: BigInt> Rescale<T> for RawCiphertext<T> {
 }
 
 impl<T: BigInt> RawCiphertext<T> {
-    pub fn mul(&self, other: &RawCiphertext<T>, evk: &RawCiphertext<T>, P: T) -> RawCiphertext<T> {
+    #[allow(dead_code)]
+    pub fn mul(&self, other: &RawCiphertext<T>, evk: &RawCiphertext<T>, p: T) -> RawCiphertext<T> {
         let (d_0, d_1, d_2) = (
             self.0.clone() * &other.0,
             self.0.clone() * &other.1 + &(self.1.clone() * &other.0),
             self.1.clone() * &other.1,
         );
         let mut summand = d_2 * evk;
-        summand.rescale(P);
+        summand.rescale(p);
         RawCiphertext(d_0, d_1) + &summand
     }
 }

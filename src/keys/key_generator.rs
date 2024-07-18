@@ -9,7 +9,6 @@ use crate::keys::server_key::ServerKey;
 use crate::random_distributions::{sample_n, DiscreteGaussian};
 use bnum::types::I1024;
 
-
 /// Parameters used for key generation in the homomorphic encryption scheme.
 ///
 /// The `KeyGenerationParameters` struct holds various parameters necessary for generating keys
@@ -78,6 +77,7 @@ pub fn generate_pair_keys_default<T: BigInt>(
 
 /// Generate a pair (client_key, server_key) picking default values except for
 /// dimension exponent, base modulus q, and level_max.
+#[allow(dead_code)]
 pub fn generate_pair_keys<T: BigInt>(
     dimension_exponent: u32,
     q: T,
@@ -132,6 +132,7 @@ pub fn generate_most_parameters<T: BigInt>(
     }
 }
 
+#[allow(dead_code)]
 pub fn generate_keys<T: BigInt>(
     dimension_exponent: u32,
     q: T,

@@ -17,7 +17,6 @@ pub struct PublicKey<T: BigInt> {
     pub raw_key: RawCiphertext<T>,
     pub parameters: KeyGenerationParameters<T>,
     pub noise: ComputationNoise,
-    rng: rand::rngs::ThreadRng,
     gaussian: DiscreteGaussian,
     zod: ZODistribution,
 }
@@ -50,9 +49,9 @@ impl ComputationNoise {
             inv_mul_scaling,
         }
     }
-    pub fn mul_noise<T: BigInt>(&self, level: T) -> f64 {
-        self.inv_mul_scaling * self.key_switch_noise * level.to_float() + self.rescaling_noise
-    }
+    // pub fn mul_noise<T: BigInt>(&self, level: T) -> f64 {
+    //     self.inv_mul_scaling * self.key_switch_noise * level.to_float() + self.rescaling_noise
+    // }
 }
 
 impl<T: BigInt> PublicKey<T> {
@@ -72,7 +71,6 @@ impl<T: BigInt> PublicKey<T> {
         let dimension = 2_usize.pow(parameters.dimension_exponent);
         let _dimension_f = dimension as f64;
         let _hamming_f = parameters.hamming_weight as f64;
-        let rng = rand::thread_rng();
         let gaussian = DiscreteGaussian::new(
             0.0,
             parameters.standard_deviation * parameters.standard_deviation,
@@ -90,7 +88,6 @@ impl<T: BigInt> PublicKey<T> {
             parameters,
             raw_key,
             noise,
-            rng,
             gaussian,
             zod,
         }

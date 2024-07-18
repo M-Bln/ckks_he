@@ -61,19 +61,21 @@ pub fn f64_to_i1024(n: f64) -> I1024 {
 
 /// Convert the integer coefficients into complex coefficients
 impl RingMod<I256> {
+    #[allow(dead_code)]
     pub fn to_c64(&self) -> C64 {
         let real = i256_to_f64(self.value.clone());
         C64::new(real, 0.0)
     }
 }
 
-/// Round the real part
-pub fn c64_to_ring_mod_256(complex: &C64, modulus: I256) -> RingMod<I256> {
-    RingMod::new(f64_to_i256(complex.real()), modulus)
-}
+// /// Round the real part
+// pub fn c64_to_ring_mod_256(complex: &C64, modulus: I256) -> RingMod<I256> {
+//     RingMod::new(f64_to_i256(complex.real()), modulus)
+// }
 
 /// Round the real part of the complex coefficients
 impl CyclotomicRing<RingMod<I256>> {
+    #[allow(dead_code)]
     pub fn to_c64(&self) -> Polynomial<C64> {
         let coefficients = self
             .polynomial
@@ -140,27 +142,27 @@ impl Polynomial<C64> {
     }
 }
 
-impl Polynomial<C64> {
-    pub fn to_i256(&self) -> Polynomial<I256> {
-        let coefficients = self
-            .ref_coefficients()
-            .iter()
-            .map(|coeff| f64_to_i256(coeff.real()))
-            .collect();
-        Polynomial::new(coefficients)
-    }
-}
+// impl Polynomial<C64> {
+//     pub fn to_i256(&self) -> Polynomial<I256> {
+//         let coefficients = self
+//             .ref_coefficients()
+//             .iter()
+//             .map(|coeff| f64_to_i256(coeff.real()))
+//             .collect();
+//         Polynomial::new(coefficients)
+//     }
+// }
 
-impl Polynomial<RingMod<I256>> {
-    pub fn to_c64(&self) -> Polynomial<C64> {
-        let coefficients = self
-            .ref_coefficients()
-            .iter()
-            .map(|coeff| coeff.to_c64())
-            .collect();
-        Polynomial::new(coefficients)
-    }
-}
+// impl Polynomial<RingMod<I256>> {
+//     pub fn to_c64(&self) -> Polynomial<C64> {
+//         let coefficients = self
+//             .ref_coefficients()
+//             .iter()
+//             .map(|coeff| coeff.to_c64())
+//             .collect();
+//         Polynomial::new(coefficients)
+//     }
+// }
 
 #[cfg(test)]
 mod tests {

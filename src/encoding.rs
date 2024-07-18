@@ -249,11 +249,6 @@ fn even_index_elements<T: Clone>(vec: &[T]) -> Vec<T> {
         .collect()
 }
 
-fn approx_eq(a: f64, b: f64, tol: f64) -> bool {
-    (a - b).abs() < tol
-}
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -263,6 +258,9 @@ mod tests {
     use crate::algebra::linear_algebra::{identity_matrix, multiply_matrices};
     use bnum::types::I256;
 
+    fn approx_eq(a: f64, b: f64, tol: f64) -> bool {
+        (a - b).abs() <= tol
+    }
     #[test]
     fn test_real_coeff() {
         let dimension_exponent = 4;

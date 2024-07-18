@@ -146,11 +146,13 @@ impl<T: BigInt> ClientKey<T> {
     }
 
     /// Returns an upper bound of the error expected after decryption.
+    #[allow(dead_code)]
     pub fn rescaled_error(&self, ct: &Ciphertext<T>) -> f64 {
         ct.upper_bound_error / self.encoder.scaling_factor
     }
 
     /// Returns an upper bound of the message expected after decryption.
+    #[allow(dead_code)]
     pub fn rescaled_upperbound_message(&self, ct: &Ciphertext<T>) -> f64 {
         ct.upper_bound_message / self.encoder.scaling_factor
     }
@@ -180,6 +182,7 @@ pub fn calculate_relative_error(original: &[C64], decrypted: &[C64]) -> f64 {
 }
 
 /// Calculate error between two plaintexts.
+#[allow(dead_code)]
 pub fn calculate_error(original: &[C64], decrypted: &[C64]) -> f64 {
     original
         .iter()
@@ -199,6 +202,7 @@ pub fn to_plaintext(real: &[f64]) -> Vec<C64> {
 }
 
 /// Multiplication of plaintexts (coordinate wise)
+#[allow(dead_code)]
 pub fn multiply_plaintexts(plaintext1: &[C64], plaintext2: &[C64]) -> Plaintext {
     assert_eq!(
         plaintext1.len(),
@@ -213,12 +217,8 @@ pub fn multiply_plaintexts(plaintext1: &[C64], plaintext2: &[C64]) -> Plaintext 
         .collect()
 }
 
-/// Scalar multiplication of plaintexts.
-pub fn scalar_mul_plaintext(scalar: C64, plaintext: &[C64]) -> Plaintext {
-    plaintext.iter().map(|&a| scalar * a).collect()
-}
-
 /// Coordinate wise addition of plaintexts.
+#[allow(dead_code)]
 pub fn add_plaintexts(plaintext1: &[C64], plaintext2: &[C64]) -> Plaintext {
     assert_eq!(
         plaintext1.len(),
@@ -239,7 +239,7 @@ mod tests {
 
     use super::*;
     use crate::algebra::big_int::ToFloat;
-    use crate::algebra::complex::{raise_to_powers_of_two, C64};
+    use crate::algebra::complex::C64;
     use crate::algebra::polynomial::Polynomial;
     use crate::keys::key_generator::{generate_pair_keys, generate_pair_keys_default};
     use crate::random_distributions::generate_random_vector;
@@ -540,5 +540,13 @@ mod tests {
             println!("result: {}", r);
             assert!((r - C64::new(1234.0, 0.0)).magnitude() < 1.0);
         }
+    }
+
+    pub fn raise_to_powers_of_two(z: C64, n: usize) -> Vec<C64> {
+        let mut result: Vec<C64> = vec![z];
+        for i in 0..n {
+            result.push(result[i] * result[i]);
+        }
+        result
     }
 }

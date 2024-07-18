@@ -49,6 +49,7 @@ pub fn sample_n<T: UniformSampler, R: Rng>(sampler: T, n: usize, rng: &mut R) ->
     result
 }
 
+#[allow(dead_code)]
 pub fn generate_random_vector(length: usize, min: f64, max: f64) -> Vec<f64> {
     let mut rng = rand::thread_rng();
     (0..length).map(|_| rng.gen_range(min..max)).collect()
@@ -73,8 +74,6 @@ pub fn generate_random_vector(length: usize, min: f64, max: f64) -> Vec<f64> {
 
 #[derive(Clone, Debug)]
 pub struct DiscreteGaussian {
-    mean: f64,
-    standard_deviation: f64,
     normal: Normal<f64>,
     rng: ThreadRng,
 }
@@ -84,12 +83,7 @@ impl DiscreteGaussian {
     pub fn new(mean: f64, standard_deviation: f64) -> Self {
         let normal = Normal::new(mean, standard_deviation).unwrap();
         let rng = rand::thread_rng();
-        DiscreteGaussian {
-            mean,
-            standard_deviation,
-            normal,
-            rng,
-        }
+        DiscreteGaussian { normal, rng }
     }
 
     /// Generates a random integer according to the discrete Gaussian distribution.

@@ -60,10 +60,12 @@ where
         result
     }
 
+    #[allow(dead_code)]
     pub fn degree(&self) -> i64 {
         degree_from_coefs(self.ref_coefficients())
     }
 
+    #[allow(dead_code)]
     pub fn degree_truncate(&mut self) -> i64 {
         let degree = degree_from_coefs(self.ref_coefficients());
         self.mut_coefficients().truncate((degree + 1) as usize);
@@ -677,14 +679,14 @@ mod tests {
 
         let mut poly2 = Polynomial::new(vec![0, 0, 0, 0]);
         poly2.degree_truncate();
-        assert_eq!(poly2.ref_coefficients(), &[]);
+        assert_eq!(poly2.ref_coefficients(), &[] as &[i64]);
         assert_eq!(poly2.degree(), -1, "Degree should be -1");
 
         let mut poly4: Polynomial<i64> = Polynomial::new(vec![]);
         poly4.degree_truncate();
         assert_eq!(
             poly4.ref_coefficients(),
-            &[],
+            &[] as &[i64],
             "Empty polynomial should remain empty"
         );
         assert_eq!(

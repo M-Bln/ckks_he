@@ -58,16 +58,19 @@ impl<T: BigInt> RingMod<T> {
     }
 
     // Getter for the value
+    #[allow(dead_code)]
     pub fn value(&self) -> T {
         self.value
     }
 
     // Getter for the modulus
+    #[allow(dead_code)]
     pub fn modulus(&self) -> T {
         self.modulus
     }
 
     // Fast exponentiation
+    #[allow(dead_code)]
     pub fn pow(&self, n: u64) -> Self {
         let mut base = *self;
         let mut exp = n;

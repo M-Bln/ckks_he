@@ -1,5 +1,4 @@
 use crate::algebra::big_int::BigInt;
-use crate::algebra::complex::Complex;
 use crate::algebra::polynomial::Polynomial;
 use crate::ciphertext::Ciphertext;
 use crate::encoding::Encoder;
@@ -90,6 +89,7 @@ impl<T: BigInt> ServerKey<T> {
     }
 
     /// Returns an upper bound of the error expected after decryption.
+    #[allow(dead_code)]
     pub fn rescaled_error(&self, ct: &Ciphertext<T>) -> f64 {
         ct.upper_bound_error / self.encoder.scaling_factor
     }
@@ -163,6 +163,7 @@ impl<T: BigInt> ServerKey<T> {
     /// let error = calculate_error(&expected, &decrypted);
     /// assert!(error < client_key.rescaled_error(&result), "Error larger than expected");
     /// ```
+    #[allow(dead_code)]
         add(ct1: &Ciphertext<T>, ct2: &Ciphertext<T>) -> Ciphertext<T>,
 
         /// Rescales the ciphertext by the given level decrement.
@@ -175,6 +176,7 @@ impl<T: BigInt> ServerKey<T> {
         /// # Returns
         ///
         /// A result indicating success or failure.
+    #[allow(dead_code)]
         rescale(ct: &mut Ciphertext<T>, level_decrement: u32) -> Result<(), OperationError>,
 
     /// Homomorphically multiplies two ciphertexts.
