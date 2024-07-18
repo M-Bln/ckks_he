@@ -55,23 +55,6 @@ pub fn generate_random_vector(length: usize, min: f64, max: f64) -> Vec<f64> {
     (0..length).map(|_| rng.gen_range(min..max)).collect()
 }
 
-// impl UniformSampler for Sampler<I256> {
-//     type Item = I256;
-//     fn sample(&mut self, min: I256, max: I256) -> I256 {
-
-//     }
-// }
-
-// impl<T> UniformSampler<T>
-// where
-//     T: PartialOrd + Copy,
-// {
-//     pub fn sample(&mut self, min: T, max: T) -> T {
-//         let distribution = Uniform::new_inclusive(min, max);
-//         distribution.sample(&mut self.rng)
-//     }
-// }
-
 #[derive(Clone, Debug)]
 pub struct DiscreteGaussian {
     normal: Normal<f64>,
@@ -164,49 +147,6 @@ impl HWTDistribution {
         vec
     }
 }
-
-// pub struct HWTDistribution {
-//     weight: usize,
-//     rng: ThreadRng,
-// }
-
-// impl HWTDistribution {
-//     pub fn new(weight: usize) -> Self {
-// 	let rng = rand::thread_rng();
-// 	HWTDistribution{
-// 	    weight, rng,
-// 	}
-//     }
-
-//     pub fn sample<T: BigInt>(&mut self) -> T {
-// 	if self.rng.gen() {
-// 	    T::from(1 as i64)
-// 	} else {
-// 	    T::from(-1 as i64)
-// 	}
-//     }
-
-//     pub fn sample_n<T: BigInt>(&mut self, n: usize) -> Vec<T> {
-// 	assert!(n >= weight)
-//     }
-// }
-
-// /// Generates a random f64 number according to a Gaussian distribution with given mean and variance.
-// pub fn random_gaussian(mean: f64, variance: f64) -> f64 {
-//     let std_dev = variance.sqrt();
-//     let normal = Normal::new(mean, std_dev).unwrap();
-//     let mut rng = rand::thread_rng();
-//     normal.sample(&mut rng)
-// }
-
-// /// Generates a random integer according to a Gaussian distribution with given mean and variance.
-// pub fn random_gaussian_integer(mean: f64, variance: f64) -> i64 {
-//     let std_dev = variance.sqrt();
-//     let normal = Normal::new(mean, std_dev).unwrap();
-//     let mut rng = rand::thread_rng();
-//     let sample = normal.sample(&mut rng);
-//     sample.round() as i64
-// }
 
 #[cfg(test)]
 mod tests {

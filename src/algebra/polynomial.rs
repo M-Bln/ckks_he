@@ -174,7 +174,6 @@ where
 impl<T> Mul<&Polynomial<T>> for Polynomial<T>
 where
     T: Add<Output = T> + Sub<T, Output = T> + Mul<T, Output = T> + Clone + Zero,
-    //    T: Mul<Output = T> + Add<Output = T> + Clone + Zero,
 {
     type Output = Self;
 
@@ -199,33 +198,6 @@ where
         // Polynomial::new(result_coeffs)
     }
 }
-
-// impl<T> Mul<&Polynomial<T>> for Polynomial<T>
-// where
-//     T: Mul<Output = T> + Add<Output = T> + Clone + Zero,
-// {
-//     type Output = Self;
-
-//     fn mul(self, other: &Polynomial<T>) -> Self::Output {
-//         if self.coefficients.is_empty() | other.coefficients.is_empty() {
-//             return Polynomial::new(vec![]);
-//         }
-
-//         let result_len = self.coefficients.len() + other.coefficients.len() - 1;
-//         let mut result_coeffs = vec![self.coefficients[0].zero(); result_len];
-
-//         for i in 0..self.coefficients.len() {
-//             for j in 0..other.coefficients.len() {
-//                 if i + j < result_len {
-//                     result_coeffs[i + j] = result_coeffs[i + j].clone()
-//                         + (self.coefficients[i].clone() * other.coefficients[j].clone());
-//                 }
-//             }
-//         }
-
-//         Polynomial::new(result_coeffs)
-//     }
-// }
 
 pub trait ScalarMul<RHS> {
     type Output;
@@ -326,17 +298,6 @@ impl<T: BigInt> Rescale<RingMod<T>> for Polynomial<RingMod<T>> {
         }
     }
 }
-
-// impl Polynomial<I256> {
-//     pub fn modulo(&self, modulus: I256) -> Polynomial<RingMod<I256>> {
-//         let coefficients = self
-//             .coefficients
-//             .iter()
-//             .map(|&coeff| RingMod::<I256>::new(coeff, modulus))
-//             .collect();
-//         Polynomial { coefficients }
-//     }
-// }
 
 #[cfg(test)]
 mod tests {

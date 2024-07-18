@@ -5,13 +5,14 @@ use crate::algebra::polynomial::ScalarMul;
 
 use std::ops::{Add, Mul};
 
-//type CiphertextRing = CyclotomicRing<RingMod<I256>>; pub type
+/// Space of messages, elements of the cyclotomic ring.
 pub type Message<T> = CyclotomicRing<RingMod<T>>;
 
+/// Raw ciphertexts, without the upper bound of error and messages.
 #[derive(Clone, Debug)]
 pub struct RawCiphertext<T: BigInt>(pub Message<T>, pub Message<T>);
 
-// Should I also keep a ref to public / eval key?
+/// Tagged ciphertext, includes upper bounds for messages and errors.
 #[derive(Clone, Debug)]
 pub struct Ciphertext<T: BigInt> {
     pub raw: RawCiphertext<T>,
@@ -35,13 +36,6 @@ impl<T: BigInt> Ciphertext<T> {
         }
     }
 }
-
-// impl<T: BigInt>  Mul<&Ciphertext<T>> for T {
-//     type Output = Ciphertext<T>;
-//     fn mul(self, ct: &Ciphertext<T>) -> Ciphertext<T> {
-// 	let raw = self*ct.raw;
-//     }
-// }
 
 impl<T: BigInt> ScalarMul<&Ciphertext<T>> for T {
     type Output = Ciphertext<T>;
