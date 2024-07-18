@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["raise_to_powers_of_two","raise_to_powers_of_two_rescale"],"struct":["C64"],"trait":["Complex"]};

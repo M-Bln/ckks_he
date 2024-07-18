@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["degree_from_coefs"],"struct":["Polynomial"],"trait":["ScalarMul"]};

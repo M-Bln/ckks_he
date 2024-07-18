@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["generate_random_vector","sample_n"],"struct":["DiscreteGaussian","HWTDistribution","ZODistribution"],"trait":["UniformSamplable"]};

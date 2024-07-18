@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["algebra","ciphertext","encoding","keys","random_distributions"]};

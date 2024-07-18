@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["EncryptionError"],"fn":["add_plaintexts","bounded_by","calculate_error","calculate_relative_error","multiply_plaintexts","scalar_mul_plaintext","to_plaintext"],"struct":["ClientKey"],"type":["Plaintext"]};

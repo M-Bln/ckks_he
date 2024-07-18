@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["arithmetic","big_int","complex","conversion_rounding","cyclotomic_ring","linear_algebra","polynomial"]};
