@@ -39,7 +39,7 @@ pub struct KeyGenerationParameters<T: BigInt> {
 }
 
 /// Generate a pair (client_key, server_key) with no security but fast computation
-/// 
+///
 /// # Examples
 ///
 /// ```

@@ -23,9 +23,7 @@ pub trait ToFloat {
     fn to_float(&self) -> f64;
 }
 
-/// A trait to abstract away the type of integers used in the CKKS scheme.
-/// It requires large integers and many distinct implementation exist.
-/// So far we use mostly bnum and in particular I1024.
+/// A trait representing large integers with common arithmetic operations.
 pub trait BigInt:
     Sized
     + Add<Output = Self>
@@ -61,6 +59,20 @@ pub trait BigInt:
         RingMod::new(self.clone() % modulus, modulus)
     }
 
+    /// Performs fast exponentiation of the value to the given exponent.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ckks_he::algebra::big_int::BigInt;
+    /// use bnum::types::I1024;
+    ///
+    /// let exponent = 9;
+    /// let big_int_value = I1024::from(2 as i64);
+    ///
+    /// let result = big_int_value.fast_exp(exponent);
+    /// assert_eq!(result, I1024::from(512 as i64)); // 2^9
+    /// ```
     fn fast_exp(&self, exponent: u32) -> Self {
         let mut base = *self;
         let mut exp = exponent;
@@ -76,7 +88,22 @@ pub trait BigInt:
         result
     }
 
-    /// Assuming other >=0, pick a representative of self modulo other in the range ]-other/2, other/2]
+    /// Picks a representative of `self` modulo `other` in the range `]-other/2, other/2]`.
+    ///
+    /// Assumes `other` is greater than 0.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ckks_he::algebra::big_int::BigInt;
+    /// use bnum::types::I1024;
+    ///
+    /// let big_int_value = I1024::from(38);
+    /// let big_int_other = I1024::from(10);
+    ///
+    /// let remainder = big_int_value.remainder(&big_int_other);
+    /// assert_eq!(remainder, I1024::from(-2)); // 38 % 10 == -2
+    /// ```
     fn remainder(&self, other: &Self) -> Self {
         let mut remainder = *self % other;
         if Self::from(2) * remainder > *other {

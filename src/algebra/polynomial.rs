@@ -45,7 +45,7 @@ where
 
 impl<T> Polynomial<T>
 where
-    T: Add<Output = T> + Sub<T, Output= T> + Mul<T, Output = T> + Clone + Zero,
+    T: Add<Output = T> + Sub<T, Output = T> + Mul<T, Output = T> + Clone + Zero,
 {
     pub fn eval(&self, x: T) -> T
     where
@@ -75,7 +75,9 @@ where
     pub fn karatsuba_mul(&self, other: &Polynomial<T>) -> Polynomial<T> {
         let n = self.coefficients.len().max(other.coefficients.len());
         if n <= 1 {
-            return Polynomial::new(vec![self.coefficients[0].clone() * other.coefficients[0].clone()]);
+            return Polynomial::new(vec![
+                self.coefficients[0].clone() * other.coefficients[0].clone(),
+            ]);
         }
 
         let k = n / 2;
@@ -84,7 +86,9 @@ where
 
         let z0 = low_self.karatsuba_mul(&low_other);
         let z2 = high_self.karatsuba_mul(&high_other);
-        let z1 = (low_self + &high_self).karatsuba_mul(&(low_other + &high_other)) - &z0.clone() - &z2.clone();
+        let z1 = (low_self + &high_self).karatsuba_mul(&(low_other + &high_other))
+            - &z0.clone()
+            - &z2.clone();
 
         z0.add_shifted(z1, k).add_shifted(z2, 2 * k)
     }
@@ -97,10 +101,13 @@ where
 
     fn add_shifted(self, other: Polynomial<T>, shift: usize) -> Polynomial<T> {
         let mut result = self.coefficients;
-	if result.len() == 0 {
-	    return Polynomial::new(result);
-	}
-        result.resize(result.len().max(shift + other.coefficients.len()), result[0].zero());
+        if result.len() == 0 {
+            return Polynomial::new(result);
+        }
+        result.resize(
+            result.len().max(shift + other.coefficients.len()),
+            result[0].zero(),
+        );
         for (i, coeff) in other.coefficients.iter().enumerate() {
             result[i + shift] = result[i + shift].clone() + coeff.clone();
         }
@@ -166,13 +173,13 @@ where
 
 impl<T> Mul<&Polynomial<T>> for Polynomial<T>
 where
-    T: Add<Output = T> + Sub<T, Output= T> + Mul<T, Output = T> + Clone + Zero,
-//    T: Mul<Output = T> + Add<Output = T> + Clone + Zero,
+    T: Add<Output = T> + Sub<T, Output = T> + Mul<T, Output = T> + Clone + Zero,
+    //    T: Mul<Output = T> + Add<Output = T> + Clone + Zero,
 {
     type Output = Self;
 
     fn mul(self, other: &Polynomial<T>) -> Self::Output {
-	self.karatsuba_mul(other)
+        self.karatsuba_mul(other)
         // if self.coefficients.is_empty() | other.coefficients.is_empty() {
         //     return Polynomial::new(vec![]);
         // }
@@ -192,7 +199,6 @@ where
         // Polynomial::new(result_coeffs)
     }
 }
-
 
 // impl<T> Mul<&Polynomial<T>> for Polynomial<T>
 // where

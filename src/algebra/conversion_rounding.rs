@@ -20,7 +20,6 @@ where
     }
 }
 
-
 impl<T: BigInt> Polynomial<T> {
     /// Reduces the coefficients of a polynomial modulo modulus
     pub fn modulo(&self, modulus: T) -> Polynomial<RingMod<T>> {
@@ -106,7 +105,6 @@ where
         Polynomial::new(coefficients)
     }
 }
-
 
 impl<T: BigInt> CyclotomicRing<RingMod<T>> {
     /// Pick integer representatives of coefficients in the range ]-modulus/2, modulus/2]

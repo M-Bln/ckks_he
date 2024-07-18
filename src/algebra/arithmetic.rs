@@ -6,7 +6,6 @@ use std::ops::{Add, Mul, Sub};
 
 use bnum::types::I256;
 
-
 /// A structure representing an element in the ring Z/modulus Z
 ///
 /// The `RingMod` struct holds a value and a modulus, and supports basic arithmetic operations
@@ -107,7 +106,6 @@ impl<T: BigInt> Rescale<RingMod<T>> for RingMod<T> {
     }
 }
 
-
 /// Addition is performed modulo the smallest of each modulus
 impl<T: BigInt> Add for RingMod<T> {
     type Output = Self;
@@ -181,7 +179,6 @@ impl<T: BigInt> PartialEq for RingMod<T> {
 }
 
 impl<T: BigInt> Eq for RingMod<T> {}
-
 
 #[cfg(test)]
 mod tests {

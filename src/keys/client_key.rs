@@ -21,7 +21,37 @@ pub enum EncryptionError {
     ClearLargerThanUpperBound,
 }
 
-/// Encapsulate the data necessary to the client side i.e. the secret key tue public key and an encoder
+/// Encapsulates the data necessary for the client side, including the secret key, public key, and an encoder.
+///
+/// The `ClientKey` struct is responsible for managing the encryption and decryption processes
+/// in the homomorphic encryption scheme. It holds the secret key for decryption, the public key
+/// for encryption, and an encoder for encoding and decoding plaintext messages. This struct
+/// provides methods for encrypting plaintext messages, decrypting ciphertexts, and calculating
+/// the expected error after decryption.
+///
+/// # Examples
+///
+/// Basic usage:
+///
+/// ```
+/// use ckks_he::keys::key_generator::generate_pair_keys_toy;
+/// use ckks_he::random_distributions::generate_random_vector;
+/// use ckks_he::keys::client_key::{calculate_error, to_plaintext};
+///
+/// let (mut client_key, server_key) = generate_pair_keys_toy();
+/// let plaintext_dimension = client_key.plaintext_dimension();
+/// let plaintext_bound = 5.0;
+/// let real_plaintext = generate_random_vector(
+///     plaintext_dimension,
+///     -plaintext_bound,
+///     plaintext_bound,
+/// );
+/// let plaintext = to_plaintext(&real_plaintext);
+/// let ciphertext = client_key.encrypt(&plaintext, plaintext_bound).unwrap();
+/// let decrypted = client_key.decrypt(&ciphertext);
+/// let error = calculate_error(&plaintext, &decrypted);
+/// assert!(error < client_key.rescaled_error(&ciphertext), "Error larger than expected");
+/// ```
 impl<T: BigInt> ClientKey<T> {
     pub fn new(
         parameters: KeyGenerationParameters<T>,
@@ -43,9 +73,9 @@ impl<T: BigInt> ClientKey<T> {
             plaintext_dimension,
         }
     }
-    
-    /// Encrypt a plaintext
-    /// 
+
+    /// Encrypt a plaintext, an upperbound must be given.
+    ///
     /// # Examples
     ///
     /// ```
@@ -59,7 +89,7 @@ impl<T: BigInt> ClientKey<T> {
     /// let plaintext_bound = 5.0;
     /// let real_plaintext = generate_random_vector(
     ///         plaintext_dimension,
-    ///         -plaintext_bound, 
+    ///         -plaintext_bound,
     ///         plaintext_bound,
     /// );
     /// let plaintext = to_plaintext(&real_plaintext);
@@ -86,56 +116,89 @@ impl<T: BigInt> ClientKey<T> {
         Ok(encrypted)
     }
 
+    /// Decrypt a ciphertext.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ckks_he::keys::key_generator::generate_pair_keys_toy;
+    /// use ckks_he::random_distributions::generate_random_vector;
+    /// use ckks_he::keys::client_key::{calculate_error, to_plaintext};
+    ///
+    ///
+    /// let (mut client_key, server_key) = generate_pair_keys_toy();
+    /// let plaintext_dimension = 1 << (client_key.dimension_exponent() -1);
+    /// let plaintext_bound = 5.0;
+    /// let real_plaintext = generate_random_vector(
+    ///         plaintext_dimension,
+    ///         -plaintext_bound,
+    ///         plaintext_bound,
+    /// );
+    /// let plaintext = to_plaintext(&real_plaintext);
+    /// let ciphertext = client_key.encrypt(&plaintext, plaintext_bound).unwrap();
+    /// let decrypted = client_key.decrypt(&ciphertext);
+    /// let error = calculate_error(&plaintext, &decrypted);
+    /// assert!(error < client_key.rescaled_error(&ciphertext), "Error large than expected");
+    /// ```
     pub fn decrypt(&mut self, ct: &Ciphertext<T>) -> Plaintext {
         let encoded = self.secret_key.decrypt(ct);
         self.encoder.decode(&encoded)
     }
 
+    /// Returns an upper bound of the error expected after decryption.
     pub fn rescaled_error(&self, ct: &Ciphertext<T>) -> f64 {
         ct.upper_bound_error / self.encoder.scaling_factor
     }
 
+    /// Returns an upper bound of the message expected after decryption.
     pub fn rescaled_upperbound_message(&self, ct: &Ciphertext<T>) -> f64 {
         ct.upper_bound_message / self.encoder.scaling_factor
     }
 
+    /// Returns h such that 2^h is the dimension of the cyclotomic ring of messages.
     pub fn dimension_exponent(&self) -> u32 {
-	self.secret_key.parameters.dimension_exponent
+        self.secret_key.parameters.dimension_exponent
+    }
+
+    /// Returns the dimension of plaintexts space.
+    pub fn plaintext_dimension(&self) -> usize {
+        1 << (self.dimension_exponent() - 1)
     }
 }
 
+/// Calculate relative error between two plaintexts.
 pub fn calculate_relative_error(original: &[C64], decrypted: &[C64]) -> f64 {
-    original.iter()
+    original
+        .iter()
         .zip(decrypted.iter())
         .map(|(o, d)| {
-            let error = (*o-*d).magnitude();
-	    let relative_error = error / (o.magnitude());
-	    // println!("expected: {}", o);
-	    // println!("decrypted: {}", d);
-	    // println!("error: {}", error);
-	    // println!("relative error: {}", relative_error);
-	    relative_error
+            let error = (*o - *d).magnitude();
+            let relative_error = error / (o.magnitude());
+            relative_error
         })
         .fold(0.0, |max_error, current_error| max_error.max(current_error))
 }
 
+/// Calculate error between two plaintexts.
 pub fn calculate_error(original: &[C64], decrypted: &[C64]) -> f64 {
-    original.iter()
+    original
+        .iter()
         .zip(decrypted.iter())
-        .map(|(o, d)| {
-            (*o-*d).magnitude()
-        })
+        .map(|(o, d)| (*o - *d).magnitude())
         .fold(0.0, |max_error, current_error| max_error.max(current_error))
 }
 
+/// Checks if a every coefficient of `z` is bounded by `bound`.
 pub fn bounded_by(z: &[C64], bound: f64) -> bool {
     z.iter().all(|&c| c.magnitude() <= bound)
 }
 
+/// Convert slice of `f64` to vector of `C64`.
 pub fn to_plaintext(real: &[f64]) -> Vec<C64> {
     real.iter().map(|&r| C64::new(r, 0.0)).collect()
 }
 
+/// Multiplication of plaintexts (coordinate wise)
 pub fn multiply_plaintexts(plaintext1: &[C64], plaintext2: &[C64]) -> Plaintext {
     assert_eq!(
         plaintext1.len(),
@@ -398,7 +461,11 @@ mod tests {
         // Decrypt the message
         let clear_result = client_key.decrypt(&result);
 
-        let expected_result: Vec::<C64> = message_plaintext1.iter().zip(message_plaintext2.iter()).map(|(c1,c2)| *c1+*c2).collect();
+        let expected_result: Vec<C64> = message_plaintext1
+            .iter()
+            .zip(message_plaintext2.iter())
+            .map(|(c1, c2)| *c1 + *c2)
+            .collect();
         // let expected_result = scalar_mul_plaintext(
         //     C64::new(q_inverse, 0.0),
         //     &multiply_plaintexts(&message_plaintext1, &message_plaintext2),
@@ -413,11 +480,11 @@ mod tests {
                 "Original: {}, Decrypted: {}, Difference: {}",
                 expected, decrypted, diff
             );
-	    println!("relative error: {}", diff/expected.magnitude());
+            println!("relative error: {}", diff / expected.magnitude());
             assert!(diff < error_max, "Difference in real part too large!");
         }
     }
-    
+
     #[test]
     fn test_raise_to_powers_of_two() {
         // Define parameters for key generation
