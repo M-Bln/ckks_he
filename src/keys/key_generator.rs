@@ -9,7 +9,6 @@ use crate::keys::server_key::ServerKey;
 use crate::random_distributions::{sample_n, DiscreteGaussian};
 use bnum::types::I1024;
 
-use rand::distributions::uniform::UniformSampler;
 
 /// Parameters used for key generation in the homomorphic encryption scheme.
 ///

@@ -1,5 +1,3 @@
-use std::ops::Mul;
-
 use crate::algebra::arithmetic::Rescale;
 use crate::algebra::big_int::{BigInt, Zero};
 use crate::algebra::complex::Complex;

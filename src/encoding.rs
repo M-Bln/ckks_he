@@ -6,6 +6,19 @@ use crate::algebra::cyclotomic_ring::CyclotomicRing;
 use crate::algebra::linear_algebra::apply_matrix;
 use crate::algebra::polynomial::Polynomial;
 
+/// A struct to handle encoding and decoding of plaintext messages for CKKS homomorphic encryption.
+///
+/// The `Encoder` struct is responsible for encoding plaintext messages into a format suitable for
+/// encryption and decoding encrypted messages back into plaintext. A plaintext is a `Vec<C64>` of length 2^{h-1}
+/// and a ciphertext an element in a cyclotomic ring `Z/(modulus Z)[X] / (1 + X^(2^h))`.
+///
+/// # Fields
+///
+/// * `dimension_exponent`: The exponent `h` such that `M = 2^h` is the degree of the cyclotomic polynomial.
+/// * `modulus`: The modulus used for ciphertexts, which defines the space `Z/(modulus Z)[X] / (1 + X^(2^dimension_exponent))`.
+/// * `scaling_factor`: The scaling factor used before encryption to scale the plaintext messages.
+/// * `sigma_inverse_matrix`: The matrix used to compute the canonical embedding.
+/// * `sigma_matrix`: The matrix of sigma, which is the inverse of the canonical embedding.
 #[derive(Debug)]
 pub struct Encoder<T: BigInt> {
     dimension_exponent: u32, // h such that  M = 2^h is the degree of the cyclotomic polynomial
@@ -34,15 +47,6 @@ impl<T: BigInt> Encoder<T> {
         //	sigma_inverse_result.to_i256()
         let integer_polynomial = sigma_inverse_result.to_integer();
         integer_polynomial.to_cyclotomic(self.dimension_exponent)
-        // // Step 4: Reduce the polynomial modulo modulus
-        // let modular_polynomial = integer_polynomial.modulo(self.modulus.clone());
-        // println!("Modular Polynomial: {:?}", modular_polynomial);
-
-        // // Step 5: Reduce modulo the cyclotomic polynomial
-        // let cyclotomic_polynomial = modular_polynomial.to_cyclotomic(self.dimension_exponent);
-        // println!("Cyclotomic Polynomial: {:?}", cyclotomic_polynomial);
-
-        // cyclotomic_polynomial
     }
 
     pub fn encode(&self, plaintext: &[C64]) -> CyclotomicRing<RingMod<T>> {
@@ -89,28 +93,6 @@ impl<T: BigInt> Encoder<T> {
             .map(|c| *c * (1.0 / self.scaling_factor))
             .collect()
     }
-
-    // pub fn decode(&self, message: CyclotomicRing<RingMod<T>>) -> Vec<C64> {
-    //     let expected_dimension = 2_usize.pow(self.dimension_exponent);
-    //     assert_eq!(
-    //         message.dimension, expected_dimension,
-    //         "Message dimension does not match expected dimension"
-    //     );
-
-    //     // Step 1: Convert to complex coefficients
-    //     let complex_polynomial = message.to_c64();
-    //     println!("Complex Polynomial: {:?}", complex_polynomial);
-
-    //     // Step 2: Apply sigma
-    //     let canonical_embedding = self.sigma(&complex_polynomial);
-    //     println!("Canonical Embedding: {:?}", canonical_embedding);
-
-    //     // Step 3: Project to message space
-    //     let projection_result = self.projection(&canonical_embedding);
-    //     println!("Projection Result: {:?}", projection_result);
-
-    //     projection_result
-    // }
 }
 
 /// Encoder with functions encode to go from plaintext to ciphertext ring and decode from ciphertext ring to plaintext.
@@ -257,17 +239,6 @@ impl<T: BigInt> Encoder<T> {
 
         matrix
     }
-
-    // pub fn apply_sigma_inverse(&self, poly: &Polynomial<C64>) -> Vec<C64> {
-    //     let mut result = vec![C64::new(0.0, 0.0); poly.ref_coefficients().len()];
-    //     for (i, row) in self.sigma_inverse_matrix.iter().enumerate() {
-    //         result[i] = row
-    //             .iter()
-    //             .zip(poly.ref_coefficients())
-    //             .fold(C64::new(0.0, 0.0), |sum, (a, b)| sum + a.clone() * b);
-    //     }
-    //     result
-    // }
 }
 
 fn even_index_elements<T: Clone>(vec: &[T]) -> Vec<T> {
@@ -282,28 +253,6 @@ fn approx_eq(a: f64, b: f64, tol: f64) -> bool {
     (a - b).abs() < tol
 }
 
-// fn multiply_matrices(a: &[Vec<C64>], b: &[Vec<C64>]) -> Vec<Vec<C64>> {
-//     let n = a.len();
-//     let mut result = vec![vec![C64::new(0.0, 0.0); n]; n];
-
-//     for i in 0..n {
-//         for j in 0..n {
-//             for k in 0..n {
-//                 result[i][j] = result[i][j] + a[i][k] * b[k][j];
-//             }
-//         }
-//     }
-
-//     result
-// }
-
-// fn identity_matrix(n: usize) -> Vec<Vec<C64>> {
-//     let mut matrix = vec![vec![C64::new(0.0, 0.0); n]; n];
-//     for i in 0..n {
-//         matrix[i][i] = C64::new(1.0, 0.0);
-//     }
-//     matrix
-// }
 
 #[cfg(test)]
 mod tests {
@@ -313,44 +262,6 @@ mod tests {
     use crate::algebra::complex::C64;
     use crate::algebra::linear_algebra::{identity_matrix, multiply_matrices};
     use bnum::types::I256;
-
-    // #[test]
-    // fn test_encode_decode() {
-    //     let dimension_exponent = 4;
-    //     let modulus = I256::new(1300000);
-    //     let encoder = Encoder::new(dimension_exponent, modulus.clone());
-
-    //     // Generate a vector of large complex numbers as input
-    //     let plaintext: Vec<C64> = (0..2_usize.pow(dimension_exponent - 1))
-    //         .map(|i| C64::new((i*100) as f64 + 10000.0, (i * i * 100)  as f64 + 76522.1))
-    //         .collect();
-    // 	println!("plaintext: {:?}", plaintext);
-
-    //     // Encode the plaintext
-    //     let encoded = encoder.encode(&plaintext);
-    // 	println!("encoded: {:?}", encoded);
-
-    //     // Decode the encoded message
-    //     let decoded = encoder.decode(encoded);
-    // 	println!("decoded: {:?}", decoded);
-
-    //     // Verify that the decoded message matches the original plaintext
-    //     let tol = 100.0;
-    //     for (a, b) in plaintext.iter().zip(decoded.iter()) {
-    //         assert!(
-    //             approx_eq(a.real(), b.real(), tol),
-    //             "Real part mismatch: expected {}, got {}",
-    //             a.real(),
-    //             b.real()
-    //         );
-    //         assert!(
-    //             approx_eq(a.imaginary(), b.imaginary(), tol),
-    //             "Imaginary part mismatch: expected {}, got {}",
-    //             a.imaginary(),
-    //             b.imaginary()
-    //         );
-    //     }
-    // }
 
     #[test]
     fn test_real_coeff() {
@@ -737,11 +648,3 @@ mod tests {
         }
     }
 }
-
-// pub struct Encoder<T: BigInt> {
-//     modulus: T,
-//     dimension_exponent: usize, // h such that  M = 2^h is the degree of the cyclotomic polynomial
-//     primitive_roots: Vec<C64>, // The primitive 2^h-th roots of unity
-//     matrix_sigma: Vec<Vec<C64>>, // The matrix of the linear map sigma
-//     matrix_sigma_inver: Vec<Vec<C64>>, // The matrix of the inverse of sigma
-// }
